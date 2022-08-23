@@ -1,0 +1,67 @@
+scans: 3116
+root_folder: "/home/david/Documents/PhDScripts/LocalTestBCDI/"
+save_dir: "/home/david/Documents/PhDScripts/LocalTestBCDI/S3116/preprocessing/"
+data_dir: "/home/david/Documents/PhDScripts/LocalTestBCDI/data_dir/"
+sample_name: "S"
+comment: ""
+debug: False
+flag_interact: False
+background_plot: "0.5"
+centering_method: "max"
+fix_bragg: None
+fix_size: None
+center_fft: "crop_sym_ZYX"
+pad_size: None
+mask_zero_event: False
+median_filter: "skip"
+median_filter_order: 7
+reload_previous: False
+reload_orthogonal: False
+preprocessing_binning: [1, 1, 1]
+save_rawdata: False
+save_to_npz: True
+save_to_mat: False
+save_to_vti: False
+save_as_int: False
+beamline: "SIXS_2019"
+actuators: None
+is_series: False
+rocking_angle: "inplane"
+specfile_name: None
+custom_scan: False
+custom_images: None
+custom_monitor: None
+detector: "Merlin"
+phasing_binning: [1, 1, 1]
+linearity_func: None
+roi_detector: None
+normalize_flux: "skip"
+photon_threshold: 0
+photon_filter: "loading"
+bin_during_loading: True
+frames_pattern: None
+background_file: None
+hotpixels_file: "/home/david/Documents/PhDScripts/SIXS_June_2021/reconstructions/analysis/mask_merlin_better.npy"
+flatfield_file: None
+template_imagefile: "B12_syn_S1_P1_ascan_mu_%05d.nxs"
+use_rawdata: True
+interpolation_method: "linearization"
+fill_value_mask: 0
+beam_direction: [1, 0, 0]
+sample_offsets: [0, 0]
+sdd: 1.18
+energy: 8500
+custom_motors: None
+align_q: True
+ref_axis_q: "y"
+outofplane_angle: 0.0
+inplane_angle: 0.0
+sample_inplane: [1, 0, 0]
+sample_outofplane: [0, 0, 1]
+offset_inplane: 0.0
+cch1: 271
+cch2: 213
+detrot: 0.0
+tiltazimuth: 360.0
+tilt_detector: 0.0
+backend: "Agg"
