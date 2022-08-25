@@ -4,9 +4,9 @@
 ## TODO：支持的算法模型
 
 ### 图像相关
-+目标检测算法YOLOv5, SEYOLOv5, YOLOv7
-+图像分割算法UNet, TransUNet, SegFormer
-+人体关键点检测算法AlphaPose
+    +目标检测算法YOLOv5, SEYOLOv5, YOLOv7
+    +图像分割算法UNet, TransUNet, SegFormer
+    +人体关键点检测算法AlphaPose
 ### 分类算法
 +残差网络ResNet
 +浅层网络FCNet
