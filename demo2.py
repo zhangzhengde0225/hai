@@ -1,5 +1,6 @@
 
-## 模块化的使用方法，与python面向对象的方法一致
+## SDK 模块化的使用方法，与python面向对象的方法一致
+
 
 
 class GODNet(dm.nn.AbstractModule):

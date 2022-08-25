@@ -3,37 +3,65 @@
 在导入nn模块自动注册内部模块时，由于外部调用多次会导致对此初始化注册，仅初始化注册一次
 """
 import os
+import sys
+from pathlib import Path
 
 
 class InitRegister(object):
-    def __init__(self):
+    def __init__(self, internal_dir=None):
         self.inited = False
+        self.internal_dir = internal_dir  # /home/zzd/VSProject/hai/hai
+
+    def import_internal_module(self, internal_module_path):
+        """
+        导入内部模块
+        :param internal_module_path: internal module path, e.g.: apis/modules/YOLOv5-v6
+        """
+        if self.internal_dir is None:
+            full_path = os.path.join(os.getcwd(), internal_module_path)
+        else:
+            full_path = os.path.join(self.internal_dir, internal_module_path)  # /home/zzd/VSProject/hai/hai/apis/modules/YOLOv5_v6
+        full_path = Path(full_path)
+        dir_path = str(full_path.parent)
+        stem = str(full_path.stem)
+
+        in_ = dir_path in sys.path
+        if in_:
+            code = f'import {stem}'
+            exec(code)
+        else:
+            sys.path.insert(0, dir_path)
+            code = f'import {stem}'
+            exec(code)
+            sys.path.remove(dir_path)
+
+        # im_package = '.'.join(internal_module_path.split('/'))  # apis.modules.YOLOv5-v6
+        # code = f'from damei.nn.{im_package} import *'
+        # code = f'import damei.nn.{im_package}'
+        # code = f'import damei.nn.{im_package}.__init__'
+        # exec(code)
+
 
     def __call__(self, internal_modules, external_folders):
         """
         初始化注册
-        :param internal_modules: internal modules, ex: models/loader/vis_loader
-        :param external_folders: external folders, ex: dmapi, repos
+        :param internal_modules: internal modules, e.g: models/loader/vis_loader
+        :param external_folders: external folders, e.g.: dmapi, repos
         """
         if self.inited:
             pass
         else:
             # print(self.inited)
             ims = internal_modules
-            efs = external_folders
+            efs = external_folders  # ['dmapi', 'repos']
             if len(ims) > 0:
                 for i, im_path in enumerate(ims):
-                    # print(f'{i} xxfefe')
-                    im_package = '.'.join(im_path.split('/'))
-                    # code = f'from damei.nn.{im_package} import *'
-                    code = f'import damei.nn.{im_package}'
-                    # code = f'import damei.nn.{im_package}.__init__'
-                    exec(code)
+                    self.import_internal_module(im_path)
 
             if len(efs) > 0:
                 dirs = [x for x in os.listdir('.') if os.path.isdir(x)]  # 当前路径文件夹
                 for dmp in dirs:
-                    if dmp in dirs:
+                    if dmp in efs:
                         # code = f'from repos.xxx.dmapi import *'
                         code = f'from {dmp} import *'
                         exec(code)

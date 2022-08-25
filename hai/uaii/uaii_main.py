@@ -6,19 +6,20 @@ import time
 from pathlib import Path
 import damei as dm
 
-try:
-    import eventlet
+# try:
+    # import eventlet
     # from .socket.server import SocketApp
-except Exception as e:
-    dm.EXCEPTION(Exception, e, mute=True)
+# except Exception as e:
+    # dm.EXCEPTION(Exception, e, mute=True)
 
 from .utils.base_uaii import BaseUAII
 from .stream.streams import Streams
 
-try:
-    from .. import MODULES, SCRIPTS, IOS
-except:
-    from damei.nn.api import MODULES, SCRIPTS, IOS
+# try:
+    # from .. import MODULES, SCRIPTS, IOS
+# except:
+    # from damei.nn.api import MODULES, SCRIPTS, IOS
+from ..apis import MODULES, SCRIPTS, IOS
 
 from .utils.config_loader import PyConfigLoader as Config
 
@@ -29,14 +30,14 @@ logger = dm.getLogger('uaii_main')
 
 
 class UAII(BaseUAII):
-    """UAII: Unified AI Interface of damei.
+    """UAII: Unified AI Interface.
     uaii = dm.nn.api.UAII()
     """
 
     def __init__(self, cfg=None, root_path=None, **kwargs):
         super(UAII, self).__init__(**kwargs)
         self.root_path = root_path if root_path else f'{pydir.parent.parent.parent}'
-        cfg = cfg if cfg else f'{pydir.parent}/config/uaii_stream_config.py'
+        cfg = cfg if cfg else f'{pydir.parent}/configs/uaii_stream_config.py'
         self.cfg = Config(cfg_file=cfg, root_path=self.root_path)
         self._modules = MODULES  # 一个对象
         self._scripts = SCRIPTS
@@ -332,7 +333,7 @@ def run_app(root_path):
     logger = logging.getLogger('uais')
     cfg = f'{root_path}/config/uaii_stream_config.py'
     uaii = UAII(cfg=cfg)
-    SocketApp.uaii = uaii  # 设置socket app的unified ai service
-    socket_app = SocketApp()
+    # SocketApp.uaii = uaii  # 设置socket app的unified ai service
+    # socket_app = SocketApp()
     # app.logger.info('socket app加载完成')
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), socket_app.app)
+    # eventlet.wsgi.server(eventlet.listen(('', 5000)), socket_app.app)
