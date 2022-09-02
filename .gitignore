@@ -1,0 +1,6 @@
+build/*
+dist/*
+hepai.egg-info/*
+wandb/*
+checkpoints/*
+runs/*

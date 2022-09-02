@@ -1,0 +1,78 @@
+scan: 283
+root_folder: "/data/id01/inhouse/david/PETRA_December_2021/2021_P10/raw/"
+save_dir: "/data/id01/inhouse/david/PETRA_December_2021/Ar_RT/C2/align_03283/postprocessing//result_lab_flat_sample/"
+data_dir: "/data/id01/inhouse/david/PETRA_December_2021/2021_P10/raw/"
+sample_name: "align_03"
+comment: ""
+sort_method: "variance/mean"
+correlation_threshold: 0.9
+roll_modes: [0, 0, 0]
+centering_method: "max_com"
+original_size: None
+phasing_binning: [1, 1, 1]
+preprocessing_binning: [1, 1, 1]
+output_size: None
+keep_size: False
+fix_voxel: None
+data_frame: "detector"
+ref_axis_q: "y"
+save_frame: "lab_flat_sample"
+isosurface_strain: 0.3
+strain_method: "default"
+beamline: "P10"
+actuators: None
+rocking_angle: "outofplane"
+sdd: 1.83
+energy: 11294
+beam_direction: [1, 0, 0]
+outofplane_angle: 16.49
+inplane_angle: 28.16
+tilt_angle: 0.003
+sample_offsets: [0, 0, 0, 0]
+specfile_name: None
+custom_scan: False
+custom_motors: None
+detector: "Eiger4M"
+pixel_size: None
+template_imagefile: "_master.h5"
+correct_refraction: False
+optical_path_method: "threshold"
+dispersion: 5.0328e-05
+absorption: 5.0328e-05
+threshold_unwrap_refraction: 0.05
+simulation: False
+invert_phase: True
+flip_reconstruction: False
+phase_ramp_removal: "gradient"
+threshold_gradient: 1.0
+phase_offset: 0.0
+phase_offset_origin: None
+offset_method: "mean"
+debug: False
+align_axis: False
+ref_axis: "y"
+axis_to_align: [0.0, 0.0, 0.0]
+strain_range: 0.002
+phase_range: 3.142
+grey_background: True
+tick_spacing: 100
+tick_direction: "inout"
+tick_length: 3
+tick_width: 1
+get_temperature: False
+reflection: [1, 1, 1]
+reference_spacing: 2.269545
+reference_temperature: 298.15
+averaging_space: "reciprocal_space"
+threshold_avg: 0.9
+half_width_avg_phase: 1
+apodize: True
+apodization_window: "blackman"
+apodization_mu: [0.0, 0.0, 0.0]
+apodization_sigma: [0.3, 0.3, 0.3]
+apodization_alpha: [1.0, 1.0, 1.0]
+reconstruction_file: "/data/id01/inhouse/david/PETRA_December_2021/Ar_RT/C2/align_03283/preprocessing/modes_gui.h5"
+save_rawdata: False
+save_support: False
+save: True
+backend: "Agg"
