@@ -195,14 +195,18 @@ class Registry:
         self.children[registry.scope] = registry
 
     def _register_module(self, module_class, module_name=None, force=False):
-        # print('xx register')
-        # exit()
         if not inspect.isclass(module_class):
             raise TypeError('module must be a class, '
                             f'but got {type(module_class)}')
 
         if module_name is None:
-            module_name = module_class.__name__
+            module_name = module_class.name
+            assert isinstance(module_name, str), f'{module_class} has no name, please specify a name explicitly when registering it'
+            # if isinstance(module_name, str):
+            #     pass
+            # else:
+            #     module_name = module_class.__name__
+
         if isinstance(module_name, str):
             module_name = [module_name]
 
@@ -228,6 +232,12 @@ class Registry:
             return partial(self.deprecated_register_module, force=force)
         self._register_module(cls, force=force)
         return cls
+
+    def register(self, name=None, force=False, module=None):
+        """
+        Alias of register_module.
+        """
+        return self.register_module(name, force, module)
 
     def register_module(self, name=None, force=False, module=None):
         """Register a module.

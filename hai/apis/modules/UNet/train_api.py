@@ -170,9 +170,9 @@ def run(args):
                  f'\t{net.n_classes} output channels (classes)\n'
                  f'\t{"Bilinear" if net.bilinear else "Transposed conv"} upscaling')
 
-    if args.load:
-        net.load_state_dict(torch.load(args.load, map_location=device))
-        logging.info(f'Model loaded from {args.load}')
+    if args.weights:
+        net.load_state_dict(torch.load(args.weights, map_location=device))
+        logging.info(f'Model loaded from {args.weights}')
 
     net.to(device=device)
     try:
@@ -183,7 +183,7 @@ def run(args):
                   learning_rate=args.lr,
                   device=device,
                   img_scale=args.scale,
-                  val_percent=args.val / 100,
+                  val_percent=args.validation / 100,
                   amp=args.amp)
     except KeyboardInterrupt:
         torch.save(net.state_dict(), 'INTERRUPTED.pth')

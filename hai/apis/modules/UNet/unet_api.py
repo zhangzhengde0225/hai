@@ -1,5 +1,7 @@
-from distutils.log import info
+# from distutils.log import info
 import os
+import numpy as np
+from PIL import Image
 import torch
 from torch.utils.data import DataLoader, random_split
 
@@ -18,19 +20,41 @@ from . import argparse_config
 from . import CarvanaDataset
 
 
-
-@MODULES.register_module(name='UNet')
+@MODULES.register()
 class UNet(AbstractModule):
     name = 'UNet'
     description = '2015 Classic Segmentation Algorithm UNet'
     
 
     def __init__(self):
-        super(UNet, self).__init__()
+        super().__init__()
         # self.default_cfg = f"{hai.root_path}/hai/configs/UNet/UNet_default_cfg.py"
         # self.default_cfg = train.get_args()
         self.default_cfg = argparse_config.get_args()
         # self.default_cfg.exporter = 'ImagesExporter'
+
+    def __call__(self, img, *args, **kwargs):
+        ## 输入的x是ndarray，需要前处理
+        if isinstance(img, np.ndarray):
+            img = Image.fromarray(np.uint8(img))
+
+        ret = predict_api.predict_img(
+                net=self.model,
+                full_img=img,
+                device=self.device,
+                scale_factor=self.cfg.scale,
+                out_threshold=self.cfg.mask_threshold,
+        )
+        return ret
+
+    def build_model(self, *args, **kwargs):
+        device = self.device
+        cfg = self.cfg
+        model = Pytorch_UNet(n_channels=3, n_classes=cfg.classes, bilinear=cfg.bilinear)
+        if self.cfg.weights:
+            model.load_state_dict(torch.load(self.cfg.weights, map_location=device))
+        model.to(device=device)
+        return model
 
     def train(self, cfg=None, *args, **kwargs):
         cfg = cfg if cfg else self.cfg
@@ -41,7 +65,6 @@ class UNet(AbstractModule):
     def predict(self, cfg=None, *args, **kwargs):
         cfg = cfg if cfg else self.cfg
         predict_api.run(args=cfg)
-        
 
     def evaluate(self, cfg=None, *args, **kwargs):
         cfg = cfg if cfg else self.cfg
@@ -69,10 +92,4 @@ class UNet(AbstractModule):
         return info
 
 
-    def build_model(self, *args, **kwargs):
-        device = kwargs.get('device', 'cuda' if torch.cuda.is_available() else 'cpu')
-        cfg = self.cfg
-        model = Pytorch_UNet(n_channels=3, n_classes=cfg.classes, bilinear=cfg.bilinear)
-        if self.cfg.weights:
-            model.load_state_dict(torch.load(self.cfg.weights, map_location=device))
-        return model
+    

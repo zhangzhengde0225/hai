@@ -4,3 +4,4 @@ hepai.egg-info/*
 wandb/*
 checkpoints/*
 runs/*
+logs/*

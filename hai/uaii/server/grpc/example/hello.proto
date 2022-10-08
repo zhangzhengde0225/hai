@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option cc_generic_services = true;
+
+//定义服务接口
+service GrpcService {
+    rpc hello (HelloRequest) returns (HelloResponse) {}  //一个服务中可以定义多个接口，也就是多个函数功能
+}
+
+//请求的参数
+message HelloRequest {
+    string data = 1;   //数字1,2是参数的位置顺序，并不是对参数赋值
+    Skill skill = 2;  //支持自定义的数据格式，非常灵活
+};
+
+//返回的对象
+message HelloResponse {
+    string result = 1;
+    map<string, int32> map_result = 2; //支持map数据格式，类似dict
+};
+
+message Skill {
+    string name = 1;
+};

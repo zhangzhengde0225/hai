@@ -1,5 +1,6 @@
 """
 为了任意路径下的.py包的引入
+deprecated
 """
 import os, sys
 from pathlib import Path

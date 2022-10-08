@@ -4,6 +4,8 @@ uaii general
 import damei as dm
 import numpy as np
 
+from ..datasets.dataset_utils import get_file, extract_archive
+
 
 def single_plot(result, orig_img, target_names):
     """
@@ -74,3 +76,44 @@ def single_plot(result, orig_img, target_names):
                 label=label, color=None, trace=trace, status=status,
                 line_thickness=4, keypoints=keypoints, kp_score=kp_score)
         return out_img
+
+    
+def dict_match_item(all_dict, name, version):
+    """
+    从字典中匹配key和value
+    :param dict:
+    :param key:
+    :param value:
+    :return:
+    """
+    keys = list(all_dict.keys())
+    name = name.lower()
+    macthed = [x for x in keys if name in x.lower()]
+    if len(macthed) == 0:
+        return None
+    else:
+        if version is None:
+            version = latest2determined(all_dict, name)
+        for x in macthed:
+            if all_dict[x]['version'] == version:
+                return all_dict[x]
+        return None
+    
+
+def latest2determined(all_dict, name):
+    """
+    从字典中找到最新的指定版本
+    return: the latest version, i.e. 1.1 or 1.2
+    """
+    keys = list(all_dict.keys())
+    name = name.lower()
+    macthed = [x for x in keys if name in x.lower()]
+    if len(macthed) == 0:
+        return None
+    else:
+        versions = [all_dict[x]['version'] for x in macthed]
+        version = sorted(versions)[-1]
+        return version
+
+
+

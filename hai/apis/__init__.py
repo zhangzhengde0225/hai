@@ -2,7 +2,9 @@
 damei nn api for ai algorithm management (unified ai interface)
 """
 
-from ..version import __backend__, __version__
+import argparse
+from ..version import __backend__, __version__, __author__, __appname__, __email__
+from ..version import __affiliation__
 import os, sys
 from pathlib import Path
 
@@ -13,7 +15,7 @@ __pydir__ = Path(os.path.dirname(os.path.abspath(__file__)))
 try:
     import damei
 except:
-    sys.path.append(f'{__pydir__.parent}/damei')
+    sys.path.append(f'{__pydir__.parent.parent.parent}/damei')
     import damei
 
 logger = damei.getLogger('hai')
@@ -22,10 +24,15 @@ logger.info(f'HAI version: {__version__}')
 
 if __backend__ == 'local':
     from .basic.base import AbstractModule, AbstractInput, AbstractOutput, AbstractQue
-    from .basic.registry import MODULES, SCRIPTS, IOS, init_register
+    from .basic.registry import MODULES, SCRIPTS, IOS, InitRegister
     from .basic.utils import Config
+    from .basic.grpc import grpc_secure_server
     from ..uaii.uaii_main import UAII
-    from ..tests.test import test_module, test_script, test_io
+    from ..uaii.cli.cli_main import CommandLineInterface
+    from ..testor import Testor
+    from ..uaii.datasets.datasets_hub import DatasetsHub
+    from .basic import argparse
+    from ..uaii.utils import general
 
 elif __backend__ == 'damei':
     from damei.nn.api.base import AbstractModule, AbstractInput, AbstractOutput, AbstractQue
@@ -36,5 +43,10 @@ elif __backend__ == 'damei':
 else:
     raise NotImplementedError(f'{__backend__} backend is not supported, only local and damei, please check')
 
-root_path = f'{Path(__pydir__).parent.parent}'
+hai_config = Config(f'{__pydir__.parent}/configs/Base/hai_config.py')
+# from ..configs.Base.hai_config import root_path, weights_root
+# root_path = f'{Path(__pydir__).parent.parent}'
+# weights_root = f'{os.environ["HOME"]}/.hai/weights'
+init_register = InitRegister(internal_dir=hai_config.root_path)
 uaii = UAII()
+cli = CommandLineInterface(uaii=uaii, config=hai_config)

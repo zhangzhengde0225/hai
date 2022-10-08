@@ -3,16 +3,26 @@ import hai
 
 models = hai.hub.list()
 print(models)
+exit()
 
-docs = hai.hub.docs('UNet')
+# model_name = 'UNet'
+model_name = 'Particle_Transformer'
+model_name = 'ParticleNet'
+model_name = 'Particle_Flow_Network'
+model_name = 'PCNN'
+
+docs = hai.hub.docs(model_name)
 print('docs:', docs)
-model = hai.hub.load('UNet')
+model = hai.hub.load(model_name)
 
 print(f'model: {model} {type(model)}')
 # config = model.config()
 config = model.config  # Default config of model, a hai.Config object
-config.source = '/home/zzd/datasets/hai_datasets/carvana'
+# config.source = '/home/zzd/datasets/hai_datasets/carvana'
+config.source = 'TopLandscape'
+config.source = 'JetClass'
 print(config.info())
+
 
 model.train()
 

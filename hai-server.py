@@ -12,8 +12,8 @@ pydir = Path(os.path.abspath(__file__)).parent
 sys.path.append(f'{pydir.parent}')
 import hai
 
-from xsensing_ai.uaii.server.grpc import grpc_xai_server_secure
-import xsensing_ai
+
+from hai import grpc_secure_server
 import argparse
 import damei as dm
 
@@ -42,14 +42,14 @@ def get_is_running(port):
 
 def run(opt):
     # grpc_xai_server.run(ip=ip, port=port)
-    logger.info(f'xai version: {xsensing_ai.__version__}')
-    logger.info(f'xai-server params: {opt}')
+    # logger.info(f'xai version: {hai.__version__}')
+    logger.info(f'Xai-server params: {opt}')
     assert opt.mode in ['start', 'stop', 'restart'], 'mode must be start, stop or restart'
     if opt.mode == 'start':
         if opt.insecure:
-            grpc_xai_server_secure.run_insecure(port=opt.port)
+            grpc_secure_server.run_insecure(port=opt.port, debug=opt.debug)
         else:
-            grpc_xai_server_secure.run(port=opt.port)
+            grpc_secure_server.run(port=opt.port, debug=opt.debug)
     elif opt.mode == 'stop':
         is_running = get_is_running(str(opt.port))
         # print(is_running)
@@ -63,16 +63,17 @@ def run(opt):
         if is_running:
             dm.popen(f'kill -9 {is_running}')
         if opt.insecure:
-            grpc_xai_server_secure.run_insecure(port=opt.port)
+            grpc_secure_server.run_insecure(port=opt.port)
         else:
-            grpc_xai_server_secure.run(port=opt.port)
+            grpc_secure_server.run(port=opt.port)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', type=str, default='start', help='start|stop|restart mode')
+    parser.add_argument('--mode', type=str, default='start', help='start|stop|restart mode')
     parser.add_argument('--insecure', action='store_true', help='use secure grpc or insecure grpc')
     parser.add_argument('-p', '--port', type=int, default=9999, help='port to listen on')
+    parser.add_argument('--debug', '-d', default=True, action='store_true', help='debug mode')
 
     opt = parser.parse_args()
 

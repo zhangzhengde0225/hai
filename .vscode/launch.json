@@ -5,10 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: test demo",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/zzd/VSProjects/hai/test_module.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: xai-server",
             "type": "python",
             "request": "launch",
             "program": "/home/zzd/VSProjects/hai/hai-server.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                // "start"
+            ]
+        },
+        {
+            "name": "Python: inherit demo",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/zzd/VSProjects/hai/demo_inherit.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },

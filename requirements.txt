@@ -6,3 +6,7 @@ easydict
 torch>=1.7.1
 pillow
 tqdm
+
+damei
+
+wandb  # for UNet

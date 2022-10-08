@@ -1,0 +1,1 @@
+Here is the API that integrating this project to the HAI (https://github.com/zhangzhengde0225/HAI) Framework.

@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option cc_generic_services = true;
+option java_multiple_files = true;
+option java_package = "com.wxrh.cloud.grpc.sayHello";
+option java_outer_classname = "HelloWorldProto";
+
+//定义服务接口
+service GrpcService {
+    rpc hello (HelloRequest) returns (HelloResponse) {}  //一个服务中可以定义多个接口，也就是多个函数功能
+    rpc call (CallRequest) returns (CallResponse) {} //  调用xai的接口
+}
+
+//请求的参数
+message HelloRequest {
+    string data = 1;   //数字1,2是参数的位置顺序，并不是对参数赋值
+    Skill skill = 2;  //支持自定义的数据格式，非常灵活
+};
+
+//返回的对象
+message HelloResponse {
+    string result = 1;
+    map<string, int32> map_result = 2; //支持map数据格式，类似dict
+};
+
+message Skill {
+    string name = 1;
+};
+
+message CallRequest {
+    string func = 1;  //函数名
+//    map<string, string> params = 2; //参数
+//    Params params = 3;  //参数
+    bytes params = 2;  //参数，传json格式
+};
+
+message CallResponse {
+//    string result = 1;  // 返回值
+    int32 status = 1;  // 返回状态
+    bytes data = 2;  // 返回数据
+};
+
+message Params {
+//    string key = 1;
+//    int32 value = 2;
+    map<string, string> key = 1;
+    map<string, int32> value = 2;
+};

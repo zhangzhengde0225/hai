@@ -3,17 +3,65 @@
 """
 import collections
 import os, sys
+from select import select
 import numpy as np
+import copy
 import damei as dm
 import cv2
 import json
+from hai.configs.Base.hai_config import WEIGHTS_ROOT, DATASETS_ROOT
+from ..datasets.datasets_hub import DatasetsHub
 
 logger = dm.getLogger('base_uaii')
 from . import general
 
+class ModelUAII(object):
+    """关于单个模型的UAII接口，作为基类，被BaseUAII继承，提供单算法作为模型加载、训练、推理的接口"""
+    def __init__(self, **kwargs) -> None:
+        self._model = None  # 当前的模型
+        self._model_name = None
 
-class BaseUAII(object):
+    @property
+    def model(self):
+        return self._model
+    
+    @property
+    def model_name(self):
+        return self._model_name
+
+    def load_model(self, model_name, *args, **kwargs):
+        """加载模型"""
+        model = self.get_module(name=model_name)
+        model = model()  # 就是实例化一个特定的算法模型
+        model.set_config(*args, **kwargs)
+
+        self._model = model
+        self._model_name = model.name
+        return self.model
+
+    def forward(self, x, *args, **kwargs):
+        """前向传播"""
+        return self.model.__call__(x, *args, **kwargs)
+
+    def model_config(self, model_name, is_req=False):
+        """获取模型的配置文件"""
+        assert self.model_name == model_name, f'当前模型为{self.model_name}, 请先加载{model_name}模型'
+        cfg = self.model.config
+        # print(f'xxx: {type(cfg)}')
+        if is_req:
+            cfg = cfg.to_json()
+        # print(f'xxx: {type(cfg)}')
+        return cfg
+    
+    def set_config(self, model_name, cfg, *args, **kwargs):
+        """设置模型的配置文件"""
+        assert self.model_name == model_name, f'当前模型为{self.model_name}, 请先加载{model_name}模型'
+        self.model.set_config(cfg, *args, **kwargs)
+
+
+class BaseUAII(ModelUAII):
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._modules = None
         self._scripts = None
         self._ios = None
@@ -65,7 +113,7 @@ class BaseUAII(object):
             # print('Register name2cls...')
             self._name2cls = self.register_name2cls()
         return self._name2cls
-
+    
     @property
     def modules(self):
         return self._modules
@@ -81,6 +129,10 @@ class BaseUAII(object):
     @property
     def ios(self):
         return self._ios
+
+    @property
+    def module_names(self):
+        return list(self.modules.module_dict.keys())
 
     def get_module(self, name, cls=None, *args, **kwargs):
         """根据模块名和类别获取模块，是未初始化的"""
@@ -322,6 +374,47 @@ class BaseUAII(object):
             return ps0
         else:
             raise NotImplementedError(f'{ret_fmt} not implemented.')
+    
+    def list_weights(self, model_name=None, *args, **kwargs):
+        """获取模型的权重文件列表"""
+        # WEIGHTS_ROOT = hai.cfg.WEIGHTS_ROOT
+        search_root = copy.copy(WEIGHTS_ROOT)
+        if model_name is not None:
+            model_name = model_name.lower()
+            search_root = os.path.join(search_root, model_name)
+
+        weights_list = []
+        for root, dirs, files in os.walk(search_root):
+            for file in files:
+                if file.startswith('.'):  # 隐藏文件不要
+                    continue
+                w_path = os.path.join(root, file)
+                w_path = os.path.relpath(w_path, WEIGHTS_ROOT)  # 相对路径
+                w_path = f'hai/{w_path}'
+                weights_list.append(w_path)
+            # print(root, dirs, files)
+        weights_list = sorted(weights_list)
+        return weights_list
+
+    def list_datasets(self, *args, **kwargs):
+        """获取数据集列表"""
+        sub_mode = kwargs.get('sub_mode', None)
+        if sub_mode is None:  # list dataset in hai.DATASETS_ROOT
+            datasets =  os.listdir(DATASETS_ROOT)
+            datasets = sorted(datasets)
+            info = f'Total {len(datasets)} datasets: {datasets}'
+        else:  #  sub_mode ==  list, info:
+            datasets_hub = DatasetsHub()
+            info = datasets_hub.list(**kwargs)
+        
+        return info
+
+    def download_dataset(self, *args, **kwargs):
+        """下载数据集"""
+        datasets_hub = DatasetsHub()
+        f_path, success = datasets_hub.download(**kwargs)
+        return f_path, success
+
 
     def show_vis(self, ret, im0, target_names):
 

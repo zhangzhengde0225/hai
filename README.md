@@ -33,3 +33,17 @@
     Antihydrogen, htautau, hepjets, HEPMASS, Higgs&SUSY, Jet Flavor, neutrino, 2020_electron, muon_2020, 2021_muon, 2020_SARM 
 
 
+# TODO
+Visualize the dataset
+    .parquet file
+
+
+# Getting Started
+```
+pip install hepai
+
+hai --version
+```
+
+
+
