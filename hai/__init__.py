@@ -10,7 +10,7 @@ from .apis import grpc_secure_server
 from .apis import Testor
 from .apis import argparse
 from .apis import general
-from .apis import __version__, __author__, __appname__, __email__, __affiliation__
+from .apis import __version__, __author__, __appname__, __email__, __affiliation__, __version_suffix__
 # from xsensing_ai.modules import *  # 加载项目的模块
 # from xsensing_ai.uaii.server.grpc.grpc_xai_client import XAIGrpcClient
 

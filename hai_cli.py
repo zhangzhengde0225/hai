@@ -1,5 +1,6 @@
-#!/home/zzd/anaconda3/envs/mm/bin/python
+#!/home/zzd/anaconda3/bin/python
 # -*- coding: utf-8 -*-
+# /home/zzd/anaconda3/envs/mm/bin/python
 
 # import hai
 # from hai import cli

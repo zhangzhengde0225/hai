@@ -4,16 +4,19 @@ https://github.com/keras-team/keras/blob/master/keras/utils/data_utils.py
 '''
 
 import hashlib
+import imp
 import os
 import shutil
 import zipfile
 import tarfile
 import urllib
-import requests
+from sympy import im
+# import requests
 from tqdm import tqdm
 
 
 def _download(url, fname, chunk_size=1024):
+    import requests
     '''https://gist.github.com/yanqd0/c13ed29e29432e3cf3e7c38467f42f51'''
     resp = requests.get(url, stream=True)
     total = int(resp.headers.get('content-length', 0))
@@ -197,6 +200,7 @@ def get_file(origin=None,
         print(f'Downloading data from {origin} to {fpath}')
 
         error_msg = 'URL fetch failure on {}: {}'
+        import requests
         try:
             try:
                 _download(origin, fpath)

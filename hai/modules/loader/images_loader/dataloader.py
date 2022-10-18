@@ -5,7 +5,6 @@ import numpy as np
 import damei as dm
 from copy import deepcopy
 
-import torch.backends.cudnn as cudnn
 from .datasets import LoadStreams, LoadImages
 
 
@@ -29,6 +28,7 @@ class Dataloader(object):
         video_suffix = self.video_suffix
         webcam = source.isnumeric() or source.startswith(('rtsp://', 'rtmp://', 'http://')) or source.endswith('.txt')
         if webcam:
+            import torch.backends.cudnn as cudnn
             cudnn.benchmark = True  # set True to speed up constant image size inference
             dataset = LoadStreams(source, img_size=imgsz, flip=False)
             dataset.is_camera = True

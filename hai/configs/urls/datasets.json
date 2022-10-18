@@ -1,8 +1,6 @@
 
 
 {
-"datasets":
-    {
     "SFID":
         {
         "name":"SFID.zip",
@@ -46,14 +44,5 @@
         "md5": "d8dd7f71a7aaaf9f1d2ee3cddef998f9",
         "permission": "public"
         }
-    },
-"weights":
-    {
-
-    },
-"logs":
-    {
-    "FINet_logs": 1
-    }
 }
     

@@ -6,17 +6,18 @@
 # coding=utf8
 import os, sys
 from pathlib import Path
-import grpc
-from grpc import ssl_server_credentials
+# import grpc
+# from grpc import ssl_server_credentials
 import time
 import numpy as np
 import damei as dm
-from concurrent import futures
+# from concurrent import futures
 import json
+
 import hai
 
-
 pydir = Path(os.path.abspath(__file__)).parent
+
 from . import grpc_pb2_grpc, grpc_pb2
 
 logger = dm.getLogger('xai_server')
@@ -199,6 +200,8 @@ def run_insecure(port=50052):
     模拟服务启动
     :return:
     '''
+    import grpc
+    from concurrent import futures
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[
         ('grpc.max_send_message_length', 100 * 1024 * 1024),
         ('grpc.max_receive_message_length', 100 * 1024 * 1024),
@@ -217,6 +220,8 @@ def run_insecure(port=50052):
 
 def run(port=50052, debug=False):
     """开启安全的服务端"""
+    import grpc
+    from concurrent import futures
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[
         ('grpc.max_send_message_length', 100 * 1024 * 1024),
         ('grpc.max_receive_message_length', 100 * 1024 * 1024),

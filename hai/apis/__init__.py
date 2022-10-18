@@ -4,7 +4,7 @@ damei nn api for ai algorithm management (unified ai interface)
 
 import argparse
 from ..version import __backend__, __version__, __author__, __appname__, __email__
-from ..version import __affiliation__
+from ..version import __affiliation__, __version_suffix__
 import os, sys
 from pathlib import Path
 

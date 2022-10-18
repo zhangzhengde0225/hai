@@ -6,7 +6,6 @@ import hai
 import argparse
 import os
 import numpy as np
-import torch
 import damei as dm
 # from damei.nn.api.utils import Config
 from ..utils.config_loader import PyConfigLoader as Config
@@ -148,6 +147,7 @@ class AbstractModule(object):
     @property
     def device(self):
         if self._device is None:
+            import torch
             device = self.cfg.device
             if device == 'cpu':
                 pass

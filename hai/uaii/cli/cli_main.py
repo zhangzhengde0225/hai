@@ -9,17 +9,18 @@ import damei as dm
 import hai
 from ..utils.config_loader import PyConfigLoader as Config
 from ...testor import Testor
+from .cli_functions import CLIFunctions
 
 logger = dm.getLogger('hai_cli')
 
 
-class CommandLineInterface(object):
+class CommandLineInterface(CLIFunctions):
     def __init__(self, uaii=None, config=None):
-        self.uaii = uaii
+        self.uaii = uaii if uaii is not None else hai.UAII()
         self.config = config  # this is the hai config
         self.default_model = None  # if run hai command in a folder containing a model, then set the model as default model
+        self.opt = None
         self.testor = Testor()
-
     
     def _init_opt(self, opt):
         # is cwd not in sys.path, then add it
@@ -30,16 +31,18 @@ class CommandLineInterface(object):
         is_in_one_module = hai.config.API_FOLD_NAME in [x for x in os.listdir('.') if os.path.isdir(x)]
         if is_in_one_module:
             self.default_model = os.path.basename(os.getcwd())
+        self.opt = opt
         return opt
 
-    def __call__(self, opt):
+    def __call__(self, opt, **kwargs):
         # print('opt: ', opt)
         opt = self._init_opt(opt)
         mode = opt.mode
         if mode == 'init':
-            self._init_a_module(opt)
+            self._init_a_module(opt)  
         elif mode == 'list':
-            self._list_all_modules()
+            # self._list_all_modules()
+            self._deal_with_list(opt, **kwargs)
         elif mode == 'model':
             self._deal_model_mode(opt)
         elif mode == 'models':
@@ -79,7 +82,7 @@ class CommandLineInterface(object):
 
     def _deal_train_mode(self, opt):
         model_name = opt.sub_mode if opt.sub_mode else self.default_model
-        print(os.getcwd())
+        # print(os.getcwd())
         model = self.uaii.load_model(model_name)
         model.train()
 
@@ -148,9 +151,6 @@ class CommandLineInterface(object):
         print(info)
         
         
-    def _list_all_modules(self, **kwargs):
-        print(self.uaii.ps(**kwargs))
-
     def _init_a_module(self, opt):
         cfg = self.config
         api_fold_name = cfg.API_FOLD_NAME  # i.e. 'hai_api
@@ -176,11 +176,14 @@ class CommandLineInterface(object):
 
     def _show_version(self):
         data = dict()
-        data[f'{hai.__appname__.upper()} version'] = hai.__version__
+        ver = hai.__version__ + '-' + hai.__version_suffix__
+        data[f'{hai.__appname__.upper()} Version'] = ver
         # data['Author'] = hai.__author__
-        data['Email'] = hai.__email__
+
+        data['Contact'] = f'For any suggestions or demands, please email: {hai.__email__}'
         # print(f'HAI Version: {hai.__version__}, Author: {hai.__author__} @ {hai.__affiliation__}, Email: {hai.__email__}')
         info = dm.misc.dict2info(data)
+        info = info[:-1] if info.endswith('\n') else info  # remove last \n
         print(info)
 
     def run(self):
@@ -189,8 +192,8 @@ class CommandLineInterface(object):
 
 def run():
     args = argparse.ArgumentParser()
-    args.add_argument('mode', type=str, nargs='?', default=None, help='Run mode')
-    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Sub mode, such as list')
+    args.add_argument('mode', type=str, nargs='?', default=None, help='Operation')
+    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Target')
     args.add_argument('sub_sub_mode', type=str, nargs='?', default=None, help='Sub sub mode')
     args.add_argument('-V', '--version', action='store_true', help='show version')
     args.add_argument('-f', '--force', action='store_true', help='force to run (if the api exists, clear it and init again)')
