@@ -1,12 +1,18 @@
 
+damei
+easydict  # for config_loader.py
+
+
 numpy
 opencv-python
-easydict
+
 
 torch>=1.7.1
 pillow
 tqdm
 
-damei
+
 
 wandb  # for UNet
+
+

@@ -97,6 +97,11 @@ class AbstractModule(object):
 
     @property
     def train_cfg(self):
+        if self._train_cfg is None:
+            raise AttributeError(f'{self.name}: train_cfg is None, please set self._train_cfg in __init__()')
+        elif not isinstance(self._train_cfg, hai.Config):
+            self._train_cfg = hai.Config.from_anything(self._train_cfg)
+            # raise TypeError(f'{self.name}: train_cfg must be a Config object, but got {type(self._train_cfg)}')
         return self._train_cfg
     
     @property
@@ -177,7 +182,7 @@ class AbstractModule(object):
     def set_config(self, cfg=None, *args, **kwargs):
         """设置配置"""
         # old_cfg = self.cfg
-        self.config.merge(cfg2=cfg)
+        self.config.merge(cfg2=cfg, **kwargs)
         
         for key, value in kwargs.items():
             if key == 'weights' and value.startswith('hai/'):  # 替换成hai路径，TODO：支持下载模型权重并替换

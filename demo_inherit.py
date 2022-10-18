@@ -4,7 +4,7 @@ import hai
 import hai.nn as nn
 print(dir(nn))
 # nn.UNet()
-exit()  # TODO
+# exit()  # TODO
 
 class MyModel(nn.Module):
     def __init__(self):

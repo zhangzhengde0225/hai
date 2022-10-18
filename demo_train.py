@@ -3,7 +3,7 @@ import hai
 
 models = hai.hub.list()
 print(models)
-exit()
+# exit()
 
 # model_name = 'UNet'
 model_name = 'Particle_Transformer'
@@ -17,6 +17,7 @@ model = hai.hub.load(model_name)
 
 print(f'model: {model} {type(model)}')
 # config = model.config()
+
 config = model.config  # Default config of model, a hai.Config object
 # config.source = '/home/zzd/datasets/hai_datasets/carvana'
 config.source = 'TopLandscape'

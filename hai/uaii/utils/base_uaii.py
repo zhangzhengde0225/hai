@@ -140,6 +140,11 @@ class BaseUAII(ModelUAII):
         ps = self.ps(**kwargs)
         # 输入的名字也可以是ID
         exist_names = [x.split()[2] for x in ps.split('\n')[1::]]
+        is_exist = [idx for idx, x in enumerate(exist_names) if x.lower() == name.lower()]
+        if is_exist:
+            assert len(is_exist) == 1, f'存在多个同名的模块: {name}'
+            name = exist_names[is_exist[0]]
+
         if name not in exist_names:
             exist_ids = [x.split()[0] for x in ps.split('\n')[1::]]
             assert len(exist_ids) == len(exist_names)

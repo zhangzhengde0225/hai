@@ -27,7 +27,7 @@ internal_modules = [
 ]
 external_folders = [
     # '~/VSProjects/particle_transformer',
-    '~/VSProjects/FINet',
+    # '~/VSProjects/FINet',
     'repos']
 
 if config.API_FOLD_NAME in os.listdir('.'):

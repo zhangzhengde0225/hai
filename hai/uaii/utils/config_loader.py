@@ -115,6 +115,20 @@ class PyConfigLoader(collections.UserDict):
         return self.__dict__
 
     @staticmethod
+    def from_anything(*args, **kwargs):
+        """
+        从字典、.py文件等获取的配置对象
+        """
+        if len(args) == 1:
+            if isinstance(args[0], dict):
+                return PyConfigLoader(cfg_dict=args[0], **kwargs)
+            elif isinstance(args[0], str):
+                return PyConfigLoader(cfg_file=args[0], **kwargs)
+            else:
+                raise NotImplementedError('Only support dict and str')
+        return PyConfigLoader(**kwargs)
+
+    @staticmethod
     def from_file(cfg_file, name=None, root_path=None):
         return PyConfigLoader(cfg_file, name, root_path)
 
@@ -318,10 +332,11 @@ class PyConfigLoader(collections.UserDict):
         assert isinstance(opt, argparse.Namespace), 'opt must be argparse.Namespace'
         raise NotImplementedError(f'未实现')
 
-    def merge(self, cfg2):
+    def merge(self, cfg2, **kwargs):
         """合并另一个配置文件到内部，是inplace的"""
         if cfg2 is None:
             return self
+
         if isinstance(cfg2, dict):
             cfg2 = PyConfigLoader.from_dict(cfg2)
 

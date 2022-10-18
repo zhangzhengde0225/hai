@@ -177,7 +177,7 @@ class CommandLineInterface(object):
     def _show_version(self):
         data = dict()
         data[f'{hai.__appname__.upper()} version'] = hai.__version__
-        data['Author'] = hai.__author__
+        # data['Author'] = hai.__author__
         data['Email'] = hai.__email__
         # print(f'HAI Version: {hai.__version__}, Author: {hai.__author__} @ {hai.__affiliation__}, Email: {hai.__email__}')
         info = dm.misc.dict2info(data)

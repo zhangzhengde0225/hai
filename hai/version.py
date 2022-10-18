@@ -1,5 +1,5 @@
 __appname__ = 'hai'
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 __author__ = 'ZhengDe Zhang'
 __email__ = 'zdzhang@ihep.ac.cn'
 __backend__ = 'local'

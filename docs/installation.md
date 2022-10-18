@@ -11,3 +11,10 @@ HEPAI is also available on conda-forge and can be installed using conda:
 conda install -c conda-forge hepai
 ```
 
+or from source:
+```bash
+git clone https://github.com/zhangzhengde0225/hai.git
+cd hai
+python setup.py install
+```
+
