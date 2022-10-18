@@ -14,7 +14,6 @@ hai --version  # Check version
 如果未安装HAI算法框架，可以`pip install hepai`安装或参考[安装教程](installation.md)。
 
 
-hai train particle_transformer
 ### Python接口
 
 ```python
@@ -48,6 +47,7 @@ print(config.info())
 
 
 model.train()  # 启动训练
+```
 
 
 ### 命令行接口(Command Line Interface, CLI)
@@ -56,12 +56,39 @@ model.train()  # 启动训练
 hai list  # 列出所有算法、脚本和IO模块
 hai MODLE_NAME config  # 查看模型默认配置项
 hai load_config CONFIG_PATH  # 加载配置
-hai train MODEL_NAME  # 训练模型
+hai train MODEL_NAME  # 训练模型, 例如：hai train particle_transformer
 hai eval MODEL_NAME  # 评估模型(TODO)
 hai infer MODEL_NAME  # 推理模型(TODO)
 hai deploy MODEL_NAME  # 部署模型(TODO)，导出onnx/ncnn/tensorrt模型
 ```
 
+### 远程调用接口 (Need Test)
+
+AI算法通常需要大量的算力资源，HAI算法框架基于gRPC提供了远程调用接口，可以通过gRPC客户端调用HAI的训练、评估、推理等功能。
+
+1. 服务端
+
+    在GPU服务器或容器内启动HAI算法框架的服务端：
+    ```bash
+    hai-server start -p 9999  # 以端口号9999启动
+    ```
+2. 客户端
+
+    在本地电脑：
+    安装客户端：
+    ```bash
+    pip install hai-client  # 安装客户端
+    ```
+
+    调用服务端的训练接口：
+    ```python
+    import hai-client
+    hai = hai-client.HAIClient(ip='YOUR_SERVER_IP', port=9999)  # 连接服务端
+    # 连接后，调用方法与直接调用HAI一致。
+    ```
+    
+
+可以参考[远程调用教程](remote.md)。
 
 
 ## Contact
