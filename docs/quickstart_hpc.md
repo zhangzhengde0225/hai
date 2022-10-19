@@ -16,7 +16,7 @@ ssh <account>@lxslc7.ihep.ac.cn
 
     HAI算法框架已通过cvmfs发布，添加环境变量后hai软件及其所需python, pytorch等依赖已集成，可以直接使用。
     ```bash
-    source /cvmfs/hai.ihep.ac.cn/envs/hai_env/bin/activate  # 添加HAI环境变量
+    source /cvmfs/hai.ihep.ac.cn/hai_env.sh  # 添加HAI环境变量
     pip install hepai  # 安装HAI
     ```
 + 或 快速拷贝环境变量
@@ -85,6 +85,7 @@ model.train()  # 训练模型
     [-n --name <model name>]  # 模型名：可选： Particle_Transformer(默认), ParticleNet, PCNN, Particle_Flow_Network
     [-s --source <input dataset>]  # 输入源，即数据集名称，可选：JetClass-mini(默认), JetClass, QuakGluon, TopLandscape
     [-f --feature_type <feature_type>]  # 输入模型所使用的特征类型，可选：full(默认), kin, kinpid
+    [-d --device <device>]  # 使用的设备：cpu，0表示单块GPU，0,1,2,3表示多块GPU
 ```
 + network note:
     + JetClass-mini是JetClass的一个子集，约为原数据集的1%。
