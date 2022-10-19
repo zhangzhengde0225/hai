@@ -1,0 +1,34 @@
+
+
+{
+    "ParT":
+        {
+            "name": "Particle_Transformer",
+            "category": "Particle_Physics",
+            "url": "https://code.ihep.ac.cn/zdzhang/particle_transformer.git"
+        },
+    "ParticleNet":
+        {
+            "name": "ParticleNet",
+            "category": "Particle_Physics",
+            "url": "https://code.ihep.ac.cn/zdzhang/particle_transformer.git"
+        },
+    "PCNN":
+        {
+            "name": "PCNN",
+            "category": "Particle_Physics",
+            "url": "https://code.ihep.ac.cn/zdzhang/particle_transformer.git"
+        },
+    "PFN":
+        {
+            "name": "Particle_Flow_Network",
+            "category": "Particle_Physics",
+            "url": "https://code.ihep.ac.cn/zdzhang/particle_transformer.git"
+        },
+    "FINet":
+        {
+            "name": "FINet",
+            "category": "Computer_Vision",
+            "url": "https://github.com/zhangzhengde0225/FINet.git"
+        }
+}

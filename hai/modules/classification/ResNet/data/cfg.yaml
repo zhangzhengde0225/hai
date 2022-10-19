@@ -1,0 +1,9 @@
+# hyperparamets
+lr0: 0.1  # initial learning rate (SGD=1E-2, Adam=1E-3)
+momentum: 0.937  # SGD momentum/Adam beta1
+weight_decay: 0.0005  # 5e-4 optimizer weight decay
+
+# statuses: ['walking', 'standing', 'sitting', 'jumping', 'lying', 'fallen', 'squating', 'fighting']
+statuses: ['walking', 'standing', 'sitting', 'jumping', 'lying', 'squating', 'fighting']
+feature_size: [640, 192]  # w, h for build resnet
+random_flip: False

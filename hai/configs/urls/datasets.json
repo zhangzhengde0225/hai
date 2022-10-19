@@ -1,0 +1,48 @@
+
+
+{
+    "SFID":
+        {
+        "name":"SFID.zip",
+        "version":"1.0",
+        "size": "5.6 GB",
+        "description":"The SFID is Synthetic Foggy Insulator Dataset for insulator and defects detection, with about 13000 images.",
+        "source": "https://github.com/zhangzhengde0225/FINet",
+        "url":"https://ihepbox.ihep.ac.cn/ihepbox/index.php/s/adTHe1UPu0Vc7vI/download",
+        "md5": null,
+        "permission": "public"
+        },
+    "SFID:1.2":
+        {
+        "name":"SFID.zip",
+        "version":"1.2",
+        "size": "5.6 GB",
+        "description":"The is a alias of SFID for hai testing.",
+        "source": "",
+        "url":"https://ihepbox.ihep.ac.cn/ihepbox/index.php/s/adTHe1UPu0Vc7vI/download",
+        "permission": "public"
+        },
+    "TopLandscape":
+        {
+        "name":"TopLandscape.tar",
+        "version":"1.0",
+        "size": "4.6 GB",
+        "description":"The TopLandscape is a dataset for jet tagging.",
+        "source": "https://zenodo.org/record/2603256",
+        "url": "https://hqu.web.cern.ch/datasets/TopLandscape/TopLandscape.tar",
+        "md5": "4fca2e47afbf321b0f201da6b804c404",
+        "permission": "public"
+        },
+    "QuakGluon":
+        {
+        "name":"QuakGluon.tar",
+        "version":"1.0",
+        "size": "4.4 GB",
+        "description":"The QuakGluon is a dataset for jet tagging.",
+        "source": "https://zenodo.org/record/3164691",
+        "url": "https://hqu.web.cern.ch/datasets/QuakGluon/QuakGluon.tar",
+        "md5": "d8dd7f71a7aaaf9f1d2ee3cddef998f9",
+        "permission": "public"
+        }
+}
+    
