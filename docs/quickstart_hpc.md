@@ -17,15 +17,13 @@ ssh <account>@lxslc7.ihep.ac.cn
     HAI算法框架已通过cvmfs发布，添加环境变量后hai软件及其所需python, pytorch等依赖已集成，可以直接使用。
     ```bash
     source /cvmfs/hai.ihep.ac.cn/hai_env.sh  # 添加HAI环境变量
-    pip install hepai  # 安装HAI
     ```
 + 或 快速拷贝环境变量
     ```bash
     cp -r /cvmfs/hai.ihep.ac.cn/envs/hai_env .  # 拷贝
     source hai_env/bin/activate  # 添加环境变量
-    pipp install hepai
     ```
-+ 或 自行安装hai和配置环境变量
++ 或 自行安装hai和配置环境变量，运行`pip install hepai`并
     参考[安装文档](docs/install.md)安装依赖项。
 
 ## 1.3 创建工作目录
@@ -62,31 +60,17 @@ hai download datasets <dataset_name>  # 下载数据集到本地, 例如：hai d
 
 # 2. 开始
 
-## 2.1 训练模型
+## 2.1 训练模型(本机)
 ```bash
-python train.py  # 训练模型
-```
-train.py内通过HAI调用不同模型的统一接口如下：
-    
-```python
-import hai
-
-model_name = 'particle_transformer'
-model = hai.hub.load(model_name)  # 加载算法对象，其他模型同理
-config = model.config  # 获取模型配置
-config.source = "xxx"  # 修改参数source，指定数据集，其他参数同理
-config.weights = "xxx"  # 指定预训练模型
-print(config)  # 打印所有配置(包括默认配置)
-model.train()  # 训练模型
-```
-
-可通过`python train.py --h`查看更多参数，可选参数：
-```bash
+python train.py -d cpu  # 训练模型
+    # [可选参数]
     [-n --name <model name>]  # 模型名：可选： Particle_Transformer(默认), ParticleNet, PCNN, Particle_Flow_Network
     [-s --source <input dataset>]  # 输入源，即数据集名称，可选：JetClass-mini(默认), JetClass, QuakGluon, TopLandscape
     [-f --feature_type <feature_type>]  # 输入模型所使用的特征类型，可选：full(默认), kin, kinpid
     [-d --device <device>]  # 使用的设备：cpu，0表示单块GPU，0,1,2,3表示多块GPU
 ```
+可通过`python train.py --h`查看更多参数，可选参数：
+
 + network note:
     + JetClass-mini是JetClass的一个子集，约为原数据集的1%。
     + JetClass是用于Jet taggin的分类数据集，300GB+，10个类别。
@@ -98,6 +82,36 @@ model.train()  # 训练模型
     + kinpid: kinematic inputs + particle identification
     + <b>full (default)</b>: kinematic inputs + particle identification + trajectory displacement
 
+
+### 训练说明
++ 本节仅为说明如何启动训练，若使用集群，请勿在登录节上直接运行，而应使用提交脚本的方式(2.2节)。
+
++ train.py内通过HAI调用不同模型的统一接口如下：
+        
+    ```python
+    import hai
+
+    model_name = 'particle_transformer'
+    model = hai.hub.load(model_name)  # 加载算法对象，其他模型同理
+    config = model.config  # 获取模型配置
+    config.source = "xxx"  # 修改参数source，指定数据集，其他参数同理
+    config.weights = "xxx"  # 指定预训练模型
+    print(config)  # 打印所有配置(包括默认配置)
+    model.train()  # 训练模型
+    ```
+
+## 2.2 训练模型(提交任务)
+
+在脚本执行代码部分，添加如下代码：
+```bash
+source /cvmfs/hai.ihep.ac.cn/hai_env.sh
+python train.py 
+```
+如需指定运行参数请自行添加。
+提交：
+```bash
+sbatch submit_job.sh
+```
 
 训练中，可以通过控制台输出的网址查看训练过程。
 
@@ -120,11 +134,11 @@ HAI算法框架搜集和集成优秀算法，是介于最顶层应用和Pytorch,
 
 
 ## TODO:
-+ 从codo.ihpe.ac.cn下载算法，需要账号，同步开源到github
++ 从codo.ihpe.ac.cn下载算法，需要账号，同步开源到github实现免密, Done
 + 评估、推理、部署
 + 提交任务到集群
-+ hai list datasets
-+ hai list remote datasets
++ hai list datasets, Done
++ hai list remote datasets, Done
 + hai download datasets QuarkGluon
 
 
