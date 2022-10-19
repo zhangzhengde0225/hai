@@ -14,6 +14,19 @@ from .cli_functions import CLIFunctions
 logger = dm.getLogger('hai_cli')
 
 
+def run():
+    args = argparse.ArgumentParser()
+    args.add_argument('mode', type=str, nargs='?', default=None, help='Operation, like: list, download, train, eval, deploy, etc.')
+    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Target, like: model_name, dataset_name, etc.')
+    args.add_argument('sub_sub_mode', type=str, nargs='?', default=None, help='Additional parameter.')
+    args.add_argument('-V', '--version', action='store_true', help='show version')
+    args.add_argument('-f', '--force', action='store_true', help='force to run (if the api exists, clear it and init again)')
+    opt = args.parse_args()
+
+    cli = CommandLineInterface()
+    cli(opt) 
+
+
 class CommandLineInterface(CLIFunctions):
     def __init__(self, uaii=None, config=None):
         self.uaii = uaii if uaii is not None else hai.UAII()
@@ -181,7 +194,7 @@ class CommandLineInterface(CLIFunctions):
         ver = hai.__version__ + '-' + hai.__version_suffix__
         data[f'{hai.__appname__.upper()} Version'] = ver
         # data['Author'] = hai.__author__
-        data['Url'] = hai.__url__
+        data['URL'] = hai.__url__
         data['Contact'] = f'For any suggestions or demands, please email: {hai.__email__}'
         # print(f'HAI Version: {hai.__version__}, Author: {hai.__author__} @ {hai.__affiliation__}, Email: {hai.__email__}')
         info = dm.misc.dict2info(data)
@@ -192,14 +205,3 @@ class CommandLineInterface(CLIFunctions):
         pass
 
 
-def run():
-    args = argparse.ArgumentParser()
-    args.add_argument('mode', type=str, nargs='?', default=None, help='Operation')
-    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Target')
-    args.add_argument('sub_sub_mode', type=str, nargs='?', default=None, help='Sub sub mode')
-    args.add_argument('-V', '--version', action='store_true', help='show version')
-    args.add_argument('-f', '--force', action='store_true', help='force to run (if the api exists, clear it and init again)')
-    opt = args.parse_args()
-
-    cli = CommandLineInterface()
-    cli(opt) 

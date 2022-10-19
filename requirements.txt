@@ -5,14 +5,14 @@ easydict  # for config_loader.py
 numpy
 opencv-python
 
-torch>=1.7.1
+# torch>=1.7.1
 pillow
 tqdm
 
 wandb  # for UNet
 
 # grpcio  # for grpc_server.py
-# grpcio-tools  # for grpc_server.py
+grpcio-tools  # for grpc_server.py
 # protobuf  # for grpc_server.py
 # requests  # for hai dataset_utils
 
