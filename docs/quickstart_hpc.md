@@ -82,6 +82,9 @@ python train.py -d cpu  # 训练模型
     + kinpid: kinematic inputs + particle identification
     + <b>full (default)</b>: kinematic inputs + particle identification + trajectory displacement
 
+训练中，可以通过控制台输出的网址查看训练过程。
+
+训练结束后，模型和训练日志将保存着在runs文件夹内。
 
 ### 训练说明
 + 本节仅为说明如何启动训练，若使用集群，请勿在登录节上直接运行，而应使用提交脚本的方式(2.2节)。
@@ -102,20 +105,19 @@ python train.py -d cpu  # 训练模型
 
 ## 2.2 训练模型(提交任务)
 
+申请的资源信息请参考[集群使用说明](http://afsapply.ihep.ac.cn/quick/)。
+
 在脚本执行代码部分，添加如下代码：
 ```bash
 source /cvmfs/hai.ihep.ac.cn/hai_env.sh
 python train.py 
 ```
-如需指定运行参数请自行添加。
+可自行指定运行参数。
+
 提交：
 ```bash
 sbatch submit_job.sh
 ```
-
-训练中，可以通过控制台输出的网址查看训练过程。
-
-训练结束后，模型和训练日志将保存着在runs文件夹内。
 
 
 # 说明
