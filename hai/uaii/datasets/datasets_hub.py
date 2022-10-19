@@ -3,11 +3,12 @@ functions of hai datasets hub
 """
 import os, sys
 from pathlib import Path
+pydir = Path(os.path.abspath(__file__)).parent
+
 import json
 import shutil
 import damei as dm
 
-pydir = Path(os.path.abspath(__file__)).parent
 
 from .dataset_utils import get_file, extract_archive
 from ..utils import general
@@ -53,6 +54,23 @@ class DatasetsHub(object):
         else:
             raise ValueError(f'Unsupported ret_fmt: {ret_fmt}')
         return info
+
+    def list_remote_datasets(self, **kwargs):
+        return self.list(**kwargs)
+
+    def list_local_datasets(self, **kwargs):
+        ret_fmt = kwargs.get('ret_fmt', 'dict')
+        from ...apis import hai_config
+        dset_root = hai_config.DATASETS_ROOT
+        dsets = [x for x in os.listdir(dset_root) if os.path.isdir(os.path.join(dset_root, x))]
+        if ret_fmt == 'list':
+            return dsets
+        elif ret_fmt == 'dict':
+            ret_dict = {f'Total {len(dsets)} datasets': dsets}
+            return ret_dict
+        else:
+            raise ValueError(f'Unsupported ret_fmt: {ret_fmt}')
+    
 
     def download(self, *args, **kwargs):
         name = kwargs.get('name', None)

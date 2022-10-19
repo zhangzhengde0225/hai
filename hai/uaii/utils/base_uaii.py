@@ -426,7 +426,18 @@ class BaseUAII(ModelUAII):
         else:  #  sub_mode ==  list, info:
             datasets_hub = DatasetsHub()
             info = datasets_hub.list(**kwargs)
-        
+        return info
+
+    def list_remote_datasets(self, *args, **kwargs):
+        """获取远程数据集列表"""
+        datasets_hub = DatasetsHub()
+        info = datasets_hub.list_remote_datasets(**kwargs)
+        return info
+
+    def list_local_datasets(self, *args, **kwargs):
+        """获取本地数据集列表"""
+        datasets_hub = DatasetsHub()
+        info = datasets_hub.list_local_datasets(**kwargs)
         return info
 
     def download_dataset(self, *args, **kwargs):

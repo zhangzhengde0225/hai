@@ -1,4 +1,5 @@
 import damei as dm
+import hai
 
 class CLIFunctions(object):
 
@@ -6,12 +7,29 @@ class CLIFunctions(object):
         """mode = list"""
         opt = self.opt
         sub_mode = opt.sub_mode
-        if sub_mode == 'remote':
-            dict_info = self.uaii.list_remote_models()
-            info = dm.misc.dict2info(dict_info)
-            print(info)
-            return
-        print(self.uaii.ps(**kwargs))
+        ss_mode = opt.sub_sub_mode
+        # hai list
+        if sub_mode is None:
+            info = self.uaii.ps(**kwargs)
+        elif sub_mode == 'remote':  
+            # hai list remote
+            # hai list remote models
+            if ss_mode is None or ss_mode in ['model', 'models']: 
+                dict_info = self.uaii.list_remote_models()
+                info = dm.misc.dict2info(dict_info)
+            # hai list remote datasets
+            elif ss_mode == 'datasets':
+                dict_info = self.uaii.list_remote_datasets(sub_mode=sub_mode, ret_fmt='dict')
+                # info = {}
+                dict_info[f'Total {len(dict_info.keys())} datasets:'] = list(dict_info.keys())
+                info = dm.misc.dict2info(dict_info)
+        # hai list datasets
+        elif sub_mode in ['datasets', 'dataset']:  # hai list datasets
+            info = self.uaii.list_local_datasets()
+            info = dm.misc.dict2info(info)
+        else:
+            raise NotImplementedError(f'Not implemented sub_mode: "{sub_mode}", Please use "{hai.__appname__} -h" to see help.')
+        print(info)
 
     def _deal_with_download(self, *args, **kwargs):
         """

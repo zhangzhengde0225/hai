@@ -54,7 +54,6 @@ class CommandLineInterface(CLIFunctions):
         if mode == 'init':
             self._init_a_module(opt)  
         elif mode == 'list':
-            # self._list_all_modules()
             self._deal_with_list(opt, **kwargs)
         elif mode == 'download':
             self._deal_with_download(opt, **kwargs)
@@ -74,7 +73,7 @@ class CommandLineInterface(CLIFunctions):
             self._show_version()
         elif mode is None:
             self._show_version()
-            print('Please use "hai -h" to see help')
+            print(f'Please use "{hai.__appname__} -h" to see help.')
         else:
             exists_model_names = self.uaii.module_names
             if mode in exists_model_names:
@@ -129,6 +128,7 @@ class CommandLineInterface(CLIFunctions):
         ss_mode = opt.sub_sub_mode
         if sub_mode is None:  # list dataset in hai.DATASETS_ROOT
             info = self.uaii.list_datasets(sub_mode=sub_mode)
+        # hai datasets list
         elif sub_mode == 'list':
             info = self.uaii.list_datasets(sub_mode=sub_mode, ret_fmt='dict')
             info = f'Total {len(info.keys())} datasets: {list(info.keys())}'

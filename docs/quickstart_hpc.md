@@ -16,16 +16,17 @@ ssh <account>@lxslc7.ihep.ac.cn
 
     HAI算法框架已通过cvmfs发布，添加环境变量后hai软件及其所需python, pytorch等依赖已集成，可以直接使用。
     ```bash
-    # 添加HAI环境变量
-    source /cvmfs/hai.ihep.ac.cn/envs/hai_env/bin/activate
+    source /cvmfs/hai.ihep.ac.cn/envs/hai_env/bin/activate  # 添加HAI环境变量
+    pip install hepai  # 安装HAI
     ```
-+ 或者 快速拷贝环境变量
++ 或 快速拷贝环境变量
     ```bash
     cp -r /cvmfs/hai.ihep.ac.cn/envs/hai_env .  # 拷贝
     source hai_env/bin/activate  # 添加环境变量
+    pipp install hepai
     ```
-+ 或者 自行安装hai和配置环境变量
-    运行`pip install hepai`并参考[安装文档](docs/install.md)安装依赖项。
++ 或 自行安装hai和配置环境变量
+    参考[安装文档](docs/install.md)安装依赖项。
 
 ## 1.3 创建工作目录
 ```bash
@@ -82,10 +83,16 @@ model.train()  # 训练模型
 可通过`python train.py --h`查看更多参数，可选参数：
 ```bash
     [-n --name <model name>]  # 模型名：可选： Particle_Transformer(默认), ParticleNet, PCNN, Particle_Flow_Network
-    [-s --source <input dataset>]  # 输入源，即数据集名称，可选：QuakGluon(默认), JetClass, TopLandscape
+    [-s --source <input dataset>]  # 输入源，即数据集名称，可选：JetClass-mini(默认), JetClass, QuakGluon, TopLandscape
     [-f --feature_type <feature_type>]  # 输入模型所使用的特征类型，可选：full(默认), kin, kinpid
 ```
-+ note:
++ network note:
+    + JetClass-mini是JetClass的一个子集，约为原数据集的1%。
+    + JetClass是用于Jet taggin的分类数据集，300GB+，10个类别。
+    + TopLandscape是用于Jet tagging的分类数据集，4.6GB.
+    + QuarkGluon是用于Jet taggin的分类数据集，4.4GB，2个类别。
+
++ feature_type note:
     + kin: only kinematic inputs
     + kinpid: kinematic inputs + particle identification
     + <b>full (default)</b>: kinematic inputs + particle identification + trajectory displacement
@@ -100,9 +107,9 @@ model.train()  # 训练模型
 
 HAI算法框架搜集和集成优秀算法，是介于最顶层应用和Pytorch, Tesnflow、PaddlePaddle等人工智能框架的中间件。
 
-作为算法开发者，您无需基于HAI开发算法（我们也不提供底层的算子），您可以基于任何人工智能框架和算力硬件开发算法，开发完成后我们通过一套hai_api即可快速集成您的算法，从而实现统一的复现和应用的API。HAI算法框架对于您来说是一个便于模型横向对比的算法benchmark和数据集仓库。
+作为算法开发者，您无需基于HAI开发算法（我们也不提供底层的算子），您可以基于任何人工智能框架和算力硬件开发算法，开发完成后我们通过一套hai_api即可快速集成您的算法，从而实现统一的复现和应用的API。HAI算法框架对于您来说是一个便于模型横向对比的<b>算法benchmark</b>和<b>数据集</b>仓库。
 
-作为算法使用者，您可以通过HAI快速实现算法的使用、测试、部署。
+作为算法使用者，您可以通过HAI快速实现跨语言、跨平台的算法测试和应用部署，并将提供模型自演进、模型压缩、模型加速等功能。
 
 更多算法模型请参考[算法库](docs/algorithm_zoo.md)。
 
