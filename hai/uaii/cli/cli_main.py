@@ -16,8 +16,8 @@ logger = dm.getLogger('hai_cli')
 
 def run():
     args = argparse.ArgumentParser()
-    args.add_argument('mode', type=str, nargs='?', default=None, help='Operation, like: list, download, train, eval, deploy, etc.')
-    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Target, like: model_name, dataset_name, etc.')
+    args.add_argument('mode', type=str, nargs='?', default=None, help='Operation, such as: list, download, train, eval, deploy, etc.')
+    args.add_argument('sub_mode', type=str, nargs='?', default=None, help='Target, such as: <model_name>, <dataset_name>, remote, etc.')
     args.add_argument('sub_sub_mode', type=str, nargs='?', default=None, help='Additional parameter.')
     args.add_argument('-V', '--version', action='store_true', help='show version')
     args.add_argument('-f', '--force', action='store_true', help='force to run (if the api exists, clear it and init again)')

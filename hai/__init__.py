@@ -1,7 +1,5 @@
 import os
 
-from sympy import im
-
 from .apis import AbstractInput, AbstractModule, AbstractOutput, AbstractQue
 from .apis import MODULES, SCRIPTS, IOS, init_register
 from .apis import Config

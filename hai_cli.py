@@ -1,4 +1,4 @@
-#!/home/zzd/anaconda3/bin/python
+#!/home/zzd/anaconda3/envs/hai/bin/python
 # -*- coding: utf-8 -*-
 # /home/zzd/anaconda3/envs/mm/bin/python
 
