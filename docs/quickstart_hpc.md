@@ -51,7 +51,8 @@ hai list  # 已下载的算法也会被列出，如不在算法文件夹内将�
 
 ## 1.5 关于数据集（Optianal）
 集群上允许无需下载数据集，HAI已发布的数据集暂存于/hepsfs/user/zdzhang/hai_datasets下，公开数据集所有人均有全部权限。
-如需下载，可执行：
+
+如确需下载，可执行：
 ```bash
 hai list datasets  # 列出本地数据集
 hai list remote datasets  # 查看更多支持的数据集
@@ -64,7 +65,7 @@ hai download datasets <dataset_name>  # 下载数据集到本地, 例如：hai d
 ```bash
 python train.py  # 训练模型
 ```
-train.py内通过hai调用模型的接口简单、统一：
+train.py内通过HAI调用不同模型的统一接口如下：
     
 ```python
 import hai
@@ -91,14 +92,15 @@ model.train()  # 训练模型
 
 
 训练中，可以通过控制台输出的网址查看训练过程。
+
 训练结束后，模型和训练日志将保存着在runs文件夹内。
 
 
 # 说明
 
-HAI算法框架搜集和集成优秀算法，是介于最顶层应用和Pytorch, Tesnflow、PaddlePaddl等人工智能框架的中间件。
+HAI算法框架搜集和集成优秀算法，是介于最顶层应用和Pytorch, Tesnflow、PaddlePaddle等人工智能框架的中间件。
 
-作为算法开发者，您无需基于HAI开发算法（我们也不提供底层的算子），您可以基于任何人工智能框架和算力硬件开发算法，开发完成后我们通过一套hai_api即可快速集成您的算法，从而实现统一复现和应用API。HAI算法框架对于您来说是一个用于横向对比的“算法仓库”和“数据集仓库”，也是一个“算法发布平台”。
+作为算法开发者，您无需基于HAI开发算法（我们也不提供底层的算子），您可以基于任何人工智能框架和算力硬件开发算法，开发完成后我们通过一套hai_api即可快速集成您的算法，从而实现统一的复现和应用的API。HAI算法框架对于您来说是一个便于模型横向对比的算法benchmark和数据集仓库。
 
 作为算法使用者，您可以通过HAI快速实现算法的使用、测试、部署。
 
@@ -112,7 +114,10 @@ HAI算法框架搜集和集成优秀算法，是介于最顶层应用和Pytorch,
 ## TODO:
 + 从codo.ihpe.ac.cn下载算法，需要账号，同步开源到github
 + 评估、推理、部署
-
++ 提交任务到集群
++ hai list datasets
++ hai list remote datasets
++ hai download datasets QuarkGluon
 
 
 
