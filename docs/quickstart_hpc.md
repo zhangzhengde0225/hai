@@ -37,6 +37,7 @@ cd workspace
 hai --version  # 查看HAI当前版本
 ```
 
+hai命令行API的使用规则是：`hai <operation> <target> <addtional_params>`
 ```bash
 hai list  # 列出本地已安装的算法
 hai list remote  # 查看更多支持的算法
