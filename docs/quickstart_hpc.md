@@ -50,7 +50,7 @@ hai list  # 已下载的算法也会被列出，如不在算法文件夹内将�
 ```
 
 ## 1.5 关于数据集（Optianal）
-集群上允许无需下载数据集，HAI已发布的数据集暂存于/hepsfs/user/zdzhang/hai_datasets下，公开数据集所有人均有全部权限。
+集群上无需下载数据集，HAI已发布的数据集暂存于/hepsfs/user/zdzhang/hai_datasets下，公开数据集所有人均有全部权限。
 
 如确需下载，可执行：
 ```bash
