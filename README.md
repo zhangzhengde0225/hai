@@ -20,8 +20,8 @@
 
 <details open>
 <summary><b>Algorithm Zoo</b></summary>
-    <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
-    <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
+<a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
+<img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
     <br>
     <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
     <br>
@@ -38,8 +38,8 @@
 
 <details open>
 <summary><b>Dataset Zoo</b></summary>
-    <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/datasets.md">
-    <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=3 available, 10+ TODO">
+<a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/datasets.md">
+<img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=3 available, 10+ TODO">
     <br>
     <img src="https://img.shields.io/static/v1?style=social&label=CV&message=1 available">
     </a>
