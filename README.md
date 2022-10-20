@@ -4,9 +4,9 @@
 <details open>
 <summary><b>更新日志</b></summary>
 
-+ [2022.10.20] 第一个测试版本HAI v1.0.5-Beta，4个算法那3个数据集
++ [2022.10.20] 第一个测试版本HAI v1.0.5-Beta发布，4个算法那3个数据集
 
-+ [2022.8.23] HAI v1.0.0 发布
++ [2022.8.23] HAI v1.0.0
 </details>
 
 <details open>
