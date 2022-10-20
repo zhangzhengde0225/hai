@@ -69,7 +69,7 @@ python train.py -d cpu  # 训练模型
     [-f --feature_type <feature_type>]  # 输入模型所使用的特征类型，可选：full(默认), kin, kinpid
     [-d --device <device>]  # 使用的设备：cpu，0表示单块GPU，0,1,2,3表示多块GPU
 ```
-可通过`python train.py --h`查看更多参数，可选参数：
+可通过`python train.py --h`查看更多参数。
 
 + network note:
     + JetClass-mini是JetClass的一个子集，约为原数据集的1%。
@@ -83,8 +83,6 @@ python train.py -d cpu  # 训练模型
     + <b>full (default)</b>: kinematic inputs + particle identification + trajectory displacement
 
 训练中，可以通过控制台输出的网址查看训练过程。
-
-训练结束后，模型和训练日志将保存着在runs文件夹内。
 
 ### 训练说明
 + 本节仅为说明如何启动训练，若使用集群，请勿在登录节上直接运行，而应使用提交脚本的方式(2.2节)。
@@ -105,19 +103,35 @@ python train.py -d cpu  # 训练模型
 
 ## 2.2 训练模型(提交任务)
 
-申请的资源信息请参考[集群使用说明](http://afsapply.ihep.ac.cn/quick/)。
-
-在脚本执行代码部分，添加如下代码：
+申请资源及使用可参考[集群使用说明](http://afsapply.ihep.ac.cn/cchelp/zh/intro/)。
+### 2.2.1 资源配置
+```bash
+vi submit.sh  # 编辑提交脚本
+# 请根据您所述用户组指定资源分区partition、用户组account、队列qos等参数
+```
+### 2.2.2 任务配置
+在workload部分，添加如下样例代码：
 ```bash
 source /cvmfs/hai.ihep.ac.cn/hai_env.sh
-python train.py 
+python train.py
 ```
-可自行指定运行参数。
+可自行添加其他运行参数。
 
-提交：
+### 2.2.3 提交任务
+
 ```bash
-sbatch submit_job.sh
+export PATH=/afs/ihep.ac.cn/soft/common/sysgroup/hep_job/bin/:$PATH  # hep_sub等命令所在路径
+hep_sub submit_job.sh  # 提交
 ```
+查询命令：
+```bash
+hep_q -u $USER  # 查询作业状态
+hep_rm <ID>  # 删除作业
+hep_rm -a  # 删除用户所有作业
+hep_clus -slurm  # 查看可用队列
+```
+
+训练结束后，模型和训练日志将保存在`src/runs`文件夹内。
 
 
 # 说明
