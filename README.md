@@ -4,7 +4,7 @@
 <details open>
 <summary><b>更新日志</b></summary>
 
-+ [2022.10.20] HAI v1.0.5-Beta 第一个测试版本发布，4个算法和3个数据集
++ [2022.10.20] HAI v1.0.5-Beta 第一个测试版本发布，4个算法和    3个数据集
 
 + [2022.08.23] HAI v1.0.0
 </details>
@@ -19,7 +19,7 @@
 </details>
 
 <details open>
-<summary><b>Model Zoo</b></summary>
+<summary><b>Algorithm Zoo</b></summary>
     <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
     <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
     <br>
@@ -37,7 +37,7 @@
 </details>
 
 <details open>
-<summary><b>Datasets</b></summary>
+<summary><b>Dataset Zoo</b></summary>
     <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/datasets.md">
     <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=3 available, 10+ TODO">
     <br>
