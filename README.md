@@ -14,7 +14,7 @@
 
 [在计算集群上使用HAI的快速入门](docs/quickstart_hpc.md)
 
-[使用PointNet对JUNO实验的大气中微子进行重建和鉴别](https://code.ihep.ac.cn/zhangyiyu/pointnet-juno)
+[使用PointNet对JUNO实验的大气中微子进行重建和鉴别](https://code.ihep.ac.cn/zhangyiyu/pointnet)
 
 更多教程[TODO]
 
