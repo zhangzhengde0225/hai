@@ -10,8 +10,9 @@ from easydict import EasyDict
 from pathlib import Path
 import numpy as np
 import damei as dm
+from hai.modules.classification.ResNet.models import resnet_arch
 from utils import datasets, torch_utils, general, dm_control
-from models import resnet_zoo, resnet_zoo_half, resnet_zoo_behavior
+from models import resnet_zoo_half, resnet_zoo_behavior
 
 
 def train(opt):

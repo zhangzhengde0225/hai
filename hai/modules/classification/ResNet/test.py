@@ -9,9 +9,10 @@ import cv2
 import numpy as np
 from easydict import EasyDict
 from PIL import Image
+from hai.modules.classification.ResNet.models import resnet_arch
 from utils import datasets, detect_utils, torch_utils, general
 import torch
-from models import resnet_zoo, resnet_zoo_half, resnet_zoo_behavior
+from models import resnet_zoo_half, resnet_zoo_behavior
 import yaml
 import damei as dm
 

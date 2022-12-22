@@ -144,7 +144,7 @@ class BaseUAII(ModelUAII):
         exist_names = [x.split()[2] for x in ps.split('\n')[1::]]
         is_exist = [idx for idx, x in enumerate(exist_names) if x.lower() == name.lower()]
         if is_exist:
-            assert len(is_exist) == 1, f'存在多个同名的模块: {name}'
+            assert len(is_exist) == 1, f'存在多个同名的模块: {name}，请在注册时修改'
             name = exist_names[is_exist[0]]
 
         if name not in exist_names:

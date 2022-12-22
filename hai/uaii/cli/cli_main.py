@@ -30,7 +30,7 @@ def run():
 class CommandLineInterface(CLIFunctions):
     def __init__(self, uaii=None, config=None):
         self.uaii = uaii if uaii is not None else hai.UAII()
-        self.config = config  # this is the hai config
+        self.config = config if config else hai.config # this is the hai config
         self.default_model = None  # if run hai command in a folder containing a model, then set the model as default model
         self.opt = None
         self.testor = Testor()
@@ -71,6 +71,8 @@ class CommandLineInterface(CLIFunctions):
             self._deal_train_mode(opt)
         elif mode == 'version' or opt.version:
             self._show_version()
+        elif mode == 'start':
+            self._deal_with_start(**kwargs)
         elif mode is None:
             self._show_version()
             print(f'Please use "{hai.__appname__} -h" to see help.')
@@ -184,10 +186,15 @@ class CommandLineInterface(CLIFunctions):
         project_name = os.path.basename(cwd).lower()
 
         # Copy template files to api_fold
-        shutil.copy(f'{root_path}/hai/apis/templates/README_template.md', f'{api_fold_name}/README.md')
-        os.system(f'echo "\nfrom .{project_name}_api import *" > {api_fold_name}/__init__.py')
+        shutil.copy(f'{root_path}/hai/apis/templates/README_template.md', 
+                    f'{api_fold_name}/README.md')
+        shutil.copy(f'{root_path}/hai/apis/templates/register_module_template.py', 
+                    f'{api_fold_name}/{project_name}_api.py')
+        shutil.copy(f'{root_path}/hai/apis/templates/init_template.py', 
+                    f'{api_fold_name}/__init__.py')
+        os.system(f'echo "\nfrom .{project_name}_api import *" >> {api_fold_name}/__init__.py')
+        logger.info(f'Create API folder and files successfully: "{os.getcwd()}/{api_fold_name}"')
 
-        shutil.copy(f'{root_path}/hai/apis/templates/register_module_template.py', f'{api_fold_name}/{project_name}_api.py')
 
     def _show_version(self):
         data = dict()

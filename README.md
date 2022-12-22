@@ -4,7 +4,7 @@
 <details open>
 <summary><b>更新日志</b></summary>
 
-+ [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和    3个数据集
++ [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和3个数据集
 
 + [2022.08.23] HAI v1.0.0
 </details>
@@ -13,6 +13,8 @@
 <summary><b>Tutorials</b></summary>
 
 [在计算集群上使用HAI的快速入门](docs/quickstart_hpc.md)
+
+[使用PointNet对JUNO实验的大气中微子进行重建和鉴别](https://code.ihep.ac.cn/zhangyiyu/pointnet-juno)
 
 更多教程[TODO]
 
