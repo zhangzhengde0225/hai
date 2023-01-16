@@ -1,4 +1,4 @@
-# HAI
+# [HAI](https://code.ihep.ac.cn/zdzhang/hai)
 高能物理AI平台(HAI)分为算法框架、模型库、数据集、算力资源四个部分。其中，HAI算法框架集成高能物理领域经典和SOTA的人工智能算法，提供统一、简单、易用的复现和应用接口。
 
 <details open>
