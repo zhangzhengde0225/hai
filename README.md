@@ -35,7 +35,7 @@
     <li>
     <img src="https://img.shields.io/static/v1?style=social&label=射线科学&message=3 TODO">
     <li>
-    <img src="https://img.shields.io/static/v1?style=social&label=机器学习&message=TODO">
+    <img src="https://img.shields.io/static/v1?style=social&label=经典机器学习&message=TODO">
     </ul>
     </a>
     
