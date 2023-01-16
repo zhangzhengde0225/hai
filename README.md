@@ -24,16 +24,15 @@
 <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
     <ul>
     <li>
-    <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
-    </li>
-    <li>
-    <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
-    <li>
     <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=4 online, 3 TODO">
     <li>
     <img src="https://img.shields.io/static/v1?style=social&label=天体物理&message=1 TODO">
     <li>
-    <img src="https://img.shields.io/static/v1?style=social&label=射线科学&message=3 TODO">
+    <img src="https://img.shields.io/static/v1?style=social&label=同步辐射&message=2 TODO">
+    <li>
+    <img src="https://img.shields.io/static/v1?style=social&label=中子物理&message=0">
+    <li>
+    <img src="https://img.shields.io/static/v1?style=social&label=通用神经网络&message=2 online, 5 TODO">
     <li>
     <img src="https://img.shields.io/static/v1?style=social&label=经典机器学习&message=TODO">
     </ul>
