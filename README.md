@@ -30,14 +30,13 @@
     </li>
     <li>
     <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
-    <!-- <br> -->
     <li>
     <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=4 online, 3 TODO">
-    <!-- <br> -->
+    <li>
     <img src="https://img.shields.io/static/v1?style=social&label=天体物理&message=1 TODO">
-    <!-- <br> -->
+    <li>
     <img src="https://img.shields.io/static/v1?style=social&label=射线科学&message=3 TODO">
-    <!-- <br> -->
+    <li>
     <img src="https://img.shields.io/static/v1?style=social&label=机器学习&message=TODO">
     </ul>
     </a>
@@ -47,8 +46,10 @@
 <details open>
 <summary><b>Dataset Zoo</b></summary>
 <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/datasets.md">
-<img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=3 available, 10+ TODO">
-    <br>
+<ul>
+<li>
+    <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=3 available, 10+ TODO">
+    <li>
     <img src="https://img.shields.io/static/v1?style=social&label=CV&message=1 available">
     </a>
 </details>
