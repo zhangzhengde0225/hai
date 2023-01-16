@@ -24,17 +24,17 @@
 <details open>
 <summary><b>Algorithm Zoo</b></summary>
 <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
-<br>
+<!-- <br> -->
 <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
-    <br>
+    <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
-    <br>
+    <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=4 online, 3 TODO">
-    <br>
+    <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=天体物理&message=1 TODO">
-    <br>
+    <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=射线科学&message=3 TODO">
-    <br>
+    <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=机器学习&message=TODO">
     </a>
     
