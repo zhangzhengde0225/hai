@@ -2,8 +2,9 @@
 高能物理AI平台(HAI)分为算法框架、模型库、数据集、算力资源四个部分。其中，HAI算法框架集成高能物理领域经典和SOTA的人工智能算法，提供统一、简单、易用的复现和应用接口。
 
 <details open>
-<summary><b>更新日志</b></summary>
+<summary><b>News</b></summary>
 
++ [2023.01.16] 华为NPU服务器上架，如有算法国产化需求，请查阅[NPU文档](docs/computing_power/npu_power_doc.md)。
 + [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和3个数据集
 
 + [2022.08.23] HAI v1.0.0
