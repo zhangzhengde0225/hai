@@ -17,8 +17,6 @@
 
 [使用PointNet对JUNO实验的大气中微子进行重建和鉴别](https://code.ihep.ac.cn/zhangyiyu/pointnet)
 
-更多教程[TODO]
-
 </details>
 
 <details open>
