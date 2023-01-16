@@ -24,7 +24,7 @@
 <details open>
 <summary><b>Algorithm Zoo</b></summary>
 <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
-    <br>
+    <ul>
     <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
     <br>
     <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
@@ -36,6 +36,7 @@
     <img src="https://img.shields.io/static/v1?style=social&label=射线科学&message=3 TODO">
     <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=机器学习&message=TODO">
+    </div>
     </a>
     
 </details>
@@ -94,16 +95,7 @@ hai -V  # 查看版本
     import hai_client
     hai = hai_client.HAI()
     ```
-    或其他支持gRPC的语言，详见[deploy](docs/deploy.md)（TODO）
-
-
-### TODO
-+ Visualize the dataset
-  +  .parquet file
-    + images
-
-+ Display in the docker container
-
+    或其他支持gRPC的语言，详见[deploy](docs/deploy.md)
 
 
 
