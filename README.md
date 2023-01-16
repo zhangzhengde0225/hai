@@ -24,6 +24,7 @@
 <details open>
 <summary><b>Algorithm Zoo</b></summary>
 <a href="https://code.ihep.ac.cn/zdzhang/hai/-/blob/main/docs/model_zoo.md">
+<br>
 <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
     <br>
     <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
