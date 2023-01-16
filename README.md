@@ -27,7 +27,8 @@
 <!-- <br> -->
 <img src="https://img.shields.io/static/v1?style=social&label=图像相关&message=2 online, 5 TODO">
     <!-- <br> -->
-    <img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
+    
+<img src="https://img.shields.io/static/v1?style=social&label=分类算法&message=3 TODO">
     <!-- <br> -->
     <img src="https://img.shields.io/static/v1?style=social&label=粒子物理&message=4 online, 3 TODO">
     <!-- <br> -->
