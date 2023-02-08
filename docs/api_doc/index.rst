@@ -1,0 +1,34 @@
+.. Hai documentation master file, created by
+   sphinx-quickstart on Wed Feb  8 10:53:41 2023.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Hai - Efficient AI For Science Tools
+=====================================
+
+**Hai** (Hakutaku Artificial Intelligence) is a Python library providing a `Algorithm library`, `Pretrained model`,
+`Datasets` and `Computing Power` for AI researchers and developers.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
+
+   getting_started.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API
+   
+   algorithm_lib
+
+
+
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
