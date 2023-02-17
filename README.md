@@ -4,7 +4,7 @@
 <details open>
 <summary><b>News</b></summary>
 
-+ [2023.02.09] 基于ChatGPT的**HaiChatGPT**已上线，使用简单，无需梯子！使用方法：[网页版ai.ihep.ac.cn](http://ai.ihep.ac.cn)(需所内网络)、[pypi版](https://pypi.org/project/hai-chat-gpt)。
++ [2023.02.09] 基于ChatGPT的**HaiChatGPT**已上线，使用简单，无需梯子！详情查看：[HaiChatGPT](https://code.ihep.ac.cn/zdzhang/haichatgpt).
 + [2023.01.16] 华为NPU服务器上架，如有算法国产化需求，请查阅[NPU文档](docs/computing_power/npu_power_doc.md)。
 + [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和3个数据集
 
