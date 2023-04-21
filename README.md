@@ -56,7 +56,7 @@
 
 ### Quick start
 ```
-pip install hepai
+pip install hepai --upgrade
 hai -V  # 查看版本
 ```
 
