@@ -5,9 +5,15 @@
 + turbo模型，速度快
 + 需要hepai的api_key
 
-#### 安装
+## 安装hepai
 ```
 pip install hepai --upgrade
+```
+### 安装依赖包
+```
+pip install opencv-python
+pip install pillow
+pip install tqdm
 ```
 
 ## 使用
@@ -16,7 +22,7 @@ pip install hepai --upgrade
 
 import hai
 
-models = hai.Model.list()
+models = hai.Model.list()  # 列出可用模型
 print(models)
 
 system_prompt = "You are ChatGPT, answering questions conversationally"
@@ -35,6 +41,7 @@ result = hai.LLM.chat(
         ],
         stream=True,
     )
+# result是一个流式数据生成器，需要遍历获取全部结果
 
 full_result = ""
 for i in result:
