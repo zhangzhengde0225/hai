@@ -8,7 +8,7 @@ from select import select
 import numpy as np
 import copy
 import damei as dm
-import cv2
+# import cv2
 import json
 from hai.configs.Base.hai_config import WEIGHTS_ROOT, DATASETS_ROOT
 from ..datasets.datasets_hub import DatasetsHub

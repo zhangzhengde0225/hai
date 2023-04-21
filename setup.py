@@ -12,7 +12,7 @@ from unicodedata import name
 
 from setuptools import find_packages, setup, Command
 
-# Package meta-demo_for_dm.data.
+
 NAME = 'hepai'
 DESCRIPTION = 'High energy phscis Artificial Intelligence plateform, HAI.'
 URL = 'https://github.com/zhangzhengde0225/hai'
@@ -40,8 +40,11 @@ def read_requirements():
 # REQUIRED = []
 REQUIRED = [
 	"damei",
-# 	"opencv-python",
+    "numpy",
+	# "opencv-python",
 	"easydict",
+    "grpcio-tools",
+    "requests"
 ]
 
 # What packages are optional?

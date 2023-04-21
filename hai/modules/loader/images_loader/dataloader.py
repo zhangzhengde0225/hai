@@ -1,5 +1,8 @@
 import os
-import cv2
+try:
+    import cv2
+except:
+    pass
 from pathlib import Path
 import numpy as np
 import damei as dm

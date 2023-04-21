@@ -11,10 +11,10 @@ import zipfile
 import tarfile
 import urllib
 # import requests
-from tqdm import tqdm
 
 
 def _download(url, fname, chunk_size=1024):
+    from tqdm import tqdm
     import requests
     '''https://gist.github.com/yanqd0/c13ed29e29432e3cf3e7c38467f42f51'''
     resp = requests.get(url, stream=True)

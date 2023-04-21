@@ -1,7 +1,10 @@
 import os, sys
 import time
 import damei as dm
-import cv2
+try:
+    import cv2
+except:
+    pass
 import shutil
 
 from ..utils.config_loader import PyConfigLoader

@@ -19,7 +19,7 @@ except:
     import damei
 
 logger = damei.getLogger('hai')
-logger.info(f'HAI version: {__version__}')
+# logger.info(f'HAI version: {__version__}')
 
 
 if __backend__ == 'local':
@@ -43,10 +43,14 @@ elif __backend__ == 'damei':
 else:
     raise NotImplementedError(f'{__backend__} backend is not supported, only local and damei, please check')
 
+from .workers_api.llm.llm import HaiLLM as LLM
+from .workers_api.model import HaiModel as Model
+
+
 hai_config = Config(f'{__pydir__.parent}/configs/Base/hai_config.py')
 # from ..configs.Base.hai_config import root_path, weights_root
 # root_path = f'{Path(__pydir__).parent.parent}'
-# weights_root = f'{os.environ["HOME"]}/.hai/weights'
+
 init_register = InitRegister(internal_dir=hai_config.root_path)
 uaii = UAII()
 cli = CommandLineInterface(uaii=uaii, config=hai_config)

@@ -1,7 +1,7 @@
 """iniverse testor"""
 
 
-from hai.testor.test_module import TestModule
+# from hai.testor.test_module import TestModule
 
 
 class Testor(object):

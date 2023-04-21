@@ -1,5 +1,5 @@
 import os
-import cv2
+# import cv2
 from pathlib import Path
 import numpy as np
 import damei as dm
@@ -8,6 +8,7 @@ from copy import deepcopy
 try:
     import torch.backends.cudnn as cudnn
     from .datasets import LoadStreams, LoadImages
+    import cv2
 except ImportError as e:
     pass
     # dm.EXCEPTION(ImportError, e, info='You may need to install "torch" for full functionality', mute=True)

@@ -4,7 +4,7 @@
 
 from .test import test_module, test_io, test_script
 
-from .test_module import TestModule
+# from .test_module import TestModule
 
 from .testor import Testor
 

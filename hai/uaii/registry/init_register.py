@@ -46,7 +46,7 @@ class InitRegister(object):
         """
         emp = external_module_path
         if emp.startswith('~'):
-            emp = emp.replace('~', os.environ['HOME'])
+            emp = emp.replace('~', str(Path.home()))
         emp = os.path.abspath(emp) 
         if not os.path.exists(os.path.join(emp, self.api_fold_name)):
             if self.show_logger:

@@ -28,7 +28,6 @@ class PyConfigLoader(collections.UserDict):
         work_dir = os.getcwd()
         self.root_path = root_path if root_path else f'{work_dir}'  # 默认当前工作目录
         self._name = name if name else f'{cfg_file}'  # 其实是path
-        # self._replace_rule = {'~': os.environ['HOME'], }
 
         self._items = dict()
         self._load_items(cfg_file, cfg_dict, **kwargs)  # 从配置文件或配置字典初始化配置，配置添加到_items和对应的属性里
@@ -282,7 +281,7 @@ class PyConfigLoader(collections.UserDict):
         if value is None:
             return None
         elif isinstance(value, str):
-            return value.replace('~', os.environ['HOME'])
+            return value.replace('~', str(Path.home()))
         elif isinstance(value, int):
             return value
         elif isinstance(value, float):
