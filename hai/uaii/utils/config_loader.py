@@ -239,7 +239,7 @@ class PyConfigLoader(collections.UserDict):
         cfg = eval(cp.stem)  # 模块名
 
         # 读取文件获取顶格写并且不以#开头的属性
-        with open(cfg_file, 'r') as f:
+        with open(cfg_file, 'r', 'utf-8') as f:
             data = f.readlines()
         data = [x for x in data if not (x.startswith(' ') or x.startswith('#'))]  # 非顶格的不要，# 开头的不要
         data = '\n'+'\n'.join(data)
