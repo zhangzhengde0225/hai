@@ -1,5 +1,5 @@
 
-## 如何通过hepai使用GPT-3.5
+## 如何通过hepai的API使用GPT-3.5
 
 + 无需openai账号和梯子
 + turbo模型，速度快
