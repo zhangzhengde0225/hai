@@ -20,4 +20,7 @@ class HaiModel(object):
             f"{url}/list_models",
             )
         return ret.json()
-
+    
+if __name__ == '__main__':
+    ret = HaiModel.list()
+    print(ret)
