@@ -19,7 +19,11 @@ class HaiLLM(object):
 
         session = requests.Session()
         host = kwargs.get("host", "chat.ihep.ac.cn")
-        port = kwargs.get("port", 42901)
+        port = kwargs.get("port", None)
+        if port is not None:
+            url = f"http://{host}:{port}/v1/chat/completions"
+        else:
+            url = f"https://{host}/v1/chat/completions"
 
         data = dict()
         data['model'] = model
@@ -33,7 +37,8 @@ The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KE
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
         response = session.post(
-            f"http://{host}:{port}/v1/chat/completions",
+            # f"http://{host_and_port}/v1/chat/completions",
+            url,
             headers={"Authorization": f"Bearer {api_key}"},
             json=data,
             stream=True,

@@ -1,7 +1,7 @@
 
 
 
-
+import os
 import hai
 
 models = hai.Model.list()
@@ -10,7 +10,7 @@ print(models)
 system_prompt = "You are ChatGPT, answering questions conversationally"
 prompt = "Hello!"
 
-api_key = 'h89nWl6gH3NK0F1NFSNzPF0bKV0ORN'
+api_key = os.getenv('HEPAI_API_KEY')
 
 result = hai.LLM.chat(
         model='hepai/gpt-3.5-turbo',
