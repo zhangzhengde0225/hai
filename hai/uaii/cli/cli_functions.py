@@ -27,6 +27,15 @@ class CLIFunctions(object):
         elif sub_mode in ['datasets', 'dataset']:  # hai list datasets
             info = self.uaii.list_local_datasets()
             info = dm.misc.dict2info(info)
+        elif sub_mode in ['models', 'model']:  # hai list models
+            from hai.apis.workers_api.model import HaiModel
+            ret = HaiModel.list()
+            info = dm.misc.dict2info(ret)
+        elif sub_mode in ['all_workers_info', 'all_workers']:
+            from hai.apis.workers_api.model import HaiModel
+            info = HaiModel.all_workers_info()
+            info = dm.misc.dict2info(info)
+            
         else:
             raise NotImplementedError(f'Not implemented sub_mode: "{sub_mode}", Please use "{hai.__appname__} -h" to see help.')
         print(info)
