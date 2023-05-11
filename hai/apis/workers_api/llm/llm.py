@@ -15,7 +15,7 @@ class HaiLLM(object):
         :param messages: The messages.
         :return: The LLM instance.
         """
-        api_key = kwargs.pop("api_key", None)
+        api_key = kwargs.pop("api_key", os.getcwd('HEPAI_API_KEY', None))
 
         session = requests.Session()
         host = kwargs.get("host", "chat.ihep.ac.cn")
@@ -30,7 +30,7 @@ class HaiLLM(object):
         data['messages'] = messages
         data['stream'] = kwargs.pop('stream', True)
         data.update(kwargs)
-        print(f'data: {data}')
+        # print(f'data: {data}')
 
         assert api_key, """
 The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
