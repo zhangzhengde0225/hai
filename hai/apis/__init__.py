@@ -33,6 +33,8 @@ if __backend__ == 'local':
     from ..uaii.datasets.datasets_hub import DatasetsHub
     from .basic import argparse
     from ..uaii.utils import general
+    from ..uaii.worker.worker import WorkerWarper as worker
+    from ..uaii.worker.base_worker_model import BaseWorkerModel
 
 elif __backend__ == 'damei':
     from damei.nn.api.base import AbstractModule, AbstractInput, AbstractOutput, AbstractQue

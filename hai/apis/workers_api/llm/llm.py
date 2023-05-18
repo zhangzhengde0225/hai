@@ -1,3 +1,6 @@
+"""
+调用Worker的API
+"""
 
 
 import os
@@ -15,7 +18,7 @@ class HaiLLM(object):
         :param messages: The messages.
         :return: The LLM instance.
         """
-        api_key = kwargs.pop("api_key", os.getcwd('HEPAI_API_KEY', None))
+        api_key = kwargs.pop("api_key", os.getenv('HEPAI_API_KEY', None))
 
         session = requests.Session()
         host = kwargs.get("host", "chat.ihep.ac.cn")
