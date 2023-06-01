@@ -18,8 +18,14 @@ pip install tqdm
 
 ## 使用
 
+设置环境变量
+```bash
+export HEPAI_API_KEY=<your api key>
+```
+
 ```python
 
+import os, sys
 import hai
 
 models = hai.Model.list()  # 列出可用模型
@@ -28,11 +34,9 @@ print(models)
 system_prompt = "You are ChatGPT, answering questions conversationally"
 prompt = "Hello!"
 
-api_key = 'your api key'
-
 result = hai.LLM.chat(
         model='hepai/gpt-3.5-turbo',
-        api_key=api_key,
+        api_key=os.getenv("HEPAI_API_KEY"),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
@@ -46,7 +50,8 @@ result = hai.LLM.chat(
 full_result = ""
 for i in result:
     full_result += i
-    print(f'\r{full_result}', end='')
+    sys.stdout.write(i)
+    sys.stdout.flush()
 print()
 ```
 

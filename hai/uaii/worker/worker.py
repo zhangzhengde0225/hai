@@ -45,6 +45,20 @@ def heart_beat_worker(controller):
         time.sleep(WORKER_HEART_BEAT_INTERVAL)
         controller.send_heart_beat()
 
+
+
+@dataclass
+class WorkerArgs:
+    host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
+    port: str = "auto"  # 默认从42902开始
+    controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
+    worker_address: str = "auto"  # 默认是http://<ip>:<port>
+    limit_model_concurrency: int = 5  # 限制模型的并发请求
+    stream_interval: float = 0.  # 额外的流式响应间隔
+    no_register: bool = False  # 不注册到控制器
+    premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
+    
+
 class Worker:
     """
     Worker class, with basic and example functions
@@ -348,22 +362,13 @@ def get_args():
     logger.info(f"Args: {args}")
     return args
 
-
-@dataclass
-class BaseWorkerArgs:
-    host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
-    port: str = "auto"  # 默认从42902开始
-    controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
-    worker_address: str = "auto"  # 默认是http://<ip>:<port>
-    limit_model_concurrency: int = 5  # 限制模型的并发请求
-    stream_interval: float = 0.  # 额外的流式响应间隔
-    no_register: bool = False  # 不注册到控制器
-    premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
     
-def run_worker(model=None, test=False, daemon=False, **kwargs):
+def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs):
     # args = get_args() if args is None else args
-    import transformers
-    args = transformers.HfArgumentParser((BaseWorkerArgs,)).parse_args_into_dataclasses()[0]
+    # import transformers
+    # args = transformers.HfArgumentParser((WorkerArgs,)).parse_args_into_dataclasses()[0]
+    args = worker_args or WorkerArgs()
+    # print(f'worker args: {args}')
     args.port = auto_port(args.port, start=42902)
     args.worker_address = auto_worker_address(args.worker_address, args.host, args.port)
     if test:
@@ -374,7 +379,7 @@ def run_worker(model=None, test=False, daemon=False, **kwargs):
         if hasattr(args, k):
             setattr(args, k, v)
 
-    logger.info(f'args: {args}')
+    # logger.info(f'{args}')
 
     worker  = Worker(
         args.controller_address,
@@ -389,8 +394,9 @@ def run_worker(model=None, test=False, daemon=False, **kwargs):
     app.worker = worker
 
     logger.info(f"Controller address: {args.controller_address}")
+
     if daemon:
-        print(f"Daemon Worker address: {args.worker_address}")
+        logger.info(f"Daemon Worker address: {args.worker_address}")
         import threading
         t = threading.Thread(target=uvicorn.run, args=(app,), kwargs={
             "host": args.host, "port": args.port, "log_level": "info"
@@ -403,8 +409,23 @@ def run_worker(model=None, test=False, daemon=False, **kwargs):
 
 
 class WorkerWarper:
+
     @staticmethod
     def start(daemon=False, **kwargs):
+        """
+        运行一个hepai的worker
+        :param model: BaseWorkerModel = None, 模型
+        :param worker_args: WorkerArgs = None, worker的参数，可以由WorkerArgs类生成，会被下面的参数覆盖
+        :praam daemon: bool = False 是否以守护进程的方式运行
+        :param host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
+        :param port: str = "auto"  # 默认从42902开始
+        :param controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
+        :param worker_address: str = "auto"  # 默认是http://<ip>:<port>
+        :param limit_model_concurrency: int = 5  # 限制模型的并发请求
+        :param stream_interval: float = 0.  # 额外的流式响应间隔
+        :param no_register: bool = False  # 不注册到控制器
+        :param premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
+        """
         return run_worker(daemon=daemon, **kwargs)
 
 

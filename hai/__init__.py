@@ -12,7 +12,7 @@ from .apis import grpc_secure_server
 from .apis import Testor
 from .apis import argparse
 from .apis import general
-from .apis import worker, BaseWorkerModel
+from .apis import worker, BaseWorkerModel, WorkerArgs
 
 # LLM
 from .apis import LLM, Model

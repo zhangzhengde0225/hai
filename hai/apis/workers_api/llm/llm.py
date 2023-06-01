@@ -33,14 +33,12 @@ class HaiLLM(object):
         data['messages'] = messages
         data['stream'] = kwargs.pop('stream', True)
         data.update(kwargs)
-        # print(f'data: {data}')
 
         assert api_key, """
 The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
         response = session.post(
-            # f"http://{host_and_port}/v1/chat/completions",
             url,
             headers={"Authorization": f"Bearer {api_key}"},
             json=data,
@@ -66,8 +64,8 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
 
 if __name__ == '__main__':
-    # llm = HaiLLM
-    model = 'hepai/chathep-20230509'
+    import sys
+    model = 'hepai/chathep-0527'
     # model = 'hepai/gpt-3.5-turbo'
     api_key = os.getenv('HEPAI_API_KEY')
     messages = [
@@ -80,7 +78,10 @@ if __name__ == '__main__':
     #     ## 如果有多轮对话，可以继续添加，"role": "assistant", "content": "Hello there! How may I assist you today?"
     #     ## 如果有多轮对话，可以继续添加，"role": "user", "content": "I want to buy a car."
     # ]
-    ret =  HaiLLM.chat(model, api_key=api_key, messages=messages)
-    for x in ret:
-        print(x)
-    print(ret)
+    result =  HaiLLM.chat(model, api_key=api_key, messages=messages)
+    full_result = ""
+    for i in result:
+        full_result += i
+        sys.stdout.write(i)
+        sys.stdout.flush()
+    print()
