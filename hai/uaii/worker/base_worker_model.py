@@ -47,7 +47,6 @@ class BaseWorkerModel:
                 return output
         return warpper
     
-    @auto_stream
     def inference(self, **kwargs):
         """需要重写函数"""
         raise NotImplementedError("Please implement this method")

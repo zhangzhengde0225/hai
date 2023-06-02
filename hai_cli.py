@@ -4,7 +4,7 @@
 
 # import hai
 # from hai import cli
-# from .uaii.cli.cli_main import CommandLineInterface
+# from .uaii.cli.cli_main import Co5mmandLineInterface
 # from hai.apis import cli
 # from hai import apis
 from hai.uaii.cli.cli_main import run
