@@ -57,7 +57,7 @@ class WorkerArgs:
     stream_interval: float = 0.  # 额外的流式响应间隔
     no_register: bool = False  # 不注册到控制器
     premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
-    
+
 
 class Worker:
     """
@@ -366,7 +366,7 @@ def get_args():
 def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs):
     # args = get_args() if args is None else args
     # import transformers
-    # args = transformers.HfArgumentParser((WorkerArgs,)).parse_args_into_dataclasses()[0]
+    # args = transformers.HfArgumentParser((WorkerArgs, )).parse_args_into_dataclasses()
     args = worker_args or WorkerArgs()
     # print(f'worker args: {args}')
     args.port = auto_port(args.port, start=42902)
