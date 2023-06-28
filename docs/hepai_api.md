@@ -1,5 +1,5 @@
 
-## 如何通过hepai的API使用GPT-3.5
+## 如何通过hepai的API使用GPT-3.5(ChatGPT)
 
 + 无需openai账号和梯子
 + turbo模型，速度快
@@ -22,22 +22,24 @@ pip install tqdm
 ```bash
 export HEPAI_API_KEY=<your api key>
 ```
+联系zdzhang@ihep.ac.cn获取hepai的api_key。
 
+示例代码：
 ```python
 
 import os, sys
 import hai
 
-models = hai.Model.list()  # 列出可用模型
+models = hai.Model.list()  # 列出所有可用模型
 print(models)
 
 system_prompt = "You are ChatGPT, answering questions conversationally"
 prompt = "Hello!"
 
 result = hai.LLM.chat(
-        model='hepai/gpt-3.5-turbo',
-        api_key=os.getenv("HEPAI_API_KEY"),
-        messages=[
+        model='openai/gpt-3.5-turbo',  # 指定可用模型名字
+        api_key=os.getenv("HEPAI_API_KEY"),  # 输入hepai_api_key
+        messages=[  # 一个会话可能会有对个轮次，messages包含了所有轮次的对话，总是以角色user结束，gpt作为assistant来回复
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
             ## 如果有多轮对话，可以继续添加，"role": "assistant", "content": "Hello there! How may I assist you today?"
@@ -55,5 +57,4 @@ for i in result:
 print()
 ```
 
-联系zdzhang@ihep.ac.cn获取hepai的api_key
 
