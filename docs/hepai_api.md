@@ -16,15 +16,21 @@ pip install pillow
 pip install tqdm
 ```
 
-## 使用
+### 配置API_KEY 
 
-设置环境变量
+linux设置永久环境变量
 ```bash
+vi ~/.bashrc
+将下一行内容添加到文件末尾：
 export HEPAI_API_KEY=<your api key>
+
+保存后执行：source ~/.bashrc刷新环境变量
 ```
 联系zdzhang@ihep.ac.cn获取hepai的api_key。
 
-示例代码：
+## 使用
+
+python示例代码：
 ```python
 
 import os, sys
