@@ -10,7 +10,7 @@ from .apis import hub
 from .apis import hai_config as config  # inclue hai root_path, weights_root and other configs
 from .apis import grpc_secure_server
 from .apis import Testor
-from .apis import argparse
+from .apis import argparse, parse_args_into_dataclasses
 from .apis import general
 from .apis import worker, BaseWorkerModel, WorkerArgs
 
