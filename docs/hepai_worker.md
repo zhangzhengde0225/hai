@@ -30,32 +30,35 @@ class WorkerModel(BaseWorkerModel):
 ```
 #### 2.启动worker
 ```python
-import hai
-from hai import WorkerArgs
 
-model = WorkerModel()
-worker_args = WorkerArgs()
+# 用dataclasses修饰器快速定义参数类
+from dataclasses import dataclass, field
+@dataclass
+class WorkerArgs:
+    host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
+    port: str = "auto"  # 默认从42902开始
+    controller_address: str = "http://aiapi.ihep.ac.cn:42901"  # 控制器的地址
+    worker_address: str = "auto"  # 默认是http://<ip>:<port>
+    limit_model_concurrency: int = 5  # 限制模型的并发请求
+    stream_interval: float = 0.  # 额外的流式响应间隔
+    no_register: bool = False  # 不注册到控制器
+    premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
 
-hai.worker.start(
-    model=model,
-    worker_args=worker_args,
-    daemon=False,
-    **kwargs
-)
-```
 
-参数：
-```bash
-运行一个hepai的worker
-:param model: BaseWorkerModel = None, 模型
-:param worker_args: WorkerArgs = None, worker的参数，可以由WorkerArgs类生成，会被下面的参数覆盖
-:praam daemon: bool = False 是否以守护进程的方式运行
-:param host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
-:param port: str = "auto"  # 默认从42902开始
-:param controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
-:param worker_address: str = "auto"  # 默认是http://<ip>:<port>
-:param limit_model_concurrency: int = 5  # 限制模型的并发请求
-:param stream_interval: float = 0.  # 额外的流式响应间隔
-:param no_register: bool = False  # 不注册到控制器
-:param premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
+# 启动worker
+def run_worker(**kwargs):
+    model = WorkerModel()  # 获取模型
+    worker_args = hai.parse_args_into_dataclasses(WorkerArgs)  # 解析参数
+    # hai.parse_args_into_dataclasses支持多个参数类同时解析，例如：
+    # worker_args, model_args = hai.parse_args_into_dataclasses((WorkerArgs, ModelArgs))
+
+    hai.worker.start(
+        daemon=False,  # 是否以守护进程的方式启动
+        model=model,
+        worker_args=worker_args,
+        **kwargs
+        )
+
+if __name__ == '__main__':
+    run_worker()
 ```
