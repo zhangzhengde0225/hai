@@ -16,6 +16,9 @@ def parse_args_into_dataclasses(
     This relies on argparse's `ArgumentParser.parse_known_args`. See the doc at:
     docs.python.org/3.7/library/argparse.html#argparse.ArgumentParser.parse_args
 
+    Usage::
+        python xx.py --arg1 val1 --arg2 val2 
+
     Args:
         dataclass_types:
             Dataclass type, or list of dataclass types for which we will "fill" instances with the parsed args.
@@ -40,14 +43,22 @@ def parse_args_into_dataclasses(
                 after initialization.
             - The potential list of remaining argument strings. (same as argparse.ArgumentParser.parse_known_args)
     """
-    assert isinstance(dataclasses_types, tuple), f'input dataclasses must be tuple, but got {type(dataclasses_types)}'
-    return HfArgumentParser(dataclasses_types).parse_args_into_dataclasses(
+    # assert isinstance(dataclasses_types, tuple), f'input dataclasses must be tuple, but got {type(dataclasses_types)}'
+    is_tuple = isinstance(dataclasses_types, tuple)
+    if not is_tuple:
+        dataclasses_types = (dataclasses_types, )
+    result = HfArgumentParser(dataclasses_types).parse_args_into_dataclasses(
         args=args,
         return_remaining_strings=return_remaining_strings,
         look_for_args_file=look_for_args_file,
         args_filename=args_filename,
         args_file_flag=args_file_flag,
     )
+    if is_tuple:
+        return result
+    else:
+        r1, = result
+        return r1
 
 
 def test():
@@ -58,8 +69,18 @@ def test():
         name: str = 'zhangsan'
         age: int = 18
 
-    args = parse_args_into_dataclasses((TestArgs, ))
+    @dataclasses.dataclass
+    class TestArgs2:
+        name2: str = 'lisi'
+
+    args = parse_args_into_dataclasses(TestArgs)
     print(args)
+    print(args.name)
+
+    args1, args2 = parse_args_into_dataclasses((TestArgs, TestArgs2))
+    print(args1)
+    print(args2)
+    print(args2.name2)
 
 
 if __name__ == '__main__':

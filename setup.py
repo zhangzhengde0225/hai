@@ -35,17 +35,16 @@ def read_requirements():
     with open('requirements.txt') as f:
         return f.read().splitlines()
 
-
-# REQUIRED = read_requirements()
+REQUIRED = read_requirements()
 # REQUIRED = []
-REQUIRED = [
-	"damei",
-    "numpy",
-	# "opencv-python",
-	"easydict",
-    "grpcio-tools",
-    "requests"
-]
+# REQUIRED = [
+# 	"damei",
+#     "numpy",
+# 	# "opencv-python",
+# 	"easydict",
+#     "grpcio-tools",
+#     "requests"
+# ]
 
 # What packages are optional?
 EXTRAS = {
