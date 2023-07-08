@@ -102,8 +102,12 @@ class Worker:
                 user_or_group, name = a.split(':')
                 user_or_group = user_or_group.strip()
                 name = name.strip()
-                assert user_or_group in ['user', 'group']
-                prems[user_or_group] = name
+                assert user_or_group in ['users', 'groups']
+                if ',' in name:
+                    names = name.split(',')
+                else:
+                    names = [name]
+                prems[user_or_group] = names
         elif isinstance(premissions, dict):
             prems = premissions
         else:
@@ -371,6 +375,7 @@ def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs)
     # print(f'worker args: {args}')
     args.port = auto_port(args.port, start=42902)
     args.worker_address = auto_worker_address(args.worker_address, args.host, args.port)
+    logger.info(f"Worker address: {args.worker_address}")
     if test:
         args.controller_address = "http://chat.ihep.ac.cn:4444"
 

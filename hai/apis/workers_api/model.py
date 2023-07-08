@@ -24,12 +24,15 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
         :return: The list of models.
         """  
-        host = kwargs.get("host", "chat.ihep.ac.cn")
-        port = kwargs.get("port", None)
-        if port:
-            url = f"http://{host}:{port}"
-        else:
-            url = f'https://{host}'
+        url = kwargs.get("url", None)
+        if not url:
+            host = kwargs.get("host", "aiapi.ihep.ac.cn")
+            port = kwargs.get("port", None)
+            if port:
+                url = f"http://{host}:{port}"
+            else:
+                url = f'https://{host}'
+        assert url, f'url or (host and port) is required. For example: url="http://aiapi.ihep.ac.cn:42901"'
 
         ret = requests.post(
             f"{url}/list_models",
