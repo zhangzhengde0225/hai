@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 # (1) 实现WorkerModel
 @dataclass
 class ModelArgs:
-    model_name: str = "hepai/demo_model_name"  # 模型名称
+    name: str = "hepai/demo_model_name"  # 模型名称
     # 其他参数
 
 class Model(BaseWorkerModel):
@@ -67,7 +67,10 @@ def run_worker(**kwargs):
     # worker_args = hai.parse_args_into_dataclasses(WorkerArgs)  # 解析参数
     model_args, worker_args = hai.parse_args_into_dataclasses((ModelArgs, WorkerArgs))  # 解析多个参数类
     # print(worker_args)
-    model = WorkerModel(name=worker_args.name)  # 获取模型
+    model = WorkerModel(  # 获取模型
+        name=worker_args.name
+        # 此处可以传入其他参数
+        )
 
     hai.worker.start(
         daemon=False,  # 是否以守护进程的方式启动
