@@ -37,6 +37,8 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         ret = requests.post(
             f"{url}/list_models",
             )
+        if ret.status_code != 200:
+            raise ValueError(f"Hai Model connect url: {url} Error: \n{ret.status_code} {ret.reason} {ret.text}")
         return ret.json()
     
     @staticmethod
@@ -75,5 +77,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
     
 if __name__ == '__main__':
-    ret = HaiModel.list()
+    ret = HaiModel.list(
+        url="http://aiapi.ihep.ac.cn:42901",
+    )
     print(ret)

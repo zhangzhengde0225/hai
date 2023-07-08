@@ -21,7 +21,7 @@ class HaiLLM(object):
         api_key = kwargs.pop("api_key", os.getenv('HEPAI_API_KEY', None))
 
         session = requests.Session()
-        host = kwargs.get("host", "chat.ihep.ac.cn")
+        host = kwargs.get("host", "aiapi.ihep.ac.cn")
         port = kwargs.get("port", None)
         if port is not None:
             url = f"http://{host}:{port}/v1/chat/completions"
@@ -66,7 +66,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 if __name__ == '__main__':
     import sys
     model = 'hepai/chathep-0527'
-    # model = 'hepai/gpt-3.5-turbo'
+    model = 'hepai/gpt-3.5-turbo'
     api_key = os.getenv('HEPAI_API_KEY')
     messages = [
         {'role': 'system', 'content': 'You are a bot.'},
@@ -78,7 +78,10 @@ if __name__ == '__main__':
     #     ## 如果有多轮对话，可以继续添加，"role": "assistant", "content": "Hello there! How may I assist you today?"
     #     ## 如果有多轮对话，可以继续添加，"role": "user", "content": "I want to buy a car."
     # ]
-    result =  HaiLLM.chat(model, api_key=api_key, messages=messages)
+    result =  HaiLLM.chat(
+        model, api_key=api_key, messages=messages,
+        host="aiapi.ihep.ac.cn", port=42901,
+        )
     full_result = ""
     for i in result:
         full_result += i
