@@ -13,8 +13,9 @@
     
     HepAI团队：
     
-    你好，我是xx中心xx课题组的(职工/学生)xxx，我想使用GPT-4，我的所邮箱是xxx@ihep.ac.cn，我的ai.ihep.ac.cn的用户名是xxx。
-    
+    你好，我是xx中心xx课题组的(职工/学生)xxx，我想使用GPT-4，我的所邮箱是xxx@ihep.ac.cn，
+    我的ai.ihep.ac.cn的用户名是xxx。
+
     我已经知悉GPT-4的使用费用，同意向HepAI团队支付相应的费用。
 
 
