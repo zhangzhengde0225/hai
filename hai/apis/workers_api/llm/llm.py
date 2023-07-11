@@ -26,9 +26,9 @@ class HaiLLM(object):
             host = kwargs.get("host", "aiapi.ihep.ac.cn")
             port = kwargs.get("port", None)
             if port is not None:
-                url = f"http://{host}:{port}/v1/chat/completions"
+                url = f"http://{host}:{port}"
             else:
-                url = f"https://{host}/v1/chat/completions"
+                url = f"https://{host}"
 
         data = dict()
         data['model'] = model
@@ -42,7 +42,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 """
         session = requests.Session()
         response = session.post(
-            url,
+            f'{url}/v1/chat/completions',
             headers={"Authorization": f"Bearer {api_key}"},
             json=data,
             stream=True,
