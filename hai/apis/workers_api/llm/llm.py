@@ -19,14 +19,16 @@ class HaiLLM(object):
         :return: The LLM instance.
         """
         api_key = kwargs.pop("api_key", os.getenv('HEPAI_API_KEY', None))
-
-        session = requests.Session()
-        host = kwargs.get("host", "aiapi.ihep.ac.cn")
-        port = kwargs.get("port", None)
-        if port is not None:
-            url = f"http://{host}:{port}/v1/chat/completions"
+        url = kwargs.pop("url", None)
+        if url is not None:
+            url = url if 'http' in url else f'http://{url}'
         else:
-            url = f"https://{host}/v1/chat/completions"
+            host = kwargs.get("host", "aiapi.ihep.ac.cn")
+            port = kwargs.get("port", None)
+            if port is not None:
+                url = f"http://{host}:{port}/v1/chat/completions"
+            else:
+                url = f"https://{host}/v1/chat/completions"
 
         data = dict()
         data['model'] = model
@@ -38,6 +40,7 @@ class HaiLLM(object):
 The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
+        session = requests.Session()
         response = session.post(
             url,
             headers={"Authorization": f"Bearer {api_key}"},
