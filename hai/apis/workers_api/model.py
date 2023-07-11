@@ -24,16 +24,21 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
         :return: The list of models.
         """  
-        host = kwargs.get("host", "chat.ihep.ac.cn")
-        port = kwargs.get("port", None)
-        if port:
-            url = f"http://{host}:{port}"
-        else:
-            url = f'https://{host}'
+        url = kwargs.get("url", None)
+        if not url:
+            host = kwargs.get("host", "aiapi.ihep.ac.cn")
+            port = kwargs.get("port", None)
+            if port:
+                url = f"http://{host}:{port}"
+            else:
+                url = f'https://{host}'
+        assert url, f'url or (host and port) is required. For example: url="http://aiapi.ihep.ac.cn:42901"'
 
         ret = requests.post(
             f"{url}/list_models",
             )
+        if ret.status_code != 200:
+            raise ValueError(f"Hai Model connect url: {url} Error: \n{ret.status_code} {ret.reason} {ret.text}")
         return ret.json()
     
     @staticmethod
@@ -72,5 +77,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
     
 if __name__ == '__main__':
-    ret = HaiModel.list()
+    ret = HaiModel.list(
+        url="http://aiapi.ihep.ac.cn:42901",
+    )
     print(ret)

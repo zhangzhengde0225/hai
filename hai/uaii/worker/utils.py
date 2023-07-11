@@ -40,9 +40,10 @@ def auto_worker_address(worker_address, host, port):
         return f'http://{host}:{port}'
     elif host == '0.0.0.0':
         ## TODO，此处需要改进，获取本机ip
-        hostname = socket.gethostname()
-        ip = socket.gethostbyname(hostname)
-        print(f'Hostname: {hostname}, ip: {ip}')
+        # 获取本机的外部 IP 地址是使用一个与外部世界的连接
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("10.255.255.255", 1))
+            ip = s.getsockname()[0]
         return f'http://{ip}:{port}'
     else:
         raise ValueError(f'host {host} is not supported')
