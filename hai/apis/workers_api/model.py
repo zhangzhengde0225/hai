@@ -1,8 +1,14 @@
 
 
-import os
+import os, sys
 import requests
-
+from pathlib import Path
+here = Path(__file__).parent
+try:
+    import hai
+except:
+    sys.path.append(str(here.parent.parent.parent))
+    import hai
 
 
 class HaiModel(object):
@@ -13,7 +19,7 @@ class HaiModel(object):
             api_key = os.environ.get("HEPAI_API_KEY", None)
         if api_key is None:
             raise ValueError(f"""            
-The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
+The HepAI API-KEY is required. You can set it via `hai.api_key=xxx` in your code, or set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the method.
 """)
         return api_key
@@ -24,10 +30,13 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
         :return: The list of models.
         """  
+        api_key = kwargs.pop("api_key", None) or hai.api_key
+        api_key = HaiModel.ensure_api_key(api_key)
+        
         url = kwargs.get("url", None)
         if not url:
             host = kwargs.get("host", "aiapi.ihep.ac.cn")
-            port = kwargs.get("port", None)
+            port = kwargs.get("port", 42901)
             if port:
                 url = f"http://{host}:{port}"
             else:
@@ -36,6 +45,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
         ret = requests.post(
             f"{url}/list_models",
+            headers={"Authorization": f"Bearer {api_key}"},
             )
         if ret.status_code != 200:
             raise ValueError(f"Hai Model connect url: {url} Error: \n{ret.status_code} {ret.reason} {ret.text}")
@@ -74,6 +84,8 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
             all_info[model_name] = workers_info
             # print(res.json())
         return all_info
+    
+    
 
     
 if __name__ == '__main__':

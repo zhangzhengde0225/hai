@@ -15,7 +15,7 @@ from .apis import general
 from .apis import worker, BaseWorkerModel, WorkerArgs
 
 # LLM
-from .apis import LLM, Model
+from .apis import LLM, Model, api_key
 
 # from xsensing_ai.modules import *  # 加载项目的模块
 # from xsensing_ai.uaii.server.grpc.grpc_xai_client import XAIGrpcClient

@@ -3,9 +3,10 @@
 """
 
 
-import os
+import os, sys
+from pathlib import Path
 import requests
-
+import hai
 
 
 class HaiLLM(object):
@@ -18,11 +19,12 @@ class HaiLLM(object):
         :param messages: The messages.
         :return: The LLM instance.
         """
-        api_key = kwargs.pop("api_key", os.getenv('HEPAI_API_KEY', None))
+        api_key = kwargs.pop("api_key", None)
+        api_key = api_key or hai.api_key
 
         session = requests.Session()
         host = kwargs.get("host", "aiapi.ihep.ac.cn")
-        port = kwargs.get("port", None)
+        port = kwargs.get("port", 42901)
         if port is not None:
             url = f"http://{host}:{port}/v1/chat/completions"
         else:
