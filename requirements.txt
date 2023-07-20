@@ -16,7 +16,7 @@ grpcio-tools  # for grpc_server.py
 # protobuf  # for grpc_server.py
 # requests  # for hai dataset_utils
 
-# fastapi  # for hai worker
-# uvicorn  # for hai worker
+fastapi  # for hai worker
+uvicorn  # for hai worker
 
 
