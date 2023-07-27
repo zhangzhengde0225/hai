@@ -92,4 +92,5 @@ if __name__ == '__main__':
     ret = HaiModel.list(
         url="http://aiapi.ihep.ac.cn:42901",
     )
+    print(len(ret))
     print(ret)

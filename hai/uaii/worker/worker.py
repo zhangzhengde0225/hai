@@ -47,18 +47,6 @@ def heart_beat_worker(controller):
 
 
 
-@dataclass
-class WorkerArgs:
-    host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
-    port: str = "auto"  # 默认从42902开始
-    controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
-    worker_address: str = "auto"  # 默认是http://<ip>:<port>
-    limit_model_concurrency: int = 5  # 限制模型的并发请求
-    stream_interval: float = 0.  # 额外的流式响应间隔
-    no_register: bool = False  # 不注册到控制器
-    premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
-
-
 class Worker:
     """
     Worker class, with basic and example functions
@@ -71,7 +59,9 @@ class Worker:
                  limit_model_concurrency: int = 5,  # 模型并发数
                  stream_interval: int = 2,  # stream的间隔
                  no_register: bool = False,  # 是否注册到controller
-                 premissions: any = None,  # 权限
+                 permissions: any = None,  # 权限
+                 description: str = None,  # 模型的描述
+                 author: str = None,  # 模型的作者
                  **kwargs
                  ):
         
@@ -81,7 +71,9 @@ class Worker:
         self.limit_model_concurrency = limit_model_concurrency
         self.stream_interval = stream_interval
         self.no_register = no_register
-        self._premissions = self._init_premissions(premissions)
+        self.description = description
+        self.author = author
+        self._permissions = self._init_permissions(permissions)  # 将str转换为dict
 
         self._model = model or BaseWorkerModel()
 
@@ -91,27 +83,24 @@ class Worker:
                 target=heart_beat_worker, args=(self,))
             self.heart_beat_thread.start()
 
-    def _init_premissions(self, premissions):
+    def _init_permissions(self, permissions):
         """worker授予用户或者组的权限"""
         prems = dict()
-        if premissions is None:
+        if permissions is None:
             pass
-        elif isinstance(premissions, str):
+        elif isinstance(permissions, str):
             """user: <user1>; user: <user2>; group: <group1>, ..."""
-            for a in premissions.split(';'):
+            for a in permissions.split(';'):
                 user_or_group, name = a.split(':')
                 user_or_group = user_or_group.strip()
                 name = name.strip()
-                assert user_or_group in ['users', 'groups']
-                if ',' in name:
-                    names = name.split(',')
-                else:
-                    names = [name]
+                assert user_or_group in ['owner', 'users', 'groups']
+                names = name.split(',')  if ',' in name else [name]
                 prems[user_or_group] = names
-        elif isinstance(premissions, dict):
-            prems = premissions
+        elif isinstance(permissions, dict):
+            prems = permissions
         else:
-            raise ValueError(f"premissions should be str or dict, but got {type(premissions)}")
+            raise ValueError(f"permissions should be str or dict, but got {type(permissions)}")
         return prems
 
     def check_model(self):
@@ -119,8 +108,8 @@ class Worker:
         assert hasattr(self.model, 'inference'), f"Model {self.model_name} has no inference function"
 
     @property
-    def premissions(self):
-        return self._premissions
+    def permissions(self):
+        return self._permissions
     
     @property
     def model_name(self):
@@ -139,16 +128,35 @@ class Worker:
     def register_to_controller(self):
         logger.info(f'Register model "{self.model_name}" to controller.')
         url = self.controller_addr + "/register_worker"
+        
+        metadata = {
+            "description": self.description,
+            "author": self.author,
+        }
         data = {
-            "worker_name": self.worker_addr,
+            "worker_addr": self.worker_addr,
             "check_heart_beat": True,
+            "metadata": metadata,
             "worker_status": self.get_status(),
             }
         r = requests.post(url, json=data)
-        assert r.status_code == 200
+        assert r.status_code == 200, f"Register model {self.model_name} failed. {r.text}"
+        
+    def get_status(self):
+        try:
+            misc = self.model.get_misc()
+        except:
+            misc = None
+        return {
+            "model_name": self.model_name,
+            "speed": 1,
+            "queue_length": self.get_queue_length(),
+            "permissions": self.permissions,
+            "misc": misc,
+        }
 
     def send_heart_beat(self):
-        logger.info(f"Send heart beat. Models: {[self.model_name]}. "
+        logger.info(f"Send heart beat. Models: {self.model_name}. "
                     f"Semaphore: {pretty_print_semaphore(model_semaphore)}. "
                     f"global_counter: {global_counter}")
 
@@ -157,7 +165,7 @@ class Worker:
         while True:
             try:
                 ret = requests.post(url, json={
-                    "worker_name": self.worker_addr,
+                    "worker_addr": self.worker_addr,
                     "queue_length": self.get_queue_length()}, timeout=5)
                 exist = ret.json()["exist"]
                 break
@@ -175,19 +183,6 @@ class Worker:
             _value = model_semaphore._value
             _num_waiters = len(model_semaphore._waiters) if model_semaphore._waiters is not None else 0
             return self.limit_model_concurrency - _value + _num_waiters
-
-    def get_status(self):
-        try:
-            misc = self.model.get_misc()
-        except:
-            misc = None
-        return {
-            "model_names": [self.model_name],
-            "speed": 1,
-            "queue_length": self.get_queue_length(),
-            "premissions": self.premissions,
-            "misc": misc,
-        }
 
     def _sleep(self, seconds):
         if float(seconds) == 0. or seconds is None:
@@ -349,28 +344,25 @@ async def get_status(request: Request):
     return app.worker.get_status()
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="127.0.0.1")
-    parser.add_argument("--port", type=str, default='auto')
-    parser.add_argument("--controller-address", type=str,
-        default="http://127.0.0.1:42901")
-    parser.add_argument("--worker-address", type=str,
-        default="auto")
-    parser.add_argument("--limit-model-concurrency", type=int, default=5, help="限制模型的并发请求")
-    parser.add_argument("--stream-interval", type=int, default=0., help="额外的流式响应间隔")
-    parser.add_argument("--no-register", action="store_true", help="不注册到控制器")
-    parser.add_argument("--premissions", type=str, default='group: all', 
-        help="模型权限授予谁,写法：'user: <user1>; user: <user2>; group: <group1>, ...'")
-    args = parser.parse_args()
-    logger.info(f"Args: {args}")
-    return args
+# def get_args():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--host", type=str, default="127.0.0.1")
+#     parser.add_argument("--port", type=str, default='auto')
+#     parser.add_argument("--controller-address", type=str,
+#         default="http://127.0.0.1:42901")
+#     parser.add_argument("--worker-address", type=str,
+#         default="auto")
+#     parser.add_argument("--limit-model-concurrency", type=int, default=5, help="限制模型的并发请求")
+#     parser.add_argument("--stream-interval", type=int, default=0., help="额外的流式响应间隔")
+#     parser.add_argument("--no-register", action="store_true", help="不注册到控制器")
+#     parser.add_argument("--permissions", type=str, default='group: all', 
+#         help="模型权限授予谁,写法：'user: <user1>; user: <user2>; group: <group1>, ...'")
+#     args = parser.parse_args()
+#     logger.info(f"Args: {args}")
+#     return args
 
     
 def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs):
-    # args = get_args() if args is None else args
-    # import transformers
-    # args = transformers.HfArgumentParser((WorkerArgs, )).parse_args_into_dataclasses()
     args = worker_args or WorkerArgs()
     # print(f'worker args: {args}')
     args.port = auto_port(args.port, start=42902)
@@ -384,8 +376,6 @@ def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs)
         if hasattr(args, k):
             setattr(args, k, v)
 
-    # logger.info(f'{args}')
-
     worker  = Worker(
         args.controller_address,
         args.worker_address,
@@ -393,7 +383,9 @@ def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs)
         limit_model_concurrency=args.limit_model_concurrency,
         stream_interval=args.stream_interval,
         no_register=args.no_register,
-        premissions=args.premissions
+        permissions=args.permissions,
+        description=args.description,
+        author=args.author,
         )
     
     app.worker = worker
@@ -413,6 +405,21 @@ def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs)
     return args.worker_address
 
 
+@dataclass
+class WorkerArgs:
+    host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
+    port: str = "auto"  # 默认从42902开始
+    controller_address: str = "http://aiapi.ihep.ac.cn:42901"  # 控制器的地址
+    worker_address: str = "auto"  # 默认是http://<ip>:<port>
+    limit_model_concurrency: int = 5  # 限制模型的并发请求
+    stream_interval: float = 0.  # 额外的流式响应间隔
+    no_register: bool = False  # 不注册到控制器
+    permissions: str = 'groups: all'  # 模型的权限授予，分为用户和组，用;分隔
+    description: str = None  # 模型的描述
+    author: str = None  # 模型的作者
+
+
+
 class WorkerWarper:
 
     @staticmethod
@@ -429,9 +436,11 @@ class WorkerWarper:
         :param limit_model_concurrency: int = 5  # 限制模型的并发请求
         :param stream_interval: float = 0.  # 额外的流式响应间隔
         :param no_register: bool = False  # 不注册到控制器
-        :param premissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
+        :param permissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
         """
         return run_worker(daemon=daemon, **kwargs)
+    
+    
 
 
 if __name__ == "__main__":

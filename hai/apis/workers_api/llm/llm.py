@@ -46,7 +46,8 @@ The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KE
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
         response = session.post(
-            f'{url}/v1/chat/completions',
+            # f'{url}/v1/chat/completions',
+            f'{url}/v1/inference',
             headers={"Authorization": f"Bearer {api_key}"},
             json=data,
             stream=True,
@@ -73,7 +74,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 if __name__ == '__main__':
     import sys
     model = 'hepai/chathep-0527'
-    model = 'hepai/gpt-3.5-turbo'
+    model = 'openai/gpt-3.5-turbo'
     api_key = os.getenv('HEPAI_API_KEY')
     messages = [
         {'role': 'system', 'content': 'You are a bot.'},
@@ -86,7 +87,9 @@ if __name__ == '__main__':
     #     ## 如果有多轮对话，可以继续添加，"role": "user", "content": "I want to buy a car."
     # ]
     result =  HaiLLM.chat(
-        model, api_key=api_key, messages=messages,
+        model,
+        api_key=api_key, 
+        messages=messages,
         host="aiapi.ihep.ac.cn", port=42901,
         )
     full_result = ""
