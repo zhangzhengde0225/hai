@@ -47,6 +47,7 @@ else:
 
 from .workers_api.llm.llm import HaiLLM as LLM
 from .workers_api.model import HaiModel as Model
+from .workers_api.model import HaiModel as Models
 
 
 hai_config = Config(f'{__pydir__.parent}/configs/Base/hai_config.py')

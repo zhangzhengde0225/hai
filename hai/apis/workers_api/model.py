@@ -1,8 +1,15 @@
-
+#!coding:utf-8
+"""
+The Models API of HepAI Platform.
+Author: Zhengde Zhang
+All rights reserved, 2023. 
+This script is free for non-commercial use. Please contact zdzhang@ihep.ac.cn for commercial use.
+"""
 
 import os, sys
 import requests
 from pathlib import Path
+import damei as dm
 here = Path(__file__).parent
 try:
     import hai
@@ -10,6 +17,29 @@ except:
     sys.path.append(str(here.parent.parent.parent))
     import hai
 
+from .sam.pre_process import sam_pre_process, sam_post_process
+
+logger = dm.getLogger('model.py')
+
+class PreProcessFunctions:
+   
+    @staticmethod
+    def pre_process(model, data):
+        """
+        面向切面的编程，输入数据经过预处理函数，再传入模型，若未定义，则不进行预处理。
+        """
+        if model == "meta/segment_anything_model":
+            data = sam_pre_process(data)
+        return data
+
+class PostProcessFunctions:
+    @staticmethod
+    def post_process(model, data):
+        """面向切面的变成，输出结果经过后处理函数，再输出，若未定义，则不进行后处理"""
+        if model == "meta/segment_anything_model":
+            data = sam_post_process(data)
+        return data
+    
 
 class HaiModel(object):
 
@@ -26,17 +56,18 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 
     @staticmethod
     def list(**kwargs):
-        """List all models.
-
+        """
+        List all models on HepAI Platform.
+        
         :return: The list of models.
         """  
         api_key = kwargs.pop("api_key", None) or hai.api_key
         api_key = HaiModel.ensure_api_key(api_key)
         
-        url = kwargs.get("url", None)
+        url = kwargs.pop("url", None)
         if not url:
-            host = kwargs.get("host", "aiapi.ihep.ac.cn")
-            port = kwargs.get("port", 42901)
+            host = kwargs.pop("host", "aiapi.ihep.ac.cn")
+            port = kwargs.pop("port", 42901)
             if port:
                 url = f"http://{host}:{port}"
             else:
@@ -46,6 +77,7 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         ret = requests.post(
             f"{url}/list_models",
             headers={"Authorization": f"Bearer {api_key}"},
+            json=kwargs,
             )
         if ret.status_code != 200:
             raise ValueError(f"Hai Model connect url: {url} Error: \n{ret.status_code} {ret.reason} {ret.text}")
@@ -86,8 +118,85 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         return all_info
     
     
+    @staticmethod
+    def inference(model, **kwargs):
+        api_key = kwargs.pop("api_key", None)
+        stream = kwargs.get("stream", False)
+        timeout = kwargs.get("timeout", 60)
+        
+        api_key = api_key or hai.api_key
 
+        url = kwargs.pop("url", None)
+        if not url:
+            host = kwargs.pop("host", "aiapi.ihep.ac.cn")
+            port = kwargs.pop("port", None)
+            if port is not None:
+                url = f"http://{host}:{port}"
+            else:
+                url = f"https://{host}"
+
+        data = dict()
+        data['model'] = model
+        data.update(kwargs)
+
+        assert api_key, """
+The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
+Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
+"""
+
+        data = PreProcessFunctions.pre_process(model=model, data=data)
+
+        logger.info(f"Requesting {url} ...")
+        # logger.info(f"Requesting data: {data}")
+        session = requests.Session()
+        response = session.post(
+        # response = requests.post(
+            f'{url}/v1/inference',
+            headers={"Authorization": f"Bearer {api_key}"},
+            json=data,
+            timeout=timeout,
+            stream=stream
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"Got status code {response.status_code} from server: {response.text}")
+            # print(response.content)  # 只有非流式相应才能查看内容
+            
+        try:
+            data = response.json()
+        except:
+            text = response.text
+            raise Exception(f"Parse data from server failed, Error: {text}")
+
+        data = response.json()
+        if data['status_code'] != 42901:
+            error_info = f'Request error: {data}'
+            logger.error(error_info)
+            raise Exception(error_info)
+        data = data['message']
+        
+        data = PostProcessFunctions.post_process(model=model, data=data)
+        
+        return data
+        
+        
     
+    @staticmethod
+    def sam(**kwargs):
+        """
+        Segmeng an image via Segment Anything Model.
+        :param img: The image path or image array.
+        :param input_points: The input points prompt, e.g. [[x1,y1], [x2,y2], ...], defualt is None.
+        :param input_labels: The input labels corresponding to the points prompt, 0 represents the background point, 1 represents the front attraction, and the format is [0, 1,...], which needs to be combined with the input points correspond one by one, if not provided, default to all previous attractions.
+        :param input_boxes: The input boxes prompt, e.g. [[x1,y1,x2,y2], [x1,y1,x2,y2], ...], defualt is None.
+        :return: The segmentation result. if no prompt is provided, the result is the segmentation of the entire image by front attraction grid points.
+        """
+        model = "meta/segment_anything_model"
+        model2 = kwargs.pop("model", None)
+        assert model2 is None or model2 == model, f"model={model2} is not supported, only support model={model}"
+        return HaiModel.inference(model=model, **kwargs)
+    
+
 if __name__ == '__main__':
     ret = HaiModel.list(
         url="http://aiapi.ihep.ac.cn:42901",

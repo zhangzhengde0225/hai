@@ -22,7 +22,7 @@ class HaiLLM(object):
         api_key = kwargs.pop("api_key", None)
         api_key = api_key or hai.api_key
 
-        session = requests.Session()
+        
         host = kwargs.get("host", "aiapi.ihep.ac.cn")
         port = kwargs.get("port", 42901)
         if port is not None:
@@ -45,6 +45,7 @@ class HaiLLM(object):
 The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KEY` via `export HEPAI_API_KEY=xxx`.
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
+        session = requests.Session()
         response = session.post(
             # f'{url}/v1/chat/completions',
             f'{url}/v1/inference',
