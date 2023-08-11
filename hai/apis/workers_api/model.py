@@ -120,6 +120,14 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
     
     @staticmethod
     def inference(model, **kwargs):
+        """
+        Call the model to execute inference.
+        :param model: The model name.
+        :param api_key: Your HepAI api key, can be obtained in https://ai.ihep.ac.cn.
+        :param timeout：The timeout of the request, default is 60s.
+        :param stream: Whether to stream the response, default is False.
+        :param kwargs: The input data of the model, they are differ for each model, e.g. {"img": "https://xxx.jpg"}.
+        """
         api_key = kwargs.pop("api_key", None)
         stream = kwargs.get("stream", False)
         timeout = kwargs.get("timeout", 60)
