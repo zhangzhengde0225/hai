@@ -58,7 +58,9 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
     def list(**kwargs):
         """
         List all models on HepAI Platform.
-        
+        :param refresh: Whether to refresh the model list, default is False.
+        :param return_all_info: Whether to return all information of the models, default is False.
+        :param api_key: Your HepAI api key, can be obtained in https://ai.ihep.ac.cn, only return public models if not provided.
         :return: The list of models.
         """  
         api_key = kwargs.pop("api_key", None) or hai.api_key

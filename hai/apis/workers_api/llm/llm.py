@@ -22,19 +22,16 @@ class HaiLLM(object):
         api_key = kwargs.pop("api_key", None)
         api_key = api_key or hai.api_key
 
-        
-        host = kwargs.get("host", "aiapi.ihep.ac.cn")
-        port = kwargs.get("port", 42901)
-        if port is not None:
-            url = f"http://{host}:{port}"
-        else:
-            host = kwargs.get("host", "aiapi.ihep.ac.cn")
-            port = kwargs.get("port", None)
+        url = kwargs.pop("url", None)
+        if not url:
+            host = kwargs.pop("host", "aiapi.ihep.ac.cn")
+            port = kwargs.pop("port", None)
             if port is not None:
                 url = f"http://{host}:{port}"
             else:
                 url = f"https://{host}"
-
+        
+        
         data = dict()
         data['model'] = model
         data['messages'] = messages
