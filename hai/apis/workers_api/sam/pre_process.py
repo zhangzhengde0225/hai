@@ -20,6 +20,7 @@ def sam_pre_process(data):
     img = data.pop('img', None)
     assert img is not None, "The img need to be provided."
     if isinstance(img, str):  # 路径，加载为图片
+        assert os.path.exists(img), f"图片{img}不存在"
         if os.path.isfile(img):
             img = load_img(img)
     if isinstance(img, np.ndarray):  # 图片，转换为base64
