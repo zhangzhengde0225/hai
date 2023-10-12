@@ -58,7 +58,16 @@ def sam_pre_process(data):
 
 def sam_post_process(data):
     # return data
-    for i, mask_info in enumerate(data):
-        mask_info['segmentation'] = np.array(mask_info['segmentation'], dtype=np.int32)
+    if isinstance(data[0], dict):
+        only_mask = False
+    else:
+        only_mask = True
+
+    if only_mask:
+        for mask_info in data:
+            mask_info = np.array(mask_info, dtype=np.int32)
+    else:
+        for i, mask_info in enumerate(data):
+            mask_info['segmentation'] = np.array(mask_info['segmentation'], dtype=np.int32)
         
     return data
