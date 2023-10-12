@@ -21,6 +21,7 @@ import requests
 import uvicorn
 
 import damei as dm 
+import atexit
 here = Path(__file__).parent
 
 try:
@@ -44,7 +45,6 @@ def heart_beat_worker(controller):
     while True:
         time.sleep(WORKER_HEART_BEAT_INTERVAL)
         controller.send_heart_beat()
-
 
 
 class Worker:
@@ -81,7 +81,9 @@ class Worker:
             self.register_to_controller()
             self.heart_beat_thread = threading.Thread(
                 target=heart_beat_worker, args=(self,))
+            self.heart_beat_thread.setDaemon(True)  # 解决推出问题
             self.heart_beat_thread.start()
+        atexit.register(self.exit_handler)
 
     def _init_permissions(self, permissions):
         """worker授予用户或者组的权限"""
@@ -102,6 +104,25 @@ class Worker:
         else:
             raise ValueError(f"permissions should be str or dict, but got {type(permissions)}")
         return prems
+    
+    # 程序退出时，发送退出信息
+    def exit_handler(self):
+        logger.info(f'Stop model "{self.model_name}" to controller {self.controller_addr}, ')
+        url = self.controller_addr + "/stop_worker"
+        
+        metadata = {
+            "description": self.description,
+            "author": self.author,
+        }
+        data = {
+            "worker_addr": self.worker_addr,
+            "check_heart_beat": True,
+            "metadata": metadata,
+            "worker_status": self.get_status(),
+            }
+        r = requests.post(url, json=data)
+        assert r.status_code == 200, f"Stop model {self.model_name} failed. {r.text}"
+        logger.info(f'Done. {r.text}')
 
     def check_model(self):
         # 测试是否有inference函数
@@ -423,7 +444,7 @@ class WorkerArgs:
 class WorkerWarper:
 
     @staticmethod
-    def start(daemon=False, **kwargs):
+    def start(**kwargs):
         """
         运行一个hepai的worker
         :param model: BaseWorkerModel = None, 模型
@@ -438,6 +459,8 @@ class WorkerWarper:
         :param no_register: bool = False  # 不注册到控制器
         :param permissions: str = 'group: all'  # 模型的权限授予，分为用户和组，用;分隔
         """
+        daemon = kwargs.pop('daemon', False)
+        assert daemon is False, "Daemon is deprecated in 2023.10.12"
         return run_worker(daemon=daemon, **kwargs)
     
     
