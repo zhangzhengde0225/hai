@@ -189,8 +189,6 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         
         return data
         
-        
-    
     @staticmethod
     def sam(**kwargs):
         """
@@ -205,6 +203,11 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         model2 = kwargs.pop("model", None)
         assert model2 is None or model2 == model, f"model={model2} is not supported, only support model={model}"
         return HaiModel.inference(model=model, **kwargs)
+    
+    @classmethod
+    def dalle3(cls, **kwargs):
+        print(cls, kwargs)
+        return None
     
 
 if __name__ == '__main__':

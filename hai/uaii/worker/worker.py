@@ -105,24 +105,6 @@ class Worker:
             raise ValueError(f"permissions should be str or dict, but got {type(permissions)}")
         return prems
     
-    # 程序退出时，发送退出信息
-    def exit_handler(self):
-        logger.info(f'Stop model "{self.model_name}" to controller {self.controller_addr}, ')
-        url = self.controller_addr + "/stop_worker"
-        
-        metadata = {
-            "description": self.description,
-            "author": self.author,
-        }
-        data = {
-            "worker_addr": self.worker_addr,
-            "check_heart_beat": True,
-            "metadata": metadata,
-            "worker_status": self.get_status(),
-            }
-        r = requests.post(url, json=data)
-        assert r.status_code == 200, f"Stop model {self.model_name} failed. {r.text}"
-        logger.info(f'Done. {r.text}')
 
     def check_model(self):
         # 测试是否有inference函数
@@ -144,7 +126,26 @@ class Worker:
 
     @model.setter
     def model(self, model):
-        self._model = model    
+        self._model = model  
+        
+    # 程序退出时，发送退出信息
+    def exit_handler(self):
+        logger.info(f'Remove model "{self.model_name}" from controller {self.controller_addr}, ')
+        url = self.controller_addr + "/stop_worker"
+        
+        metadata = {
+            "description": self.description,
+            "author": self.author,
+        }
+        data = {
+            "worker_addr": self.worker_addr,
+            "check_heart_beat": True,
+            "metadata": metadata,
+            "worker_status": self.get_status(),
+            }
+        r = requests.post(url, json=data)
+        assert r.status_code == 200, f"Stop model {self.model_name} failed. {r.text}"
+        logger.info(f'Done. {r.text}')  
     
     def register_to_controller(self):
         logger.info(f'Register model "{self.model_name}" to controller.')
@@ -262,7 +263,6 @@ class Worker:
                 yield json.dumps(output).encode() + b"\0"
             else:
                 raise ValueError(f'output type {type(output)} not supported')
-
         try:
             output = self.model.inference(**params)
             if not stream:
@@ -449,7 +449,6 @@ class WorkerWarper:
         运行一个hepai的worker
         :param model: BaseWorkerModel = None, 模型
         :param worker_args: WorkerArgs = None, worker的参数，可以由WorkerArgs类生成，会被下面的参数覆盖
-        :praam daemon: bool = False 是否以守护进程的方式运行
         :param host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
         :param port: str = "auto"  # 默认从42902开始
         :param controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址

@@ -1,5 +1,8 @@
 
 
+# import hai
+# addr = hai.worker.start(daemon=True)
+# print('addr', addr)
+
 import hai
-addr = hai.worker.start(daemon=True)
-print('addr', addr)
+hai.Model.dalle3(promt='a white cat')
