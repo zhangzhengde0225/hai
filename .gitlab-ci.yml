@@ -16,4 +16,7 @@ push_to_github:
     - main
   before_script:
     - cd /tmp/workspace
+  cache:
+    paths:
+      - /tmp/workspace
     
