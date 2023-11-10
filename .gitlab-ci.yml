@@ -3,6 +3,8 @@ stages:
 
 push_to_github:
   stage: deploy
+  tags:
+    - gitlab-to-github
   script:
     - git clone --bare https://code.ihep.ac.cn/zdzhang/hai.git
     - cd hai.git
