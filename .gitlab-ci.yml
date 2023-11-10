@@ -6,6 +6,9 @@ push_to_github:
   tags:
     - gitlab-to-github
   script:
+    - su zzd
+    - whoami
+    - cd /home/zzd/.tmp
     - git clone --bare https://code.ihep.ac.cn/zdzhang/hai.git
     - cd hai.git
     - git push --mirror git@github.com:zhangzhengde0225/hai.git
