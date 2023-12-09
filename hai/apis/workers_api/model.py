@@ -18,6 +18,7 @@ except:
     import hai
 
 from .sam.pre_process import sam_pre_process, sam_post_process
+from .nougat.pdf_process import pdf_process
 
 logger = dm.getLogger('model.py')
 
@@ -30,6 +31,8 @@ class PreProcessFunctions:
         """
         if model == "meta/segment_anything_model":
             data = sam_pre_process(data)
+        elif model == "meta/nougat":
+            data = pdf_process(data)
         return data
 
 class PostProcessFunctions:
@@ -155,7 +158,8 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 """
 
         data = PreProcessFunctions.pre_process(model=model, data=data)
-
+        if model == "meta/nougat":
+            stream = True
         logger.info(f"Requesting {url} ...")
         # logger.info(f"Requesting data: {data}")
         session = requests.Session()
@@ -171,22 +175,23 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         if response.status_code != 200:
             raise Exception(f"Got status code {response.status_code} from server: {response.text}")
             # print(response.content)  # 只有非流式相应才能查看内容
-            
         try:
             data = response.json()
+            status_code = data.pop('status_code', 42901)
+            if status_code != 42901:
+                error_info = f'Request error: {data}'
+                logger.error(error_info)
+                raise Exception(error_info)
         except:
-            text = response.text
-            raise Exception(f"Parse data from server failed, Error: {text}")
-
-        data = response.json()
-        if data['status_code'] != 42901:
-            error_info = f'Request error: {data}'
-            logger.error(error_info)
-            raise Exception(error_info)
-        data = data['message']
+            pass
         
+        if not stream:            
+            data = response.json()
+            data = data['message']
+        else: 
+            data = response.content.decode('utf-8', errors='ignore')
+            data = data.replace('[DONE]', "")
         data = PostProcessFunctions.post_process(model=model, data=data)
-        
         return data
         
     @staticmethod
