@@ -4,7 +4,6 @@ https://github.com/keras-team/keras/blob/master/keras/utils/data_utils.py
 '''
 
 import hashlib
-import imp
 import os
 import shutil
 import zipfile

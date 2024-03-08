@@ -7,6 +7,7 @@ push_to_github:
     - gitlab-to-github
   script:
     - whoami
+    - cd /tmp
     - git clone --bare https://code.ihep.ac.cn/zdzhang/hai.git
     - cd hai.git
     - git push --mirror git@github.com:zhangzhengde0225/hai.git
@@ -14,9 +15,4 @@ push_to_github:
     - rm -rf hai.git
   only:
     - main
-  before_script:
-    - cd /tmp/workspace
-  cache:
-    paths:
-      - /tmp/workspace
     
