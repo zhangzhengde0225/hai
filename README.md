@@ -1,5 +1,15 @@
-# [HAI](https://code.ihep.ac.cn/zdzhang/hai)
-白泽AI平台(Hakutaku AI)分为算法框架、模型库、数据集、算力资源四个部分。其中，HAI算法框架集成高能物理领域经典和SOTA的人工智能算法，提供统一、简单、易用的复现和应用接口。
+[![Stars](https://img.shields.io/github/stars/zhangzhengde0225/CDNet)](
+https://github.com/zhangzhengde0225/hai)
+[![Open issue](https://img.shields.io/github/issues/zhangzhengde0225/CDNet)](
+https://github.com/zhangzhengde0225/hai/issues)
+<!-- [![Datasets](https://img.shields.io/static/v1?label=Download&message=datasets&color=green)](
+https://github.com/zhangzhengde0225/CDNet/blob/master/docs/DATASETS.md)
+[![Datasets](https://img.shields.io/static/v1?label=Download&message=source_code&color=orange)](
+https://github.com/zhangzhengde0225/CDNet/archive/refs/heads/master.zip) -->
+
+
+# [HepAI](https://ai.ihep.ac.cn)
+AI平台(Hakutaku AI)分为算法框架、模型库、数据集、算力资源四个部分。其中，HAI算法框架集成高能物理领域经典和SOTA的人工智能算法，提供统一、简单、易用的复现和应用接口。
 
 <details open>
 <summary><b>News</b></summary>
