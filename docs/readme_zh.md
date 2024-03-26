@@ -7,33 +7,28 @@ https://github.com/zhangzhengde0225/CDNet/blob/master/docs/DATASETS.md)
 [![Datasets](https://img.shields.io/static/v1?label=Download&message=source_code&color=orange)](
 https://github.com/zhangzhengde0225/CDNet/archive/refs/heads/master.zip) -->
 
-#### English | [简体中文](https://github.com/zhangzhengde0225/hai/blob/main/docs/readme_zh_cn.md)
-
-# HepAI Library
-This is [HepAI](https://ai.ihep.ac.cn) python library, the AI platform can accelerate scientific research in multidisciplinary scenarios, simplify model iteration and flow, and is a common infrastructure for the development of AI algorithms and applications.
-
-The HepAI platform itself is a software system that carries AI algorithm models, provides AI computing power, connects data channels, and conducts AI training.
-
-The HepAI framework integrates classic and state-of-the-art (SOTA) artificial intelligence algorithms in the field of high-energy physics. One can access related algorithm models, datasets, and computational resources through a unified interface, making the application of AI simple and efficient.
+#### English | [简体中文](https://github.com/zhangzhengde0225/CDNet/blob/master/docs/README_zh_cn.md)
+# [HepAI](https://ai.ihep.ac.cn)
+AI平台(Hakutaku AI)分为算法框架、模型库、数据集、算力资源四个部分。其中，HAI算法框架集成高能物理领域经典和SOTA的人工智能算法，提供统一、简单、易用的复现和应用接口。
 
 <details open>
 <summary><b>News</b></summary>
 
-+ [2024.03.26] v1.0.21 Make LLM request like OpenAI via HepAI object.
-+ [2023.10.24] v1.0.18 接入dalle文生图模型，调用方法教程见[此处](https://note.ihep.ac.cn/s/EG60U1Rtf)。
++ [2023.10.24] v1.0.18接入dalle文生图模型，调用方法教程见[此处](https://note.ihep.ac.cn/s/EG60U1Rtf)。
 + [2023.04.21] v1.0.7通过hepai使用GPT-3.5，[hepai_api.md](docs/hepai_api.md).
 + [2023.02.09] 基于ChatGPT的**HaiChatGPT**已上线，使用简单，无需梯子！详情查看：[HaiChatGPT](https://code.ihep.ac.cn/zdzhang/haichatgpt).
 + [2023.01.16] 华为NPU服务器上架，如有算法国产化需求，请查阅[NPU文档](docs/computing_power/npu_power_doc.md)。
 + [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和3个数据集
+
 + [2022.08.23] HAI v1.0.0
 </details>
 
 <details open>
 <summary><b>Tutorials</b></summary>
 
-[Quick Start to Using HepAI on Computing Clusters](docs/quickstart_hpc.md)
+[在计算集群上使用HAI的快速入门](docs/quickstart_hpc.md)
 
-[Reconstruction and identification of atmospheric neutrinos in JUNO experiments using PointNet](https://code.ihep.ac.cn/zhangyiyu/pointnet)
+[使用PointNet对JUNO实验的大气中微子进行重建和鉴别](https://code.ihep.ac.cn/zhangyiyu/pointnet)
 
 </details>
 
