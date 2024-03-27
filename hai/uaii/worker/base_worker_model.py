@@ -21,6 +21,7 @@ class BaseWorkerModel:
         self.name = kwargs.pop('name', "hepai/worker-base-model")
         self.trainable = kwargs.pop('trainable', False)
         self.inferable = kwargs.pop('inferable', False)
+        self.allowd_functions = ['inference', 'train', 'evaluate', "chat_completions"]
 
     @staticmethod
     def convert(ret):

@@ -1,5 +1,12 @@
-import hai
-# from hai import BaseWorkerModel
+
+import os, sys
+from pathlib import Path    
+here = Path(__file__).parent
+try:
+    import hepai
+except:
+    sys.path.insert(0, f'{here.parent.parent.parent}')
+    import hepai
 from worker import WorkerWarper
 from base_worker_model import BaseWorkerModel
 from dataclasses import dataclass, field
@@ -17,11 +24,13 @@ class WorkerModel(BaseWorkerModel):
         return output, input
         # for i in output:
         #     yield i  # 可以return返回python的基础类型或yield生成器
+    
+    def chat_completions(self, **kwargs):
+        pass
+        raise NotImplementedError("Please implement this method")
 
-def run_worker(**kwargs):
-    # worker_args = hai.parse_args_into_dataclasses(WorkerArgs)  # 解析参数
-    model_args, worker_args = hai.parse_args_into_dataclasses((ModelArgs, WorkerArgs))  # 解析多个参数类
-    # print(worker_args)
+def run_worker(model_args, worker_args, **kwargs):
+    
     model = WorkerModel(  # 获取模型
         name=model_args.name
         # 此处可以传入其他参数
@@ -58,10 +67,14 @@ class WorkerArgs:
     limit_model_concurrency: int = 5  # 限制模型的并发请求
     stream_interval: float = 0.  # 额外的流式响应间隔
     no_register: bool = False  # 不注册到控制器
-    permissions: str = 'groups: all'  # 模型的权限授予，分为用户和组，用;分隔，例如：需要授权给所有组、a用户、b用户：'groups: all; users: a, b; owner: c'
+    permissions: str = 'groups: PAYG'  # 模型的权限授予，分为用户和组，用;分隔，例如：需要授权给所有组、a用户、b用户：'groups: all; users: a, b; owner: c'
     description: str = 'This is a demo worker in HeiAI-Distributed Deploy Framework'  # 模型的描述
     author: str = 'hepai'  # 模型的作者
     test: bool = False  # 测试模式，不会真正启动worker，只会打印参数
 
 if __name__ == '__main__':
-    run_worker()
+    # worker_args = hai.parse_args_into_dataclasses(WorkerArgs)  # 解析参数
+    model_args, worker_args = hepai.parse_args_into_dataclasses((ModelArgs, WorkerArgs))  # 解析多个参数类
+    # print(worker_args)
+    worker_args.controller_address = "http://ainpu.ihep.ac.cn:21601"
+    run_worker(model_args=model_args, worker_args=worker_args)

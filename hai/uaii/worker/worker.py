@@ -35,7 +35,7 @@ except:
 
 GB = 1 << 30
 
-logger = dm.get_logger('base_worker.py')
+logger = dm.get_logger('worker.py')
 global_counter = 0
 model_semaphore = None
 WORKER_HEART_BEAT_INTERVAL = 30
@@ -233,7 +233,26 @@ class Worker:
         except StopIteration:
             pass
         return content
-
+    
+    def unified_gate(self, **kwargs):
+        """
+        统一入口
+        """
+        assert "function" in kwargs, "function is required"
+        function = kwargs.pop("function")
+        try:
+            if hasattr(self.model, function) and callable(getattr(self.model, function)):
+                return getattr(self.model, function)(**kwargs)
+            else:
+                raise ValueError(f"Function {function} does not exist or is not callable in the model")
+        except Exception as e:
+            error_info = f'{type(e)} {e}'
+            logger.error(f'error_info: {error_info}\n {traceback.format_exc()}')
+            ret = {
+                "message": error_info,
+                "status_code": 42904, 
+            }
+            return ret
     
     def generate_stream_gate(self, **params):
         """
@@ -308,7 +327,7 @@ class WorkerAPP(FastAPI):
 
     def __init__(self):
         super().__init__()
-        self._worker = None
+        self._worker: Worker = None
 
     @property
     def worker(self):
@@ -327,6 +346,20 @@ app = WorkerAPP()  # It's a FastAPI instance
 
 def release_model_semaphore():
     model_semaphore.release()
+
+@app.post("/worker_unified_gate")
+async def app_unified_gate(request: Request):
+    global model_semaphore, global_counter
+    global_counter += 1
+    params = await request.json()
+    if model_semaphore is None:
+        model_semaphore = asyncio.Semaphore(
+            app.worker.limit_model_concurrency)
+    await model_semaphore.acquire()
+    ret = app.worker.unified_gate(**params)
+    background_tasks = BackgroundTasks()  # 背景任务
+    background_tasks.add_task(release_model_semaphore)  # 释放锁
+    return ret
 
 @app.post("/worker_generate_stream")
 async def generate_stream(request: Request):
@@ -365,28 +398,12 @@ async def get_status(request: Request):
     return app.worker.get_status()
 
 
-# def get_args():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--host", type=str, default="127.0.0.1")
-#     parser.add_argument("--port", type=str, default='auto')
-#     parser.add_argument("--controller-address", type=str,
-#         default="http://127.0.0.1:42901")
-#     parser.add_argument("--worker-address", type=str,
-#         default="auto")
-#     parser.add_argument("--limit-model-concurrency", type=int, default=5, help="限制模型的并发请求")
-#     parser.add_argument("--stream-interval", type=int, default=0., help="额外的流式响应间隔")
-#     parser.add_argument("--no-register", action="store_true", help="不注册到控制器")
-#     parser.add_argument("--permissions", type=str, default='group: all', 
-#         help="模型权限授予谁,写法：'user: <user1>; user: <user2>; group: <group1>, ...'")
-#     args = parser.parse_args()
-#     logger.info(f"Args: {args}")
-#     return args
-
-    
 def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs):
     args = worker_args or WorkerArgs()
     # print(f'worker args: {args}')
-    args.port = auto_port(args.port, start=42902)
+    if args.port == "auto":
+        start_port = args.__dict__.get("start_port", 42902)
+        args.port = auto_port(args.port, start=start_port)
     args.worker_address = auto_worker_address(args.worker_address, args.host, args.port)
     logger.info(f"Worker address: {args.worker_address}")
     if test:
@@ -438,7 +455,6 @@ class WorkerArgs:
     permissions: str = 'groups: all'  # 模型的权限授予，分为用户和组，用;分隔
     description: str = None  # 模型的描述
     author: str = None  # 模型的作者
-
 
 
 class WorkerWarper:

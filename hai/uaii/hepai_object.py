@@ -48,6 +48,7 @@ except:
     )
     from repos.openai_python.src.openai._base_client import make_request_options
 
+from hai.apis.workers_api.model import HaiModel
 
 DEFAULT_MAX_RETRIES = 2
 
@@ -187,5 +188,16 @@ class HepAI(OpenAI):
         self.completions = HaiCompletions(client=self)
         self.chat = HaiChat(client=self)
         pass
+
+    def list_models(self, **kwargs):
+        api_key = kwargs.pop("api_key", self.api_key)
+        host = kwargs.pop("host", self.base_url.host)
+        port = kwargs.pop("port", self.base_url.port)
+        return HaiModel.list(
+            api_key=api_key,
+            host=host,
+            port=port,
+            **kwargs,
+        )
 
     

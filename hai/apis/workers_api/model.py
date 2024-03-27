@@ -56,6 +56,11 @@ The HepAI API-KEY is required. You can set it via `hai.api_key=xxx` in your code
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the method.
 """)
         return api_key
+    
+
+    @staticmethod
+    def list_models(**kwargs):
+        return HaiModel.list(**kwargs)
 
     @staticmethod
     def list(**kwargs):
