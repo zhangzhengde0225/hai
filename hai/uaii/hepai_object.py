@@ -7,11 +7,27 @@ from pathlib import Path
 here = Path(__file__).parent
 
 try:
-    from openai import OpenAI
+    from openai import OpenAI, resources
+    from openai import NOT_GIVEN, Timeout, NotGiven
+    from openai._types import Headers, Query, Body
+    from openai.types import Completion
+    from openai.resources import Completions, Chat
+    from openai.resources.chat.completions import (
+        ChatCompletionMessageParam,
+        completion_create_params,
+        ChatCompletionToolChoiceOptionParam,
+        ChatCompletionToolParam,
+        ChatCompletion,
+        ChatCompletionChunk,
+        Stream,
+    )
+    from openai._utils import (
+        required_args, maybe_transform
+    )
+    from openai._base_client import make_request_options
+    
 except:
     sys.path.append(str(here.parent.parent))
-    # from hai.apis.openai_api import OpenAI
-    # from hai.apis.openai_api import NOT_GIVEN, Timeout, NotGiven
     from repos.openai_python.src.openai import OpenAI
     from repos.openai_python.src.openai import ( NOT_GIVEN, Timeout, NotGiven)
     from repos.openai_python.src.openai._types import Headers, Query, Body

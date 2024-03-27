@@ -4,5 +4,7 @@
 # addr = hai.worker.start(daemon=True)
 # print('addr', addr)
 
-import hai
-hai.Model.dalle3(promt='a white cat')
+# import hai
+# hai.Model.dalle3(promt='a white cat')
+
+from hepai import HepAI
