@@ -15,8 +15,8 @@ from dataclasses import dataclass, field
 import os, sys
 from pathlib import Path
 
-from fastapi import FastAPI, Request, BackgroundTasks
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
 import requests
 import uvicorn
 
@@ -242,17 +242,20 @@ class Worker:
         function = kwargs.pop("function")
         try:
             if hasattr(self.model, function) and callable(getattr(self.model, function)):
-                return getattr(self.model, function)(**kwargs)
+                func = getattr(self.model, function)
+                try:
+                    ret = func(**kwargs)
+                    return True, ret
+                except Exception as e:
+                    error_info = f'{type(e)} {e}'
+                    # logger.error(f'error_info: {error_info}\n {traceback.format_exc()}')
+                    return False, error_info
             else:
-                raise ValueError(f"Function {function} does not exist or is not callable in the model")
+                return False, f"Function `{function}` does not exist or is not callable in the model `{self.model_name}`",
         except Exception as e:
             error_info = f'{type(e)} {e}'
             logger.error(f'error_info: {error_info}\n {traceback.format_exc()}')
-            ret = {
-                "message": error_info,
-                "status_code": 42904, 
-            }
-            return ret
+            return False, error_info
     
     def generate_stream_gate(self, **params):
         """
@@ -356,10 +359,16 @@ async def app_unified_gate(request: Request):
         model_semaphore = asyncio.Semaphore(
             app.worker.limit_model_concurrency)
     await model_semaphore.acquire()
-    ret = app.worker.unified_gate(**params)
+    stream = params.get("stream", False)
+    ok, data = app.worker.unified_gate(**params)
     background_tasks = BackgroundTasks()  # 背景任务
     background_tasks.add_task(release_model_semaphore)  # 释放锁
-    return ret
+    if not ok:
+        data = data if isinstance(data, str) else json.dumps(data)
+        raise HTTPException(status_code=404, detail=data)
+    if not stream:
+        return data
+    return StreamingResponse(data)
 
 @app.post("/worker_generate_stream")
 async def generate_stream(request: Request):

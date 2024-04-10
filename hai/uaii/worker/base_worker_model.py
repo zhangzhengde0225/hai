@@ -50,15 +50,15 @@ class BaseWorkerModel:
     
     def inference(self, **kwargs):
         """需要重写函数"""
-        raise NotImplementedError("Please implement this method")
+        raise NotImplementedError(f"The `inference` method of `{self.name}` is not implemented.")
     
     def train(self, **kwargs):
         """需要重写函数"""
-        raise NotImplementedError("Please implement this method")
+        raise NotImplementedError(f"The `train` method of `{self.name}` is not implemented.")
     
     def evaluate(self, **kwargs):
         """需要重写函数"""
-        raise NotImplementedError("Please implement this method")
+        raise NotImplementedError(f"The `evaluate` method of `{self.name}` is not implemented.")
     
 
     def get_misc(self, **kwargs):
@@ -67,3 +67,6 @@ class BaseWorkerModel:
         misc['trainable'] = self.trainable
         misc['inferable'] = self.inferable
         return misc
+    
+    def chat_completions(self, **kwargs):
+        raise NotImplementedError(f'The `chat_completions` method of `{self.name}` is not implemented.')
