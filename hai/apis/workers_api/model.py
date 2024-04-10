@@ -16,7 +16,7 @@ try:
 except:
     sys.path.append(str(here.parent.parent.parent))
     import hai
-
+import base64
 from .sam.pre_process import sam_pre_process, sam_post_process
 from .nougat.pdf_process import pdf_process
 
@@ -31,7 +31,7 @@ class PreProcessFunctions:
         """
         if model == "meta/segment_anything_model":
             data = sam_pre_process(data)
-        elif model == "meta/nougat":
+        elif model == "hepai/hainougat":
             data = pdf_process(data)
         return data
 
@@ -141,8 +141,9 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         api_key = kwargs.pop("api_key", None)
         stream = kwargs.get("stream", False)
         timeout = kwargs.get("timeout", 60)
-        
+        pdfbin = kwargs.get('pdfbin', None)
         api_key = api_key or hai.api_key
+        
 
         url = kwargs.pop("url", None)
         if not url:
@@ -162,9 +163,12 @@ The HepAI API-KEY is required. Please set the environment variable `HEPAI_API_KE
 Alternatively, it can be provided by passing in the `api_key` parameter when calling the `chat` method.
 """
 
-        data = PreProcessFunctions.pre_process(model=model, data=data)
-        if model == "meta/nougat":
-            stream = True
+        if not pdfbin:
+            data = PreProcessFunctions.pre_process(model=model, data=data)
+        else:
+            pdfbin= base64.b64encode(pdfbin).decode()
+            data['pdfbin'] = pdfbin
+
         logger.info(f"Requesting {url} ...")
         # logger.info(f"Requesting data: {data}")
         session = requests.Session()
