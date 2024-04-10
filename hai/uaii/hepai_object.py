@@ -25,28 +25,30 @@ try:
         required_args, maybe_transform
     )
     from openai._base_client import make_request_options
-    
 except:
-    sys.path.append(str(here.parent.parent))
-    from repos.openai_python.src.openai import OpenAI
-    from repos.openai_python.src.openai import ( NOT_GIVEN, Timeout, NotGiven)
-    from repos.openai_python.src.openai._types import Headers, Query, Body
-    from repos.openai_python.src.openai.types import Completion
-    from repos.openai_python.src.openai import resources
-    from repos.openai_python.src.openai.resources import Completions, Chat
-    from repos.openai_python.src.openai.resources.chat.completions import (
-        ChatCompletionMessageParam,
-        completion_create_params,
-        ChatCompletionToolChoiceOptionParam,
-        ChatCompletionToolParam,
-        ChatCompletion,
-        ChatCompletionChunk,
-        Stream,
-    )
-    from repos.openai_python.src.openai._utils import (
-        required_args, maybe_transform
-    )
-    from repos.openai_python.src.openai._base_client import make_request_options
+    try:
+        sys.path.append(str(here.parent.parent))
+        from repos.openai_python.src.openai import OpenAI
+        from repos.openai_python.src.openai import ( NOT_GIVEN, Timeout, NotGiven)
+        from repos.openai_python.src.openai._types import Headers, Query, Body
+        from repos.openai_python.src.openai.types import Completion
+        from repos.openai_python.src.openai import resources
+        from repos.openai_python.src.openai.resources import Completions, Chat
+        from repos.openai_python.src.openai.resources.chat.completions import (
+            ChatCompletionMessageParam,
+            completion_create_params,
+            ChatCompletionToolChoiceOptionParam,
+            ChatCompletionToolParam,
+            ChatCompletion,
+            ChatCompletionChunk,
+            Stream,
+        )
+        from repos.openai_python.src.openai._utils import (
+            required_args, maybe_transform
+        )
+        from repos.openai_python.src.openai._base_client import make_request_options
+    except:
+        raise ImportError("Can't find openai module, please install it first by `pip install openai --upgrade`.")
 
 from hai.apis.workers_api.model import HaiModel
 
