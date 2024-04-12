@@ -1,5 +1,5 @@
 
-from typing import Mapping, Union, Literal, Iterable, Optional, Dict, List
+from typing import Mapping, Union, Literal, Iterable, Optional, Dict, List, cast
 
 import httpx
 import os, sys
@@ -53,6 +53,8 @@ except:
 from hai.apis.workers_api.model import HaiModel
 
 DEFAULT_MAX_RETRIES = 2
+DEFAULT_TIMEOUT = httpx.Timeout(timeout=600.0, connect=5.0)
+DEFAULT_LIMITS = httpx.Limits(max_connections=100, max_keepalive_connections=20)
 
 class HaiCompletions(Completions):
 
@@ -174,7 +176,11 @@ class HepAI(OpenAI):
         # outlining your use-case to help us decide if it should be
         # part of our public interface in the future.
         _strict_response_validation: bool = False,
+        proxy: str | None = None,
     ) -> None:
+        if (http_client is None) and (proxy is not None):
+            http_client = self.get_http_client(proxy, base_url=base_url, timeout=timeout,)
+
         super().__init__(
             api_key=api_key,
             organization=organization,
@@ -186,10 +192,34 @@ class HepAI(OpenAI):
             http_client=http_client,
             _strict_response_validation=_strict_response_validation,
         )
-
+        
         self.completions = HaiCompletions(client=self)
         self.chat = HaiChat(client=self)
         pass
+
+    def get_http_client(self, proxy, **kwargs) -> httpx.Client:
+        if proxy is None:
+            return None
+        else:
+            proxies = {
+                "http://": proxy,
+                "https://": proxy,
+            }
+        base_url = kwargs.get("base_url", None)
+        base_url = base_url or "https://aiapi.ihep.ac.cn/v1"
+        timeout = kwargs.get("timeout", DEFAULT_TIMEOUT)
+        timeout = DEFAULT_TIMEOUT if (timeout == NOT_GIVEN or timeout is None) else timeout
+        transport = kwargs.get("transport", None)
+        limits = kwargs.get("limits", DEFAULT_LIMITS)
+        limits = DEFAULT_LIMITS if (limits == NOT_GIVEN or limits is None) else limits
+        http_client = httpx.Client(
+            base_url=base_url,
+            timeout=timeout,
+            proxies=proxies,
+            transport=transport,
+            limits=limits,
+        )
+        return http_client
 
     def list_models(self, **kwargs):
         api_key = kwargs.pop("api_key", self.api_key)
