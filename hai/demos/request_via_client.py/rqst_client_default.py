@@ -18,9 +18,15 @@ from hepai import HepAI, ChatCompletion
 # model = "gpt-3.5-turbo"
 
 proxy = None
-base_url = "http://localhost:42901/v1"
-api_key = os.getenv("HEPAI_A100_API_KEY")
+# base_url = "http://localhost:42901/v1"
+# api_key = os.getenv("HEPAI_A100_API_KEY")
+# model = "lmsys/vicuna-7b"
+
+base_url = "https://aiapi.ihep.ac.cn/v1"
+api_key = os.getenv("HEPAI_API_KEY")
 model = "lmsys/vicuna-7b"
+model = "lmsys/vicuna-7b-v1.5-16k"
+
 
 # client = OpenAI(
 client = HepAI(
