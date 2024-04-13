@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2024.04.13 v1.1.3 更新HepAI Worker，现在支持无限函数了，需搭配hepai-ddf>-1.0.4
 + 2024.04.09 v1.1.1 更新HepAI Client
 + 2024.03.08 v1.0.19 删除imp包，支持python3.12
 + 2023.10.18 v1.0.18 接入openai/dalle3模型，parse_args_into_dataclasses方法创建短名parse_args

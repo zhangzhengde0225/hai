@@ -12,21 +12,28 @@ except:
 from openai import OpenAI
 from hepai import HepAI, ChatCompletion
 
-proxy = "http://192.168.32.148:8118"
-base_url = "https://api.openai.com/v1"
+# proxy = "http://192.168.32.148:8118"
+# base_url = "https://api.openai.com/v1"
+# api_key = os.getenv("OPENAI_API_KEY")
+# model = "gpt-3.5-turbo"
+
+proxy = None
+base_url = "http://localhost:42901/v1"
+api_key = os.getenv("HEPAI_A100_API_KEY")
+model = "lmsys/vicuna-7b"
 
 # client = OpenAI(
 client = HepAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
+    api_key=api_key,
     base_url=base_url,
     proxy=proxy,
 )
 
 completion: ChatCompletion = client.chat.completions.create(
-  model="gpt-3.5-turbo",
+  model=model,
   messages=[
     {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "Hello!"}
+    {"role": "user", "content": "who  are you?"}
   ]
 )
 

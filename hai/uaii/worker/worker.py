@@ -16,7 +16,7 @@ import os, sys
 from pathlib import Path
 
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, Response
 import requests
 import uvicorn
 
@@ -365,10 +365,11 @@ async def app_unified_gate(request: Request):
     background_tasks.add_task(release_model_semaphore)  # 释放锁
     if not ok:
         data = data if isinstance(data, str) else json.dumps(data)
-        raise HTTPException(status_code=404, detail=data)
+        print(model_semaphore)
+        raise HTTPException(status_code=404, detail=data, background=background_tasks)
     if not stream:
-        return data
-    return StreamingResponse(data)
+        return JSONResponse(content=data, background=background_tasks)
+    return StreamingResponse(data, background=background_tasks)
 
 @app.post("/worker_generate_stream")
 async def generate_stream(request: Request):
