@@ -26,6 +26,7 @@ base_url = "https://aiapi.ihep.ac.cn/v1"
 api_key = os.getenv("HEPAI_API_KEY")
 model = "lmsys/vicuna-7b"
 model = "lmsys/vicuna-7b-v1.5-16k"
+model = "lmsys/vicuna-13b-v1.5"
 
 
 # client = OpenAI(
