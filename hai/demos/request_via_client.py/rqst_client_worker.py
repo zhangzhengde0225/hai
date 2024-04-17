@@ -30,7 +30,7 @@ model = "lmsys/vicuna-7b"
 model = "lmsys/vicuna-7b-v1.5-16k"
 model = "lmsys/vicuna-13b-v1.5"
 
-base_url = "http://localhost:42903/v1"
+base_url = "http://localhost:42901/v1"
 api_key = os.getenv("HEPAI_3090_API_KEY")
 model = "hepai/demo_worker"
 

@@ -63,7 +63,7 @@ class WorkerArgs:
     worker_address: str = "auto"  # 默认是http://<ip>:<port>
     limit_model_concurrency: int = 5  # 限制模型的并发请求
     stream_interval: float = 0.  # 额外的流式响应间隔
-    no_register: bool = True  # 不注册到控制器
+    no_register: bool = False  # 不注册到控制器
     permissions: str = 'groups: all; owner: admin'  # 模型的权限授予，分为用户和组，用;分隔，例如：需要授权给所有组、a用户、b用户：'groups: all; users: a, b; owner: c'
     description: str = 'This is a demo worker in HeiAI-Distributed Deploy Framework'  # 模型的描述
     author: str = 'hepai'  # 模型的作者

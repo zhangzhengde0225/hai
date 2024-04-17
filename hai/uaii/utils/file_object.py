@@ -35,6 +35,8 @@ class HaiFile:
                 file_path = self.filename
             else:
                 file_path = f'{save_dir}/{self.filename}'
+        if not file_path:
+            raise ValueError("Please specify the file path, or the save_dir and filename.")
         if self.type_ == 'image':
             img = Image.fromarray(self.data)
             img.save(file_path)
