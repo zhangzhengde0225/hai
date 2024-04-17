@@ -26,12 +26,12 @@ proxy = None
 
 base_url = "https://aiapi.ihep.ac.cn/v1"
 api_key = os.getenv("HEPAI_API_KEY")
-model = "lmsys/vicuna-7b"
-model = "lmsys/vicuna-7b-v1.5-16k"
-model = "lmsys/vicuna-13b-v1.5"
+# model = "lmsys/vicuna-7b"
+# model = "lmsys/vicuna-7b-v1.5-16k"
+# model = "lmsys/vicuna-13b-v1.5"
 
-base_url = "http://localhost:42901/v1"
-api_key = os.getenv("HEPAI_3090_API_KEY")
+# base_url = "http://localhost:42901/v1"
+# api_key = os.getenv("HEPAI_3090_API_KEY")
 model = "hepai/demo_worker"
 
 # client = OpenAI(
@@ -40,7 +40,7 @@ client = HepAI(api_key=api_key, base_url=base_url, proxy=proxy)
 
 test_functions = [
     'get_int', "get_float", "get_bool", "get_str",
-    "get_list", "get_dict", "get_image", "get_txt", "get_pdf", "get_stream"]
+    "get_list", "get_dict", "get_image", "get_pdf", "get_stream"]
 
 test_functions_dict = {
     "get_int": int,
@@ -51,7 +51,7 @@ test_functions_dict = {
     "get_dict": dict,
     "get_pdf": HaiFile,
     "get_image": HaiFile,
-    "get_txt": HaiFile,
+    # "get_txt": HaiFile,
     'get_stream': Stream,
 }
 
