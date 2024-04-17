@@ -1,4 +1,7 @@
 
+from typing import List, Dict, Any
+from pathlib import Path
+here = Path(__file__).parent
 
 
 class BaseWorkerModel:
@@ -60,7 +63,6 @@ class BaseWorkerModel:
         """需要重写函数"""
         raise NotImplementedError(f"The `evaluate` method of `{self.name}` is not implemented.")
     
-
     def get_misc(self, **kwargs):
         """需要重写函数"""
         misc = dict()
@@ -70,3 +72,36 @@ class BaseWorkerModel:
     
     def chat_completions(self, **kwargs):
         raise NotImplementedError(f'The `chat_completions` method of `{self.name}` is not implemented.')
+    
+    def get_int(self, **kwargs):
+        return 1
+    
+    def get_float(self, **kwargs):
+        return 1.0
+    
+    def get_bool(self, **kwargs):
+        return True
+    
+    def get_str(self, **kwargs):
+        return "string"
+    
+    def get_list(self, **kwargs):
+        return [1, 2, 3]
+    
+    def get_dict(self, **kwargs):
+        return {"key": "value"}
+    
+    def get_image(self, **kwargs):
+        return Path(f"{here}/assets/demo.png")
+    
+    def get_pdf(self, **kwargs):
+        return Path(f"{here}/assets/demo.pdf")
+
+    def get_txt(self, **kwargs):
+        return Path(f"{here}/assets/demo.txt")
+
+    def get_stream(self, **kwargs):
+        range_num = kwargs.get('range_num', 10)
+        out = [i for i in range(range_num)]
+        for i in out:
+            yield f'data: {i}\n\n'

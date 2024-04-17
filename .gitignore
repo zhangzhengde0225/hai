@@ -1,3 +1,4 @@
+demo.*
 build/*
 dist/*
 hepai.egg-info/*

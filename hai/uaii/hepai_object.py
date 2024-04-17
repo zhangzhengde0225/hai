@@ -1,60 +1,81 @@
 
-from typing import Mapping, Union, Literal, Iterable, Optional, Dict, List, cast
-
+from typing import (
+    Mapping, Union, Literal, Iterable, Optional, Dict, List, cast, Type,
+    Any,
+)
 import httpx
 import os, sys
 from pathlib import Path
 here = Path(__file__).parent
 
-try:
-    from openai import OpenAI, resources
-    from openai import NOT_GIVEN, Timeout, NotGiven
-    from openai._types import Headers, Query, Body
-    from openai.types import Completion
-    from openai.resources import Completions, Chat
-    from openai.resources.chat.completions import (
-        ChatCompletionMessageParam,
-        completion_create_params,
-        ChatCompletionToolChoiceOptionParam,
-        ChatCompletionToolParam,
-        ChatCompletion,
-        ChatCompletionChunk,
-        Stream,
-    )
-    from openai._utils import (
-        required_args, maybe_transform
-    )
-    from openai._base_client import make_request_options
-except:
-    try:
-        sys.path.append(str(here.parent.parent))
-        from repos.openai_python.src.openai import OpenAI
-        from repos.openai_python.src.openai import ( NOT_GIVEN, Timeout, NotGiven)
-        from repos.openai_python.src.openai._types import Headers, Query, Body
-        from repos.openai_python.src.openai.types import Completion
-        from repos.openai_python.src.openai import resources
-        from repos.openai_python.src.openai.resources import Completions, Chat
-        from repos.openai_python.src.openai.resources.chat.completions import (
-            ChatCompletionMessageParam,
-            completion_create_params,
-            ChatCompletionToolChoiceOptionParam,
-            ChatCompletionToolParam,
-            ChatCompletion,
-            ChatCompletionChunk,
-            Stream,
-        )
-        from repos.openai_python.src.openai._utils import (
-            required_args, maybe_transform
-        )
-        from repos.openai_python.src.openai._base_client import make_request_options
-    except:
-        raise ImportError("Can't find openai module, please install it first by `pip install openai --upgrade`.")
+import inspect
+
+## opneai
+from openai import OpenAI, resources
+from openai import NOT_GIVEN, Timeout, NotGiven
+from openai._types import Headers, Query, Body
+from openai.types import Completion
+from openai.resources import Completions, Chat
+from openai.resources.chat.completions import (
+    ChatCompletionMessageParam,
+    completion_create_params,
+    ChatCompletionToolChoiceOptionParam,
+    ChatCompletionToolParam,
+    ChatCompletion,
+    ChatCompletionChunk,
+    Stream,
+)
+from openai._utils import required_args, maybe_transform
+from openai._base_client import (
+    ResponseT, APIResponse, FinalRequestOptions, RAW_RESPONSE_HEADER, _T,
+    Stream, SSEDecoder, AsyncStream, SSEBytesDecoder,
+    make_request_options, LegacyAPIResponse, BaseAPIResponse,
+    get_origin, extract_response_type
+)
 
 from hai.apis.workers_api.model import HaiModel
+from .utils.general import load_image_from_bytes
+from .utils.file_object import HaiFile
 
 DEFAULT_MAX_RETRIES = 2
 DEFAULT_TIMEOUT = httpx.Timeout(timeout=600.0, connect=5.0)
 DEFAULT_LIMITS = httpx.Limits(max_connections=100, max_keepalive_connections=20)
+
+class HaiPostParser:
+    def __call__(self, parsed, **kwargs):
+        if isinstance(parsed, ChatCompletion):
+            """服务端仅仅返回字典时"""
+            if parsed.id is None and parsed.choices is None:
+                if parsed.model_extra:
+                    return parsed.model_extra
+
+        return parsed
+
+class HAPIResponse(APIResponse):
+
+    def get_filename(self, response: httpx.Response) -> str:
+        content_disposition = response.headers.get("content-disposition", "")
+        filename = content_disposition.split("filename=")[-1]
+        return filename.strip('"')
+     
+    def _parse(self, *, to: type[_T] | None = None) -> Any | _T:
+        response = self.http_response
+        content_type, *_ = response.headers.get("content-type", "*").split(";")
+        if "image/" in content_type:
+            filename = self.get_filename(response)
+            return HaiFile(type_="image", data=response.content, filename=filename)
+        elif "application/pdf" in content_type:
+            filename = self.get_filename(response)
+            return HaiFile(type_="pdf", data=response.content, filename=filename)
+        elif "text/" in content_type:
+            filename = self.get_filename(response)
+            return HaiFile(type_="txt", data=response.content, filename=filename)
+        # application/json时
+        return super()._parse(to=to)
+
+
+class HaiCompletion(ChatCompletion):
+    pass
 
 class HaiCompletions(Completions):
 
@@ -146,6 +167,38 @@ class HaiCompletions(Completions):
 
         return res
 
+
+    def request_worker(
+            self,
+            *,
+            model: str,
+            function: str,
+            stream: Optional[Literal[False]] | Literal[True] | NotGiven = NOT_GIVEN,
+            extra_headers: Headers | None = None,
+            extra_query: Query | None = None,
+            extra_body: Body | None = None,
+            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+            **kwargs,
+        ):
+        tmp = dict()
+        tmp["model"] = model
+        tmp["function"] = function
+        tmp.update(kwargs)
+        body=maybe_transform(tmp, completion_create_params.CompletionCreateParams)
+        options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            )
+        options["post_parser"] = HaiPostParser()
+        res = self._post(
+            "/worker/unified_gate", 
+            body=body, 
+            options=options,
+            cast_to=HaiCompletion,
+            stream=stream or False,
+            stream_cls=Stream[ChatCompletionChunk],
+        )
+        return res
+
 class HaiChat(Chat):
     @property
     def completions(self) -> HaiCompletions:
@@ -231,5 +284,63 @@ class HepAI(OpenAI):
             port=port,
             **kwargs,
         )
-
     
+    def request_worker(self, **kwargs):
+        return self.completions.request_worker(**kwargs)
+
+    def _process_response(
+        self,
+        *,
+        cast_to: Type[ResponseT],
+        options: FinalRequestOptions,
+        response: httpx.Response,
+        stream: bool,
+        stream_cls: type[Stream[Any]] | type[AsyncStream[Any]] | None,
+    ) -> ResponseT:
+        if response.request.headers.get(RAW_RESPONSE_HEADER) == "true":
+            return cast(
+                ResponseT,
+                LegacyAPIResponse(
+                    raw=response,
+                    client=self,
+                    cast_to=cast_to,
+                    stream=stream,
+                    stream_cls=stream_cls,
+                    options=options,
+                ),
+            )
+
+        origin = get_origin(cast_to) or cast_to
+
+        if inspect.isclass(origin) and issubclass(origin, BaseAPIResponse):
+            if not issubclass(origin, APIResponse):
+                raise TypeError(f"API Response types must subclass {APIResponse}; Received {origin}")
+
+            response_cls = cast("type[BaseAPIResponse[Any]]", cast_to)
+            return cast(
+                ResponseT,
+                response_cls(
+                    raw=response,
+                    client=self,
+                    cast_to=extract_response_type(response_cls),
+                    stream=stream,
+                    stream_cls=stream_cls,
+                    options=options,
+                ),
+            )
+
+        if cast_to == httpx.Response:
+            return cast(ResponseT, response)
+
+        api_response = HAPIResponse(
+            raw=response,
+            client=self,
+            cast_to=cast("type[ResponseT]", cast_to),  # pyright: ignore[reportUnnecessaryCast]
+            stream=stream,
+            stream_cls=stream_cls,
+            options=options,
+        )
+        if bool(response.request.headers.get(RAW_RESPONSE_HEADER)):
+            return cast(ResponseT, api_response)
+
+        return api_response.parse()

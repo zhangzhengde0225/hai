@@ -5,7 +5,7 @@ Worker类别，具备基本和示例功能
 import time
 import json
 import time
-from typing import List, Union
+from typing import List, Union, Generator
 import threading
 import uuid
 import traceback
@@ -16,7 +16,7 @@ import os, sys
 from pathlib import Path
 
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
-from fastapi.responses import StreamingResponse, JSONResponse, Response
+from fastapi.responses import StreamingResponse, JSONResponse, Response, FileResponse
 import requests
 import uvicorn
 
@@ -350,6 +350,11 @@ app = WorkerAPP()  # It's a FastAPI instance
 def release_model_semaphore():
     model_semaphore.release()
 
+    
+@app.post("/v1/worker/unified_gate")
+async def v1_unified_gate(request: Request):
+    return await app_unified_gate(request)
+
 @app.post("/worker_unified_gate")
 async def app_unified_gate(request: Request):
     global model_semaphore, global_counter
@@ -361,15 +366,25 @@ async def app_unified_gate(request: Request):
     await model_semaphore.acquire()
     stream = params.get("stream", False)
     ok, data = app.worker.unified_gate(**params)
-    background_tasks = BackgroundTasks()  # 背景任务
-    background_tasks.add_task(release_model_semaphore)  # 释放锁
     if not ok:
         data = data if isinstance(data, str) else json.dumps(data)
-        print(model_semaphore)
+        # print(model_semaphore)
+        release_model_semaphore()
         raise HTTPException(status_code=404, detail=data, background=background_tasks)
+    background_tasks = BackgroundTasks()  # 背景任务
+    background_tasks.add_task(release_model_semaphore)  # 释放锁
+    if isinstance(data, Generator) and (stream is None or stream is False):
+        logger.info(f"Get a generator from function: {params.get('function')}, auto set stream=True")
+        stream = True
     if not stream:
+        # 判断是不是文件路径
+        if isinstance(data, Path):
+            if not os.path.exists(data):
+                raise HTTPException(status_code=404, detail=f"File not found: {data}")
+            return FileResponse(data, filename=data.name, background=background_tasks)
         return JSONResponse(content=data, background=background_tasks)
     return StreamingResponse(data, background=background_tasks)
+
 
 @app.post("/worker_generate_stream")
 async def generate_stream(request: Request):

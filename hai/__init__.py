@@ -1,5 +1,6 @@
 import os
 
+from .configs import CONST
 from .apis import __version__, __author__, __appname__, __email__, __affiliation__, __version_suffix__
 from .version import __url__
 from .apis import AbstractInput, AbstractModule, AbstractOutput, AbstractQue
@@ -20,6 +21,8 @@ from .apis import LLM, Model, Models, api_key
 from .uaii.hepai_object import (
     HepAI, HaiCompletions, ChatCompletion, ChatCompletionChunk, Stream
     )
+from .uaii.utils.file_object import HaiFile
+
 
 # from xsensing_ai.modules import *  # 加载项目的模块
 # from xsensing_ai.uaii.server.grpc.grpc_xai_client import XAIGrpcClient

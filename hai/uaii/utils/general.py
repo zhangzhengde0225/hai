@@ -3,6 +3,8 @@ uaii general
 """
 import damei as dm
 import numpy as np
+from PIL import Image
+from io import BytesIO
 
 from ..datasets.dataset_utils import get_file, extract_archive
 
@@ -115,5 +117,14 @@ def latest2determined(all_dict, name):
         version = sorted(versions)[-1]
         return version
 
-
-
+def load_image_from_bytes(image_bytes):
+    """
+    从字节流中加载图像
+    :param image_bytes:
+    :return:
+    """
+    image_bytes = BytesIO(image_bytes)
+    img = Image.open(image_bytes)
+    # img.load()
+    # img_array = np.array(img)
+    return img
