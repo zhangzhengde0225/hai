@@ -17,6 +17,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, Response, FileResponse
+from starlette.requests import Request as StarletteRequest
 import requests
 import uvicorn
 
@@ -350,7 +351,27 @@ app = WorkerAPP()  # It's a FastAPI instance
 def release_model_semaphore():
     model_semaphore.release()
 
+async def create_receive_channel(data: dict):
+    async def receive():
+        return {
+            "type": "http.request",
+            "body": json.dumps(data).encode('utf-8'),
+            "more_body": False,
+        }
+    return receive
     
+
+@app.post("/v1/chat/completions")   # unifiled_gate衍生出来的chat_completions接口，用于直接向worker发送补全请求
+async def v1_chat_complietions(request: Request):
+    original_data = await request.json()
+    # 修改请求数据，添加新字段
+    modified_data = original_data.copy()
+    modified_data['function'] = 'chat_completions'
+    # 创建一个新的receive通道，包含修改后的数据
+    custom_receive = await create_receive_channel(modified_data)
+    custom_request = StarletteRequest(scope=request.scope, receive=custom_receive)
+    return await app_unified_gate(custom_request)
+
 @app.post("/v1/worker/unified_gate")
 async def v1_unified_gate(request: Request):
     return await app_unified_gate(request)
