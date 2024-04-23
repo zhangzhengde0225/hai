@@ -27,6 +27,8 @@ class WorkerModel(BaseWorkerModel):
         #     yield i  # 可以return返回python的基础类型或yield生成器
 
     def chat_completions(self, **kwargs):
+        # import time
+        # time.sleep(15)
         return self.inference(**kwargs)
     
     def get_status(self, **kwargs):

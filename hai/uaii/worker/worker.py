@@ -131,6 +131,12 @@ class Worker:
         
     # 程序退出时，发送退出信息
     def exit_handler(self):
+        """
+        退出时向Contoller发送退出信息
+        """
+        if self.no_register:  # 初始化时没有注册到controller，不需要发送退出信息
+            return
+
         logger.info(f'Remove model "{self.model_name}" from controller {self.controller_addr}, ')
         url = self.controller_addr + "/stop_worker"
         
