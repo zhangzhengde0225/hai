@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2024.04.25 v1.1.7 Fix text/event-stream parse error in HepAI Client. 提供HepAI Client的[文档](hepai_client.md)。
 + 2024.04.22 v1.1.6 更新Worker，从unified_gate中衍生出chat_completions，用于对话生成任务
 + 2024.04.18 v1.1.4 更新Worker和对应的Client，适配各种返回值：int, float, str, list, dict, pdf, image, txt, stream
 + 2024.04.13 v1.1.3 更新HepAI Worker，现在支持无限函数了，需搭配hepai-ddf>-1.0.4

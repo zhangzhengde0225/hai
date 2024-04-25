@@ -67,7 +67,8 @@ class HAPIResponse(APIResponse):
         elif "application/pdf" in content_type:
             filename = self.get_filename(response)
             return HaiFile(type_="pdf", data=response.content, filename=filename)
-        elif "text/" in content_type:
+        elif ("text/" in content_type) and ("event-stream" not in content_type):
+            # Fix text/event-stream parse error in 202404
             filename = self.get_filename(response)
             return HaiFile(type_="txt", data=response.content, filename=filename)
         # application/json时
