@@ -19,7 +19,6 @@ grpcio-tools  # for grpc_server.py
 fastapi  # for hai worker
 uvicorn  # for hai worker
 
-openai
-
+openai>=1.23.6
 
 

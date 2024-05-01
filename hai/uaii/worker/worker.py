@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import os, sys
 from pathlib import Path
 
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, APIRouter
 from fastapi.responses import StreamingResponse, JSONResponse, Response, FileResponse
 from starlette.requests import Request as StarletteRequest
 import requests
@@ -397,7 +397,7 @@ async def app_unified_gate(request: Request):
         data = data if isinstance(data, str) else json.dumps(data)
         # print(model_semaphore)
         release_model_semaphore()
-        raise HTTPException(status_code=404, detail=data, background=background_tasks)
+        raise HTTPException(status_code=404, detail=data)
     background_tasks = BackgroundTasks()  # 背景任务
     background_tasks.add_task(release_model_semaphore)  # 释放锁
     if isinstance(data, Generator) and (stream is None or stream is False):
@@ -450,7 +450,7 @@ async def get_status(request: Request):
     return app.worker.get_status()
 
 
-def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs):
+def run_worker(model=None, worker_args=None, extra_routers=None, daemon=False, test=False, **kwargs):
     args = worker_args or WorkerArgs()
     # print(f'worker args: {args}')
     if args.port == "auto":
@@ -479,6 +479,12 @@ def run_worker(model=None, worker_args=None, daemon=False, test=False, **kwargs)
         )
     
     app.worker = worker
+    if extra_routers:
+        if isinstance(extra_routers, APIRouter):
+            extra_routers = [extra_routers]
+        for extra_router in extra_routers:
+            assert isinstance(extra_router, APIRouter), f"extra_router should be an instance of APIRouter: {extra_router}"
+            app.include_router(extra_router)
 
     logger.info(f"Controller address: {args.controller_address}")
 
@@ -519,6 +525,7 @@ class WorkerWarper:
         :param worker_args: WorkerArgs = None, worker的参数，可以由WorkerArgs类生成，会被下面的参数覆盖
         :param host: str = "0.0.0.0"  # worker的地址，0.0.0.0表示外部可访问，127.0.0.1表示只有本机可访问
         :param port: str = "auto"  # 默认从42902开始
+        :param extra_routers: List[APIRouter] = None,  # 额外的路由
         :param controller_address: str = "http://chat.ihep.ac.cn:42901"  # 控制器的地址
         :param worker_address: str = "auto"  # 默认是http://<ip>:<port>
         :param limit_model_concurrency: int = 5  # 限制模型的并发请求
