@@ -14,8 +14,8 @@ import inspect
 from openai import OpenAI, resources
 from openai import NOT_GIVEN, Timeout, NotGiven
 from openai._types import Headers, Query, Body
-from openai.types import Completion
-from openai.resources import Completions, Chat
+from openai.types import Completion, ChatModel
+from openai.resources import Chat
 from openai.resources.chat.completions import (
     ChatCompletionMessageParam,
     completion_create_params,
@@ -24,6 +24,8 @@ from openai.resources.chat.completions import (
     ChatCompletion,
     ChatCompletionChunk,
     Stream,
+    Completions,
+    ChatCompletionStreamOptionsParam,
 )
 from openai._utils import required_args, maybe_transform
 from openai._base_client import (
@@ -85,28 +87,7 @@ class HaiCompletions(Completions):
         self,
         *,
         messages: Iterable[ChatCompletionMessageParam],
-        model: Union[
-            str,
-            Literal[
-                "gpt-4-0125-preview",
-                "gpt-4-turbo-preview",
-                "gpt-4-1106-preview",
-                "gpt-4-vision-preview",
-                "gpt-4",
-                "gpt-4-0314",
-                "gpt-4-0613",
-                "gpt-4-32k",
-                "gpt-4-32k-0314",
-                "gpt-4-32k-0613",
-                "gpt-3.5-turbo",
-                "gpt-3.5-turbo-16k",
-                "gpt-3.5-turbo-0301",
-                "gpt-3.5-turbo-0613",
-                "gpt-3.5-turbo-1106",
-                "gpt-3.5-turbo-0125",
-                "gpt-3.5-turbo-16k-0613",
-            ],
-        ],
+        model: Union[str, ChatModel],
         frequency_penalty: Optional[float] | NotGiven = NOT_GIVEN,
         function_call: completion_create_params.FunctionCall | NotGiven = NOT_GIVEN,
         functions: Iterable[completion_create_params.Function] | NotGiven = NOT_GIVEN,
@@ -119,6 +100,7 @@ class HaiCompletions(Completions):
         seed: Optional[int] | NotGiven = NOT_GIVEN,
         stop: Union[Optional[str], List[str]] | NotGiven = NOT_GIVEN,
         stream: Optional[Literal[False]] | Literal[True] | NotGiven = NOT_GIVEN,
+        stream_options: Optional[ChatCompletionStreamOptionsParam] | NotGiven = NOT_GIVEN,
         temperature: Optional[float] | NotGiven = NOT_GIVEN,
         tool_choice: ChatCompletionToolChoiceOptionParam | NotGiven = NOT_GIVEN,
         tools: Iterable[ChatCompletionToolParam] | NotGiven = NOT_GIVEN,
@@ -148,6 +130,7 @@ class HaiCompletions(Completions):
                     "seed": seed,
                     "stop": stop,
                     "stream": stream,
+                    "stream_options": stream_options,
                     "temperature": temperature,
                     "tool_choice": tool_choice,
                     "tools": tools,
@@ -160,7 +143,9 @@ class HaiCompletions(Completions):
         options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             )
-        res = self._post("/chat/completions", body=body, options=options,
+        res = self._post(
+            "/chat/completions", 
+            body=body, options=options,
             cast_to=ChatCompletion,
             stream=stream or False,
             stream_cls=Stream[ChatCompletionChunk],
@@ -250,8 +235,9 @@ class HepAI(OpenAI):
         self.completions = HaiCompletions(client=self)
         self.chat = HaiChat(client=self)
         pass
-
-    def get_http_client(self, proxy, **kwargs) -> httpx.Client:
+    
+    @classmethod
+    def get_http_client(cls, proxy, **kwargs) -> httpx.Client:
         if proxy is None:
             return None
         else:
