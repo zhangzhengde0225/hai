@@ -13,12 +13,13 @@ from hai.configs import CONST
 from hepai import HepAI, ChatCompletion, Stream
 
 # base_url = "https://api.openai.com/v1"
-base_url = "http://localhost:42901/v1"
-
+# base_url = "http://localhost:42901/v1"
+base_url = "https://aiapi.ihep.ac.cn/v1"
 
 client = HepAI(
     api_key=os.getenv("OPENAI_API_KEY"),
     base_url=base_url,
+    max_retries=0,
     )
 
 api_key = os.getenv("HEPAI_API_KEY")
