@@ -185,6 +185,44 @@ class HaiCompletions(Completions):
         )
         return res
 
+    def verify_api_key(
+            self, 
+            api_key: str, 
+            extra_headers: Headers | None = None,
+            extra_query: Query | None = None,
+            extra_body: Body | None = None,
+            timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+            **kwargs):
+        
+        params = {
+            "api_key": api_key,
+        }
+        params.update(kwargs)
+        options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
+            )
+        try:
+            res = self._post(
+                "/verify_api_key", 
+                body=params, 
+                options=options,
+                cast_to=HaiCompletion,
+                stream=False,
+            )
+            rst = res.model_extra
+        except Exception as e:
+            status_code = getattr(e, "status_code", None)
+            if status_code == 401:  # 验证失败
+            # if status_code.status_code == 401:  # 验证失败
+                response = getattr(e, "response", None)
+                detail = response.json().get("detail", "")
+                rst = {"success": False, "detail": detail}
+            else:
+                raise e
+        return rst
+
+
+
 class HaiChat(Chat):
     @property
     def completions(self) -> HaiCompletions:
@@ -271,6 +309,10 @@ class HepAI(OpenAI):
             port=port,
             **kwargs,
         )
+    
+    def verify_api_key(self, api_key: str = None, **kwargs):
+        api_key = api_key or self.api_key
+        return self.completions.verify_api_key(api_key, **kwargs)
     
     def request_worker(self, **kwargs):
         return self.completions.request_worker(**kwargs)

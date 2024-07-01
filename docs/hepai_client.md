@@ -10,9 +10,9 @@ hepai库的客户端HepAI允许用户通用最简单的方式调用HepAI平台�
 安装hepai库·
 
 ```bash
-pip install hepai>=1.1.7 --upgrade
+pip install hepai>=1.1.9 --upgrade
 ```
-需要python3.8及以上版本。
+需要python3.10及以上版本。
 
 一个简单的例子
 ```python

@@ -19,6 +19,7 @@ The HepAI framework integrates classic and state-of-the-art (SOTA) artificial in
 <details open>
 <summary><b>News</b></summary>
 
++ [2024.05.16] v1.1.9 HepAI Client支持GPT-4o, 调用方法:
 + [2024.03.26] v1.0.21 Make LLM request like OpenAI via HepAI object.
 + [2023.10.24] v1.0.18 接入dalle文生图模型，调用方法教程见[此处](https://note.ihep.ac.cn/s/EG60U1Rtf)。
 + [2023.04.21] v1.0.7通过hepai使用GPT-3.5，[hepai_api.md](docs/hepai_api.md).
