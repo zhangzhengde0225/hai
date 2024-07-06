@@ -77,11 +77,11 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
         url = kwargs.pop("url", None)
         if not url:
             host = kwargs.pop("host", "aiapi.ihep.ac.cn")
-            port = kwargs.pop("port", 42901)
-            if port:
-                url = f"http://{host}:{port}"
+            port = kwargs.pop("port", None)  # 42901
+            if port is None:
+                url = f'https://{host}'  
             else:
-                url = f'https://{host}'
+                url = f"http://{host}:{port}"
         assert url, f'url or (host and port) is required. For example: url="http://aiapi.ihep.ac.cn:42901"'
 
         ret = requests.post(
