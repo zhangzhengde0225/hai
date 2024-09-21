@@ -2,6 +2,7 @@ assets/A-I-HEP.png
 
 # .demo.pdf
 
+data/*
 build/*
 dist/*
 hepai.egg-info/*
