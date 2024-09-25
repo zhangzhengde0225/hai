@@ -118,4 +118,4 @@ hai -V  # 查看版本
     或其他支持gRPC的语言，详见[deploy](docs/deploy.md)
 
 
-not
+note
