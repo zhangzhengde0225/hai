@@ -1,5 +1,7 @@
 # 更新日志
 
+
++ 2024.09.29 v1.1.11 更新hepai_object, 支持OpenAI v1.50.2的retries_taken参数
 + 2024.07.01 v1.1.10 更新HepAI client，支持验证api_key，client.verify_api_key(api_key=api_key)
 + 2024.05.18 v1.1.9 更新HepAI client，适配OpenAI 1.30.1，允许传入`stream_options`参数
 + 2024.04.30 v1.1.8 添加Worker支持传入自定义路由，hepai.worker.start(..., extra_routes=[APIRoute(...), ...])

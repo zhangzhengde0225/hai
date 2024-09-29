@@ -325,6 +325,7 @@ class HepAI(OpenAI):
         response: httpx.Response,
         stream: bool,
         stream_cls: type[Stream[Any]] | type[AsyncStream[Any]] | None,
+        retries_taken: int = 0,
     ) -> ResponseT:
         if response.request.headers.get(RAW_RESPONSE_HEADER) == "true":
             return cast(
@@ -336,6 +337,7 @@ class HepAI(OpenAI):
                     stream=stream,
                     stream_cls=stream_cls,
                     options=options,
+                    retries_taken=retries_taken,
                 ),
             )
 
@@ -355,6 +357,7 @@ class HepAI(OpenAI):
                     stream=stream,
                     stream_cls=stream_cls,
                     options=options,
+                    retries_taken=retries_taken,
                 ),
             )
 
@@ -368,6 +371,7 @@ class HepAI(OpenAI):
             stream=stream,
             stream_cls=stream_cls,
             options=options,
+            retries_taken=retries_taken,
         )
         if bool(response.request.headers.get(RAW_RESPONSE_HEADER)):
             return cast(ResponseT, api_response)
