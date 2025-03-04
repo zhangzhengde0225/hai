@@ -1,5 +1,5 @@
 import os, sys
-from typing import Dict, Union, Literal, List, Generator, Optional
+from typing import Dict, Union, Literal, List, Generator, Optional, Iterable
 from pydantic import BaseModel
 from dataclasses import dataclass, field
 import json
@@ -34,6 +34,15 @@ class ChatCompletionRequest(BaseModel):
     max_length: Optional[int] = None
     stream: Optional[bool] = False
     stop: Optional[List[str]] = None
+    
+    
+class EmbeddingsRequest(BaseModel):
+    input: Union[str, List[str], Iterable[int], Iterable[Iterable[int]]]
+    model: str
+    dimensions: int = HepAI.NotGiven
+    encoding_format: Literal["float", "base64"] = HepAI.NotGiven
+    user: str = HepAI.NotGiven
+    
 
 
 class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRModel.
@@ -88,7 +97,7 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
 
     def request_openai(
             self, 
-            oai_messages: List,
+            oai_messages: List, 
             stream: bool = False,
             extra_headers: None = None,
             **kwargs):
@@ -97,25 +106,15 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
         oai_params.pop("messages", None)
         extra_body: Dict = oai_params.pop("extra_body", {})
         
-        if self.cfg.engine in ["bge-m3:latest"]:
-            response = self.client.embeddings.create(
-                model=self.cfg.engine,
-                input=oai_messages[0]['content'],
-                extra_headers=extra_headers,
-                extra_body=extra_body,
-                **oai_params
-                )
-            return response
-        else:
-            response = self.client.chat.completions.create(
-                model=self.cfg.engine, 
-                messages=oai_messages, 
-                stream=stream,
-                extra_headers=extra_headers,
-                extra_body=extra_body,
-                **oai_params
-                )
-            return response
+        response = self.client.chat.completions.create(
+            model=self.cfg.engine, 
+            messages=oai_messages, 
+            stream=stream,
+            extra_headers=extra_headers,
+            extra_body=extra_body,
+            **oai_params
+            )
+        return response
     
 
     def run_test(self):
@@ -192,25 +191,22 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
             extra_headers = {"Authorization": f"Bearer {api_key}"}
         else:
             extra_headers = kwargs.pop("extra_headers", {})
+        extra_body: Dict = kwargs.pop("extra_body", {})
+        extra_query: Dict = kwargs.pop("extra_query", {})
+        timeout = kwargs.pop("timeout", HepAI.NotGiven)
 
-        request = ChatCompletionRequest(**kwargs)
+        request = EmbeddingsRequest(**kwargs)
 
-        #提取request中的message，生成符合openai格式的message
-        oai_messages = [{"role": msg.role, "content": msg.content} for msg in request.messages] 
-        kwargs = {k: v for k, v in kwargs.items() if k not in ['model', 'messages', 'stream']}
-
-        if self.is_o1:  # o1不允许tempterature、top_p等参数
-            kwargs.pop("temperature", None)
-            kwargs.pop("top_p", None)
-
-        response = self.request_openai(
-            oai_messages=oai_messages,
-            stream=False,
-            extra_headers=extra_headers,
-            **kwargs,
-        )
+        response = self.client.embeddings.create(
+                input=request.input,
+                model=self.cfg.engine,
+                extra_headers=extra_headers,
+                extra_body=extra_body,
+                extra_query=extra_query,
+                timeout=timeout
+                )
         return response
-    
+
         
 @dataclass
 class ModelConfig(HModelConfig):
@@ -225,7 +221,7 @@ class ModelConfig(HModelConfig):
     proxy: str = field(default=None, metadata={"help": "Proxy of the model"})
     need_external_api_key: bool = field(default=False, metadata={"help": "Need external api key from user，就是每次发送请求都需要外部传输过来"})
     use_async: bool = field(default=False, metadata={"help": "whether use async client"})
-    test: bool = field(default=True, metadata={"help": "Test model"})
+    test: bool = field(default=False, metadata={"help": "Test model"})
 
     def __post_init__(self):
         if isinstance(self._api_key, str) and self._api_key.startswith("os.environ/"):

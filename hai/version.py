@@ -1,5 +1,5 @@
 __appname__ = 'hepai'
-__version__ = '1.1.27'
+__version__ = '1.1.29'
 __version_suffix__ = 'Beta'  # version suffix, like: 1.0.0-Dev, Beta, Stable
 __author__ = 'ZhengDe Zhang'
 __email__ = 'zdzhang@ihep.ac.cn'

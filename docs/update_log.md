@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.02.22 v1.1.29 适配openai v1.60.0
 + 2025.02.18 v1.1.27 支持deepseek worker
 + 2025.02.14 v1.1.26 client支持`fetch_api_key`方法。
 + 2025.02.11 v1.1.25 更新基础APIKeyInfo类，增加了`app_group`字段

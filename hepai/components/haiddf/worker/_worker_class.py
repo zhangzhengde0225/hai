@@ -512,7 +512,7 @@ class CommonWorker:
                     raise HTTPException(status_code=504, detail=error_msg)
                 ## TODO: 其他报错类型转换为合适的报错状态码
                 error_msg2 = f"{e_class}: {str(e)}"
-                print(f"一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
+                print(f"A一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
                 raise HTTPException(status_code=400, detail=f'{error_msg2}\n{error_msg2}')
         else:
             raise HTTPException(status_code=404, detail=f"Function `{function}` does not exist or is not callable in the worker `{self.worker_id}`")

@@ -16,7 +16,11 @@ from openai import NOT_GIVEN, Timeout, NotGiven
 from openai._types import Headers, Query, Body
 from openai.types import Completion, ChatModel
 from openai.resources import Chat
-from openai.resources.chat.completions import (
+
+# from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+
+# adopt to openai v1.63.2
+from openai.resources.chat.completions.completions import (
     ChatCompletionMessageParam,
     completion_create_params,
     ChatCompletionToolChoiceOptionParam,
@@ -27,6 +31,7 @@ from openai.resources.chat.completions import (
     Completions,
     ChatCompletionStreamOptionsParam,
 )
+
 from openai._utils import required_args, maybe_transform
 from openai._base_client import (
     ResponseT, APIResponse, FinalRequestOptions, RAW_RESPONSE_HEADER, _T,

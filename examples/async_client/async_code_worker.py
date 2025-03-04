@@ -7,7 +7,7 @@ logging.basicConfig(level="DEBUG")
 logging.getLogger().setLevel("DEBUG")
 
 # 1. 在本机或者远程服务器配置代码执行器
-# 下载链接见DrSai/modules/components/actuators/code_woker_v2.md
+# 下载链接见drsai/modules/components/actuators/code_woker_v2.md
 # 运行方式见https://code.ihep.ac.cn/xuliang/drsai-code-worker-v2
 
 # 2.配置访问代码执行器的必要参数

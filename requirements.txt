@@ -19,7 +19,7 @@ grpcio-tools  # for grpc_server.py
 fastapi  # for hai worker
 uvicorn  # for hai worker
 
-openai>=1.50.1
+openai>=1.63.0
 
 python-dateutil  # for relativedelta
 
