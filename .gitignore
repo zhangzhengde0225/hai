@@ -1,3 +1,6 @@
+hepai/workers/deepseek/*.log
+hepai/workers/deepseek/*.txt
+hepai/workers/deepseek/*.out
 
 trials/
 assets/A-I-HEP.png

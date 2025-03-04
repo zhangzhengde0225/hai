@@ -97,15 +97,25 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
         oai_params.pop("messages", None)
         extra_body: Dict = oai_params.pop("extra_body", {})
         
-        response = self.client.chat.completions.create(
-            model=self.cfg.engine, 
-            messages=oai_messages, 
-            stream=stream,
-            extra_headers=extra_headers,
-            extra_body=extra_body,
-            **oai_params
-            )
-        return response
+        if self.cfg.engine in ["bge-m3:latest"]:
+            response = self.client.embeddings.create(
+                model=self.cfg.engine,
+                input=oai_messages[0]['content'],
+                extra_headers=extra_headers,
+                extra_body=extra_body,
+                **oai_params
+                )
+            return response
+        else:
+            response = self.client.chat.completions.create(
+                model=self.cfg.engine, 
+                messages=oai_messages, 
+                stream=stream,
+                extra_headers=extra_headers,
+                extra_body=extra_body,
+                **oai_params
+                )
+            return response
     
 
     def run_test(self):
@@ -118,36 +128,19 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
                 "content": q,
                 }
             ]
-        params['stream'] = True
+        if self.cfg.engine in ["bge-m3:latest"]:
+            params["stream"] = False
+        else:
+            params['stream'] = True
         print(f"Q: {q}")
         print(f"R: ", end="")
-        reasoning_flag = True
+        # reasoning_flag = False
 
-        response = self.chat_completions(**params)
-        for chunk in response:
-            chunk: ChatCompletionChunk = chunk
-            if isinstance(chunk, str) and chunk.startswith('data: '):
-                # chunk = dict(chunk[6::])
-                chunk = json.loads(chunk[6::])
-                chunk = ChatCompletionChunk(**chunk)
-            if reasoning_flag:
-                reasoning_content = chunk.choices[0].delta.model_extra.get("reasoning_content", None)
-                if reasoning_content:  # 有思考过程
-                    print(reasoning_content, end="", flush=True)
-                    continue
-                if chunk.choices[0].delta.content == "\n\n":
-                    # 思考模式结束
-                    reasoning_flag = False
-                    print(f'A: ', end="")
-                    continue
-            print('chunk', chunk, type(chunk))
-            print('chunk.choices[0]', chunk.choices[0], type(chunk.choices[0]))
-            print('chunk.choices[0].delta', chunk.choices[0].delta, type(chunk.choices[0].delta))
-            print('chunk.choices[0].delta.content', chunk.choices[0].delta.content, type(chunk.choices[0].delta.content))
-            x = chunk.choices[0].delta.content
-            print('x', x, type(x))
-            if x:
-                print(x, end="", flush=True)
+        response = self.embeddings(**params)
+        x = response.data[0].embedding
+
+        if x:
+            print(x, end="", flush=True)
         
 
     @HRModel.remote_callable
@@ -188,16 +181,46 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
                 **kwargs,
             )
             return response
-        
+
+    @HRModel.remote_callable
+    def embeddings(self, *args, **kwargs):
+        # 请求litellm时需要携带api-key
+        if self.cfg.need_external_api_key:
+            api_key = kwargs.pop("api_key", None)
+            if not api_key:
+                raise KeyError("You should provied API-KEY when calling this worker")
+            extra_headers = {"Authorization": f"Bearer {api_key}"}
+        else:
+            extra_headers = kwargs.pop("extra_headers", {})
+
+        request = ChatCompletionRequest(**kwargs)
+
+        #提取request中的message，生成符合openai格式的message
+        oai_messages = [{"role": msg.role, "content": msg.content} for msg in request.messages] 
+        kwargs = {k: v for k, v in kwargs.items() if k not in ['model', 'messages', 'stream']}
+
+        if self.is_o1:  # o1不允许tempterature、top_p等参数
+            kwargs.pop("temperature", None)
+            kwargs.pop("top_p", None)
+
+        response = self.request_openai(
+            oai_messages=oai_messages,
+            stream=False,
+            extra_headers=extra_headers,
+            **kwargs,
+        )
+        return response
+    
         
 @dataclass
 class ModelConfig(HModelConfig):
-    name: str = field(default="hepai/deepseek-r1:32b", metadata={"help": "Model's name"})
+    name: str = field(default="hepai/bge-m3:latest", metadata={"help": "Model's name"})
     permission: Union[str, Dict] = field(default=None, metadata={"help": "Model's permission, separated by ;, e.g., 'groups: all; users: a, b; owner: c', will inherit from worker permissions if not setted"})
     version: str = field(default="2.0", metadata={"help": "Model's version"})
     
-    engine: str = field(default="deepseek-r1:32b", metadata={"help": "Model engine"})
-    base_url: str = field(default="<base_url>", metadata={"help": "Base url of the litellm"})
+    engine: str = field(default="bge-m3:latest", metadata={"help": "Model engine"})
+    # base_url: str = field(default="<base_url>", metadata={"help": "Base url of the litellm"})
+    base_url: str = field(default="http://10.5.6.130:11434/v1/", metadata={"help": "Base url of the litellm"})
     _api_key: str = field(default=HepAI.NotGiven, metadata={"help": "API key of the model"})
     proxy: str = field(default=None, metadata={"help": "Proxy of the model"})
     need_external_api_key: bool = field(default=False, metadata={"help": "Need external api key from user，就是每次发送请求都需要外部传输过来"})
@@ -215,9 +238,11 @@ class WorkerConfig(HWorkerConfig):
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: int = field(default=0, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
+    # auto_start_port: int = field(default=42650, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
     controller_address: str = field(default="http://aiapi.ihep.ac.cn:42601", metadata={"help": "Controller's address"})
+    # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
     permissions: str = field(default='users: admin; groups: default', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     description: str = field(default='This is a demo worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})

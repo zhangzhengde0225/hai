@@ -66,6 +66,10 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
 
     @property
     def oai_param_keys(self):
+#        return [
+#            "messages", "model", "frequency_penalty",  "function_call", "functions", "logit_bias", "logprobs", "max_tokens", "n", 
+#            "presence_penalty", "response_format", "seed", "stop", "stream", "stream_options", 
+#            "temperature", "tool_choice", "tools", "top_logprobs", "top_p", "user", "extra_headers", "extra_query", "extra_body", "timeout"]
         return [
             "messages", "model", "frequency_penalty",  "function_call", "functions", "logit_bias", "logprobs", "max_tokens", "n", 
             "presence_penalty", "response_format", "seed", "stop", "stream", "stream_options", 
@@ -89,18 +93,23 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
     def request_openai(
             self, 
             oai_messages: List,
-            stream: bool = False,
+#            stream: bool = False,
             extra_headers: None = None,
             **kwargs):
         oai_params = {k: v for k, v in kwargs.items() if k in self.oai_param_keys}
         oai_params.pop("model", None)
         oai_params.pop("messages", None)
+#        oai_params.pop("input", None)
         extra_body: Dict = oai_params.pop("extra_body", {})
-        
-        response = self.client.chat.completions.create(
+
+        print('client.models.list()', self.client.models.list())
+
+#        response = self.client.chat.completions.create(
+        response = self.client.embeddings.create(
             model=self.cfg.engine, 
-            messages=oai_messages, 
-            stream=stream,
+            input=oai_messages, 
+#            massages=oai_messages, 
+#            stream=stream,
             extra_headers=extra_headers,
             extra_body=extra_body,
             **oai_params
@@ -118,10 +127,10 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
                 "content": q,
                 }
             ]
-        params['stream'] = True
+        params['stream'] = False
         print(f"Q: {q}")
         print(f"R: ", end="")
-        reasoning_flag = True
+        reasoning_flag = False
 
         response = self.chat_completions(**params)
         for chunk in response:
@@ -140,12 +149,8 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
                     reasoning_flag = False
                     print(f'A: ', end="")
                     continue
-            print('chunk', chunk, type(chunk))
-            print('chunk.choices[0]', chunk.choices[0], type(chunk.choices[0]))
-            print('chunk.choices[0].delta', chunk.choices[0].delta, type(chunk.choices[0].delta))
-            print('chunk.choices[0].delta.content', chunk.choices[0].delta.content, type(chunk.choices[0].delta.content))
+
             x = chunk.choices[0].delta.content
-            print('x', x, type(x))
             if x:
                 print(x, end="", flush=True)
         
@@ -174,7 +179,7 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
         if request.stream:
             response = self.request_openai(
                 oai_messages=oai_messages,
-                stream=True,
+#                stream=True,
                 extra_headers=extra_headers,
                 **kwargs
             )
@@ -183,12 +188,12 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
         else:
             response = self.request_openai(
                 oai_messages=oai_messages,
-                stream=False,
+#                stream=False,
                 extra_headers=extra_headers,
                 **kwargs,
             )
             return response
-        
+
         
 @dataclass
 class ModelConfig(HModelConfig):

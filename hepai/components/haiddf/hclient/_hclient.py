@@ -50,7 +50,7 @@ class DemoResoure(SyncAPIResource):
         )
     
 
-def get_defualt_timeout(timeout: float = 60.0, connect: float = 5.0) -> httpx.Timeout:
+def get_defualt_timeout(timeout: float = 600.0, connect: float = 5.0) -> httpx.Timeout:
     return httpx.Timeout(timeout=timeout, connect=connect)
 
 
