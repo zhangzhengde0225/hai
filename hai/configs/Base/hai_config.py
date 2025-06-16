@@ -12,5 +12,5 @@ WEIGHTS_ROOT = f'{Path.home()}/.{__appname__}/weights'
 DATASETS_ROOT = f'{Path.home()}/datasets/{__appname__}_datasets'
 
 # hai_api
-API_FOLD_NAME = f'{__appname__}_api' 
+API_FOLD_NAME = f'{__appname__}_api'
 
