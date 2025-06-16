@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Literal, Union, Optional, Any
 import json
 import inspect
+from inspect import signature, Parameter, ismethod, iscoroutinefunction
 
 @dataclass
 class permission:
@@ -208,7 +209,94 @@ class HRModel(HRemoteModel):
     """
     Alias of HepAI Remote Model
     """
-    ...
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.register_functions: List[Dict[str, str]] = self.load_functions()
+
+    def _clean_type_str(self, annotation):
+        """类型注解清洗方法"""
+        if annotation == Parameter.empty:
+            return "Any"
+        
+        # 处理标准类型
+        if isinstance(annotation, type):
+            return annotation.__name__
+        
+        # 处理typing模块类型
+        type_str = str(annotation)
+        
+        # 去除模块前缀
+        type_str = type_str.replace('typing.', '')
+        
+        # 处理特殊类型
+        if '[' not in type_str:  # 简单类型
+            return type_str.split('.')[-1]  # 获取最终类型名
+        
+        # 处理泛型类型 (如List[int])
+        try:
+            main_type, args = type_str.split('[', 1)
+            main_type = main_type.split('.')[-1]  # 提取主类型名
+            args = args.rstrip(']')
+            return f"{main_type}[{args}]"
+        except:
+            return type_str
+    
+    def load_functions(self) -> List[Dict[str, str]]:
+        register_functions = []
+        # 遍历当前类及其所有父类
+        for cls in self.__class__.__mro__:
+            # 仅处理CustomWorkerModel及其子类（假设CustomWorkerModel是基类）
+            if cls is HRModel or issubclass(cls, HRModel):
+                for attr_name in dir(cls):
+                    attr = getattr(cls, attr_name)
+                    # 检查类属性是否被标记为remote_callable
+                    if getattr(attr, "is_remote_callable", False):
+                        if attr.is_remote_callable:
+                            # 获取实例对应的属性（处理可能的实例覆盖）
+                            instance_attr = getattr(self, attr_name)
+                            if callable(instance_attr):
+                                # 获取原始函数（处理装饰器包装）
+                                raw_func = getattr(instance_attr, '__wrapped__', instance_attr)
+                                # 处理异步函数
+                                if iscoroutinefunction(raw_func):
+                                    sig = signature(raw_func)
+                                else:
+                                    sig = signature(instance_attr)
+                                
+                                # 构建参数结构
+                                params = []
+                                for param in sig.parameters.values():
+                                    if param.name == 'self' and ismethod(instance_attr):
+                                        continue  # 跳过实例方法的self参数
+                                    params.append({
+                                        "name": param.name,
+                                        # "type": str(param.annotation) if param.annotation != Parameter.empty else "Any",
+                                        "type": self._clean_type_str(param.annotation) if param.annotation != Parameter.empty else "Any",
+                                        "default": param.default if param.default != Parameter.empty else None
+                                    })
+                                
+                                register_functions.append({
+                                    "__name__": attr_name,
+                                    "__doc__": instance_attr.__doc__,
+                                    "__signature__": params,
+                                    # "__return__": str(sig.return_annotation) if sig.return_annotation != Parameter.empty else "Any"
+                                    "__return__": self._clean_type_str(sig.return_annotation) if sig.return_annotation != Parameter.empty else "Any",
+                                })
+        other_functions = ['__call__', 'get_dict', 'get_float', 'get_int', 'get_list', 'get_stream', 'hello_world', 'get_register_functions']
+        # 过滤掉不需要的函数
+        register_functions = [func for func in register_functions if func['__name__'] not in other_functions]
+        return register_functions
+
+    @HRemoteModel.remote_callable
+    async def get_register_functions(self) -> list[dict[str, str]]:
+        """
+        获取当前模型中可调用的函数列表
+
+        Returns:
+            List[Dict[str, str]]: 注册函数列表，包含函数名、函数描述、函数签名
+        """
+        return self.register_functions
     
 
 @dataclass
