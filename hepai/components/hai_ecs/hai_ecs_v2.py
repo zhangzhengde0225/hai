@@ -20,12 +20,13 @@ class Config:
     # partition: str
     # kvm_param: str
     nodes: int = 1
-    chdir: str = None
+    # chdir: str = None
     nodelist: str = None
     exclude: str = None
     job_name: str = "auto"
     time: str = "121m"
     daemon: bool = False
+    gpu_type: str = "A800"  # options: A800, L40, K100AI
     qos: str = "normal"
     
     def __post_init__(self):
@@ -58,19 +59,21 @@ class Config:
                 elif unit == 'd':
                     self.time = f"{value * 24:02d}:00:00"
 
+
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
     parser.add_argument('--gres', type=str, default="gpu:1", help='Generic resource, default is `gpu:1`.')
     parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
     parser.add_argument('-J', '--job-name', type=str, default="auto", help="Name of the job.")
-    parser.add_argument('-t', '--time', default="121m", help="Walltime of the machine, default is 120 minutes.")
+    parser.add_argument('-t', '--time', default="121m", help="Walltime of the machine, default is 120 minutes")
+    parser.add_argument('-g', '--gpu-type', type=str, default="A800", help="Type of GPU, default is `A800`, options: `A800`, `L40`, `K100AI`.")
     
     
     # parser.add_argument('--partition', type=str, default="gpu", help="Partition to use, default is `gpu`.")
     # parser.add_argument('--not-save-changes', action='store_true', help="Not save changes of the vitural machine if True, default is False.")
     # parser.add_argument('--kvm-param', type=str, default="auto", help="KVM parameters, format is `num_cores:num_memory`, default is auto.")
-    parser.add_argument('--chdir', type=str, help="Change to directory before running job.")
+    # parser.add_argument('--chdir', type=str, help="Change to directory before running job.")
     
     # TODO：设置和排除nodelist
     parser.add_argument('--nodelist', type=str, help="Specifies the list of nodes to use.")
@@ -321,7 +324,7 @@ curl -X POST "http://aiweb02.ihep.ac.cn:8001/api/v1/create-job?job_type=${1}&clu
             "qos": self.cfg.qos,  # QOS
             "gpu_name": partition,  # gpu or dcu
             "gpu_num": gpu_num,  # gpu num
-            "gpu_type": "",  # gpu 类型 a800 或者 l40 或者 k100ai
+            "gpu_type": self.cfg.gpu_type,  # gpu 类型 a800 或者 l40 或者 k100ai
             "ntasks_per_node": 1,  # 不改
             "job_name": self.cfg.job_name
         }
