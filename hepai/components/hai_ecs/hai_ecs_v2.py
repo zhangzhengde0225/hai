@@ -94,7 +94,7 @@ class SubmittedJobInfo:
     """提交作业后返回的信息"""
     jobId: str  #  872
     jobType: str  # enode
-    jobPath: str  # '/aifs/user/home/zdzhang/.ink/Jobs/enode-20250616-211720'
+    jobPath: str  # '/.xx/Jobs/enode-20250616-211720'
     
 
 @dataclass
@@ -126,34 +126,31 @@ class ConnectionInfo:
     gateway_port: int
     jobId: int
 
-# test_uid = "21927"  # 用户的uid
-# test_email = "zdzhang@ihep.ac.cn"  # 用户的邮箱
-
-
 class AIEmailFetcher:
     
     @staticmethod
     def fetch_email(username: str) -> str:
-        username = "zdzhang"
-        # username = 'guocq'
-        reps = requests.get(
-            "http://localhost:42601/apiv2/user/get_email_by_username?username=" + username,
+        resp = requests.get(
+            f"https://login.ihep.ac.cn/umt/api/APIafsToemail?afsAccount={username}",
             headers={
                 "Content-Type": "application/json",
-            },
-            # json={"username": username}  # 使用测试的uid
+            }
         )
         try:
-            reps.raise_for_status()
-            reps_json = reps.json()
+            resp.raise_for_status()  # 检查请求是否成功
+            resp_json = resp.json()
         except Exception as e:
-            raise RuntimeError(f"请求失败: {e}, \n{reps.text}")
+            raise RuntimeError(f"请求失败: {e}, \n{resp.text}")
         
-        email = reps_json.get("data", {}).get("email", "")
+        ret = resp_json.get("result", [])
+        assert len(ret) == 1, f"Expected exactly one result, but got {len(ret)} for user `{username}`."
+        
+        email = ret[0].get("email", "")
         if not email:
             raise RuntimeError(f"Failed to fetch email for user `{username}`.")
         
-
+        return email
+        
 
 class HaiECS:
 
@@ -164,11 +161,8 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        # self.email = AIEmailFetcher.fetch_email(username=self.username)
-        self.email = self.username
-        
-        pass
-      
+        self.email = AIEmailFetcher.fetch_email(username=self.username)
+        # print(f'Current user: {self.username}, uid: {self.uid}, email: {self.email}')
         
     def _get_username(self):
         """获取当前执行脚本的用户名"""
@@ -277,7 +271,7 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
             resp.raise_for_status()
             resp_json = resp.json()
         except Exception as e:
-            raise RuntimeError(f"请求失败: {e}")
+            raise RuntimeError(f"请求失败: {e}, \n{resp.text}")
         data = resp_json.get("data", [])
         
         job_status_list = [JobStatus(**item) for item in data]
@@ -338,13 +332,12 @@ curl -X POST "http://aiweb02.ihep.ac.cn:8001/api/v1/create-job?job_type=${1}&clu
     accerlerator_cards: {partition} * {gpu_num}
 """)
         
-        # TODO: 自动获得uid和email
         resp = requests.post(
             "http://aiweb02.ihep.ac.cn:8001/api/v1/create-job?job_type=enode&cluster_id=slurm",
             headers={
                 "Content-Type": "application/json",
-                "uid": "21927",  # 用户的uid
-                "email": "zdzhang@ihep.ac.cn"  # 用户的邮箱
+                "uid": str(self.uid),  # 用户的uid
+                "email": str(self.email)  # 用户的邮箱
             },
             json=data
         )
@@ -421,4 +414,5 @@ if __name__ == "__main__":
     args = parse_args()
     # 执行创建或管理VM的逻辑
     hai_ecs = HaiECS(args)
+    
     hai_ecs()
