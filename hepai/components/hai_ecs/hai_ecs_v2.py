@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Union
 import argparse
 from dataclasses import dataclass
 import requests
@@ -225,7 +226,7 @@ class HaiECS:
 
     
     
-    def get_conection_info(self, job_id: int | str):
+    def get_conection_info(self, job_id: Union[str, int]) -> ConnectionInfo:
         """
 curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_type=${2}&cluster_id=slurm" \
   -H "uid: 21628" \
