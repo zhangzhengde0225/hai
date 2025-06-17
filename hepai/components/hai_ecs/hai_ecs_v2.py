@@ -385,7 +385,7 @@ ECS information:
     User: {self.username}
     Port: {connection_info.gateway_port}
     
-    You can connect to it via: `ssh -o StrictHostKeyChecking=no {self.username}@{connection_info.host} -p {connection_info.gateway_port}`""")
+    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`""")
             exit(0)  # 如果有正在运行的作业，则直接退出
         
         job_info = self.submit_enode_job()
@@ -403,8 +403,8 @@ The ECS is ready!
     User: {self.username}
     Port: {connection_info.gateway_port}
     
-    You can connect to it via: `ssh -o StrictHostKeyChecking=no {self.username}@{connection_info.host} -p {connection_info.gateway_port}`
     For more information, please visit: `https://ai.ihep.ac.cn/docs`
+    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`
     """)
         return connection_info
  
