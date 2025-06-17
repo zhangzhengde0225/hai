@@ -11,6 +11,7 @@ import time
 import re
 import pwd
 import sys
+import warnings
 
 
 @dataclass
@@ -30,9 +31,20 @@ class Config:
     qos: str = "gpunormal"
     
     def __post_init__(self):
+        self.gpu_type_partition_map = {
+            "a800": "gpu",
+            "l40": "gpu",
+            "k100ai": "dcu",
+        }
+        self.partition_qos_map = {
+            "gpu": ["gpunormal", "gpudebug", "gpuintera"],
+            "dcu": ["dcunormal", "dcudebug", "dcuintera", "dcudvp"],
+        }
+        
         self._convert_walltime()
         self._auto_job_name()
         self._check_gpu_type()
+        self._check_consistency()
         
     def _auto_job_name(self):
         """自动生成job_name"""
@@ -62,11 +74,40 @@ class Config:
                     
     def _check_gpu_type(self):
         """检查gpu_type是否在允许的范围内"""
-        allowed_gpu_types = ["a800", "l40", "k100ai"]
+        allowed_gpu_types = list(self.gpu_type_partition_map.keys())
         self.gpu_type = self.gpu_type.lower()  # 转换为小写以便比较
         if self.gpu_type not in allowed_gpu_types:
             raise ValueError(f"Invalid gpu_type: {self.gpu_type}, allowed types are: {allowed_gpu_types}")
 
+    def _check_consistency(self):
+        """检查一致性"""
+        p, n = self.gres.split(":")
+        if p not in ["gpu", "dcu"]:
+            raise ValueError(f"Invalid gres: {self.gres}, only `gpu` and `dcu` are allowed.")
+        
+        # 用户选择的gpu_type和gres必须一致
+        if self.gpu_type_partition_map[self.gpu_type] != p:
+            raise ValueError(f"gpu_type `{self.gpu_type}` is not consistent with gres `{self.gres}`.")
+        
+        # 队列自动更新
+        allowed_qos = self.partition_qos_map.get(p, [])
+        if self.qos not in allowed_qos:
+            # warnings.warn(f"QOS `{self.qos}` is not in the allowed list for partition `{p}`, using default QOS.")
+            # 尝试自动QOS
+            p_from_qos = 'dcu' if self.qos.startswith('dcu') else 'gpu'
+            new_qos = self.qos.replace(p_from_qos, p)
+            if new_qos in allowed_qos:
+                self.qos = new_qos
+                warnings.warn(f"QOS `{self.qos}` is set automatically to match the partition `{p}`.")
+            else:
+                raise ValueError(f"QOS `{self.qos}` is not allowed for partition `{p}`, allowed QOS are: {allowed_qos}.")    
+            
+            
+            
+            
+        if p == 'gpu':
+            if 
+        
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
