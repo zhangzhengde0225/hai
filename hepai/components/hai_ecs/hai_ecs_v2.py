@@ -111,7 +111,7 @@ class Config:
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
-    parser.add_argument('command', nargs='?', default='start', choices=['start', 'stop'], help="start or stop ECS. Default is start.")
+    parser.add_argument('command', nargs='?', default='start', choices=['start', 'stop', 'status'], help="start or stop ECS. Default is start.")
     parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource. Default is `gpu:1`, which means 1 GPU. You can also set `gpu:2`, `dcu:1`, etc.')
     parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes. Default is 1.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
@@ -450,28 +450,23 @@ The ECS is ready!
 if __name__ == "__main__":
     args = parse_args()
     
+    config = Config(
+            gres=args.gres,
+            nodes=args.nodes,
+            qos=args.qos,
+            job_name=args.job_name,
+            time=args.time,
+            gpu_type=args.gpu_type,
+        )
+    hai_ecs = HaiECS(config)
+    
     # 判断命令
     if getattr(args, "command", "start") == "stop":
         # 只需要gres等参数用于初始化Config
-        config = Config(
-            gres=args.gres,
-            nodes=args.nodes,
-            qos=args.qos,
-            job_name=args.job_name,
-            time=args.time,
-            gpu_type=args.gpu_type,
-        )
-        hai_ecs = HaiECS(config)
         hai_ecs.stop_enode_job()
+    elif getattr(args, "command", "start") == "start":
+        hai_ecs()
+    elif getattr(args, "command", "start") == "status":
+        hai_ecs()
     else:
-        # start
-        config = Config(
-            gres=args.gres,
-            nodes=args.nodes,
-            qos=args.qos,
-            job_name=args.job_name,
-            time=args.time,
-            gpu_type=args.gpu_type,
-        )
-        hai_ecs = HaiECS(config)
         hai_ecs()
