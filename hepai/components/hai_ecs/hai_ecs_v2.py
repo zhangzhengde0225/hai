@@ -78,6 +78,11 @@ class Config:
         self.gpu_type = self.gpu_type.lower()  # 转换为小写以便比较
         if self.gpu_type not in allowed_gpu_types:
             raise ValueError(f"Invalid gpu_type: {self.gpu_type}, allowed types are: {allowed_gpu_types}")
+        # 根据gres自动设置gpu_type
+        if self.gres.lower().startswith("dcu:"):
+            if self.gpu_type != "k100ai":
+                warnings.warn(f"Using `dcu` gres, but gpu_type is set to `{self.gpu_type}`, which is not consistent with `dcu`. Setting gpu_type to `k100ai`.")
+                self.gpu_type = "k100ai"
 
     def _check_consistency(self):
         """检查一致性"""
@@ -110,7 +115,7 @@ def parse_args() -> Config:
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
     parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name.")
     parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
-    parser.add_argument('-tp', '--gpu-type', type=str, default="A800", help="Type of GPU. Default is `A800`, options: `A800`, `L40`, `K100AI`.")
+    parser.add_argument('-tp', '--gpu-type', type=str, default='A800', help="Type of GPU. Default is `A800`, options: `A800`, `L40`, `K100AI`.")
     
     
     # parser.add_argument('--partition', type=str, default="gpu", help="Partition to use, default is `gpu`.")
