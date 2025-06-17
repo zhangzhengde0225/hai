@@ -391,43 +391,6 @@ Check command:
             return enode_jobs
         return None
         
-    def __call__(self):
-        
-        enode_jobs = self.check_existing_job()
-        if enode_jobs is not None:
-            # 筛选正在running的作业
-            enode_jobs = [job for job in enode_jobs if job.jobStatus.lower() == 'running']
-            connection_info = self.get_conection_info(job_id=enode_jobs[0].jobId)
-            print(f"""
-The running ECS job id is `{connection_info.jobId}`, jobNodelist: `{enode_jobs[0].jobNodeList}`.
-ECS information:
-    HostName: {connection_info.host}
-    User: {self.username}
-    Port: {connection_info.gateway_port}
-    
-    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`""")
-            exit(0)  # 如果有正在运行的作业，则直接退出
-        
-        job_info = self.submit_enode_job()
-        # 轮询作业状态
-        time.sleep(0.5)  
-        final_status = self.poll_job_status(job_info.jobId)
-        # if final_status.jobStatus.lower() != 'running':
-        #     raise RuntimeError(f"作业 {job_info.jobId} 状态异常: {final_status.jobStatus}，请联系管理员")
-        
-        
-        connection_info = self.get_conection_info(job_id=job_info.jobId)
-        print(f"""
-The ECS is ready!
-    HostName: {connection_info.host}
-    User: {self.username}
-    Port: {connection_info.gateway_port}
-    
-    For more information, please visit: `https://ai.ihep.ac.cn/docs`
-    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`
-    """)
-        return connection_info
- 
     def stop_enode_job(self):
         """
         停止当前用户的enode作业（如果有）
@@ -446,6 +409,50 @@ The ECS is ready!
             except Exception as e:
                 print(f"Failed to stop job {job.jobId}: {e}")
         
+        
+    def __call__(self, check_status: bool = False) -> ConnectionInfo:
+        
+        enode_jobs = self.check_existing_job()
+        if enode_jobs is not None:
+            # 筛选正在running的作业
+            enode_jobs = [job for job in enode_jobs if job.jobStatus.lower() == 'running']
+            connection_info = self.get_conection_info(job_id=enode_jobs[0].jobId)
+            print(f"""
+The running ECS job id is `{connection_info.jobId}`, jobNodelist: `{enode_jobs[0].jobNodeList}`.
+ECS information:
+    HostName: {connection_info.host}
+    User: {self.username}
+    Port: {connection_info.gateway_port}
+    
+    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`""")
+            exit(0)  # 如果有正在运行的作业，则直接退出
+        else:
+            if check_status:
+                print("No running ECS jobs found. You can start a new ECS job with the command: `hai-ecs`")
+                exit(0)
+            pass
+        
+        job_info = self.submit_enode_job()
+        # 轮询作业状态
+        time.sleep(0.5)
+        final_status = self.poll_job_status(job_info.jobId)
+        # if final_status.jobStatus.lower() != 'running':
+        #     raise RuntimeError(f"作业 {job_info.jobId} 状态异常: {final_status.jobStatus}，请联系管理员")
+        
+        
+        connection_info = self.get_conection_info(job_id=job_info.jobId)
+        print(f"""
+The ECS is ready!
+    HostName: {connection_info.host}
+    User: {self.username}
+    Port: {connection_info.gateway_port}
+    
+    For more information, please visit: `https://ai.ihep.ac.cn/docs`
+    You can connect to it via: `ssh -o UserKnownHostsFile=/dev/null {self.username}@{connection_info.host} -p {connection_info.gateway_port}`
+    """)
+        return connection_info
+ 
+    
 
 if __name__ == "__main__":
     args = parse_args()
@@ -467,6 +474,6 @@ if __name__ == "__main__":
     elif getattr(args, "command", "start") == "start":
         hai_ecs()
     elif getattr(args, "command", "start") == "status":
-        hai_ecs()
+        hai_ecs(check_status=True)
     else:
         hai_ecs()
