@@ -70,8 +70,8 @@ class Config:
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
-    parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource, default is `gpu:1`.')
-    parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes.")
+    parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource. Default is `gpu:1`, which means 1 GPU. You can also set `gpu:2`, `dcu:1`, etc.')
+    parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes. Default is 1.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
     parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name.")
     parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
