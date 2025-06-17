@@ -226,9 +226,8 @@ class HaiECS:
             if time.time() - start_time > timeout:
                 raise TimeoutError(f"轮询作业状态超时（{timeout}秒），作业ID: {job_id}，请联系管理员hepai@ihep.ac.cn")
             time.sleep(interval)
+            
 
-    
-    
     def get_conection_info(self, job_id: Union[str, int]) -> ConnectionInfo:
         """
 curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_type=${2}&cluster_id=slurm" \
@@ -350,7 +349,7 @@ curl -X POST "http://aiweb02.ihep.ac.cn:8001/api/v1/create-job?job_type=${1}&clu
             resp.raise_for_status()
             resp_json = resp.json()
         except Exception as e:
-            raise RuntimeError(f"请求失败: {e}")
+            raise RuntimeError(f"请求失败: {e}: {resp.text}")
         
         data = resp_json.get("data", {})
         job_info = SubmittedJobInfo(**data)
