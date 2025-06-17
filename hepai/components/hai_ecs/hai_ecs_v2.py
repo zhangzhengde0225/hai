@@ -102,12 +102,6 @@ class Config:
             else:
                 raise ValueError(f"QOS `{self.qos}` is not allowed for partition `{p}`, allowed QOS are: {allowed_qos}.")    
             
-            
-            
-            
-        if p == 'gpu':
-            if 
-        
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
