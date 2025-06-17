@@ -239,7 +239,7 @@ class HaiECS:
         return n_cores, n_memory
         
         
-    def poll_job_status(self, job_id: str, interval: int = 1, timeout: int = 10):
+    def poll_job_status(self, job_id: str, interval: int = 1, timeout: int = 10, max_retry_times: int = 3) -> JobStatus:
         """
         轮询查询作业状态，直到作业结束或超时
         :param job_id: 作业ID
@@ -252,10 +252,17 @@ class HaiECS:
         ok_status = ['running']
         error_status = ['failed', 'cancelled', 'timeout']
         
+        retry_times = 1
         while True:
             try:
                 job_status_list = self.query_user_jobs()
             except Exception as e:
+                if retry_times < max_retry_times:
+                    retry_times += 1
+                    # print(f"查询作业状态失败，正在重试... ({retry_times}/{max_retry_times})")
+                    print(f"\rQuerying job status failed, retrying... ({retry_times}/{max_retry_times})", end="")
+                    time.sleep(interval)
+                    continue
                 raise RuntimeError(f"查询作业状态失败: {e}，请联系管理员hepai@ihep.ac.cn")
             job_status = next((js for js in job_status_list if str(js.jobId) == str(job_id)), None)
             if job_status is None:
