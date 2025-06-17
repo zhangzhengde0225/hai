@@ -81,7 +81,7 @@ class Config:
         # 根据gres自动设置gpu_type
         if self.gres.lower().startswith("dcu:"):
             if self.gpu_type != "k100ai":
-                warnings.warn(f"Using `dcu` gres, but gpu_type is set to `{self.gpu_type}`, which is not consistent with `dcu`. Setting gpu_type to `k100ai`.")
+                # warnings.warn(f"Using `dcu` gres, but gpu_type is set to `{self.gpu_type}`, which is not consistent with `dcu`. Setting gpu_type to `k100ai`.")
                 self.gpu_type = "k100ai"
 
     def _check_consistency(self):
@@ -103,7 +103,8 @@ class Config:
             new_qos = self.qos.replace(p_from_qos, p)
             if new_qos in allowed_qos:
                 self.qos = new_qos
-                warnings.warn(f"QOS `{self.qos}` is set automatically to match the partition `{p}`.")
+                # warnings.warn(f"QOS `{self.qos}` is set automatically to match the partition `{p}`.")
+                print(f"QOS `{self.qos}` is set automatically to match the partition `{p}`.")
             else:
                 raise ValueError(f"QOS `{self.qos}` is not allowed for partition `{p}`, allowed QOS are: {allowed_qos}.")    
             
