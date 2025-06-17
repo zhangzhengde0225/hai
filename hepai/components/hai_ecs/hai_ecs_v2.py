@@ -111,29 +111,15 @@ class Config:
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
+    parser.add_argument('command', nargs='?', default='start', choices=['start', 'stop'], help="start or stop ECS. Default is start.")
     parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource. Default is `gpu:1`, which means 1 GPU. You can also set `gpu:2`, `dcu:1`, etc.')
     parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes. Default is 1.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
     parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name.")
     parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
     parser.add_argument('-tp', '--gpu-type', type=str, default='A800', help="Type of GPU. Default is `A800`, options: `A800`, `L40`, `K100AI`.")
-    
-    
-    # parser.add_argument('--partition', type=str, default="gpu", help="Partition to use, default is `gpu`.")
-    # parser.add_argument('--not-save-changes', action='store_true', help="Not save changes of the vitural machine if True, default is False.")
-    # parser.add_argument('--kvm-param', type=str, default="auto", help="KVM parameters, format is `num_cores:num_memory`, default is auto.")
-    # parser.add_argument('--chdir', type=str, help="Change to directory before running job.")
-    
-    # TODO：设置和排除nodelist
-    # parser.add_argument('--nodelist', type=str, help="Specifies the list of nodes to use.")
-    # parser.add_argument('--exclude', type=str, help="Specifies the list of nodes to exclude.")
-    # parser.add_argument('-d', '--daemon', action='store_true', help="Running in the background, only submitting task")
-    
-
     args = parser.parse_args()
-    
-    return Config(**args.__dict__)
-
+    return args
 
 @dataclass
 class NodeResource:
@@ -214,6 +200,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
+        # self.username, self.uid = 'zdzhang', 21927
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         # print(f'Current user: {self.username}, uid: {self.uid}, email: {self.email}')
         
@@ -252,7 +239,7 @@ class HaiECS:
         ok_status = ['running']
         error_status = ['failed', 'cancelled', 'timeout']
         
-        retry_times = 1
+        retry_times = 0
         while True:
             try:
                 job_status_list = self.query_user_jobs()
@@ -339,31 +326,6 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
     
     
     def submit_enode_job(self):
-        """
-#!/bin/bash
-
-curl -X POST "http://aiweb02.ihep.ac.cn:8001/api/v1/create-job?job_type=${1}&cluster_id=slurm" \
-  -H "Content-Type: application/json" \
-  -H "uid: 21628" \                  // 用户的uid
-  -H "email: guocq@ihep.ac.cn" \     // 用户的邮箱
-  -d '{
-  "job_script": "",             // 空着不写
-  "job_parameters": "",         // 空着不写
-  "time": "00:30:00",           // 程序最大运行时间
-  "partition": "gpu",           // 分区
-  "nodes": "1",                 // 1个节点
-  "ntasks": "1",                // 1个CPU核
-  "mem": "1G",                  // 内存
-  "account": "ihepai",          // 用户的组，固定为ihepai
-  "qos": "gpunormal",           // QOS
-  "gpu_name":"gpu",             // gpu or dcu
-  "gpu_num": "1",               // gpu num
-  "gpu_type": "",               // gpu 类型 a800 或者 l40 或者 k100ai
-  "ntasks_per_node": 1,         // 这个不改
-  "job_name": "test"
-}'
-        """
-        
         partition, gpu_num = self.cfg.gres.split(":")
         ncores, n_memory = self._auto_num_cpu_and_memory(int(gpu_num))
         # job_name = self._auto_job_name()
@@ -466,12 +428,50 @@ The ECS is ready!
     """)
         return connection_info
  
+    def stop_enode_job(self):
+        """
+        停止当前用户的enode作业（如果有）
+        """
+        user_jobs = self.query_user_jobs()
+        enode_jobs = [job for job in user_jobs if job.jobType.lower() == 'enode']
+        if not enode_jobs:
+            print("No running ECS (enode) jobs found.")
+            return
+        for job in enode_jobs:
+            print(f"Stopping ECS job: {job.jobId} ...")
+            try:
+                # 调用 scancel 命令
+                subprocess.run(['scancel', str(job.jobId)], check=True)
+                print(f"Job `{job.jobId}` stopped.")
+            except Exception as e:
+                print(f"Failed to stop job {job.jobId}: {e}")
         
-
 
 if __name__ == "__main__":
     args = parse_args()
-    # 执行创建或管理VM的逻辑
-    hai_ecs = HaiECS(args)
     
-    hai_ecs()
+    # 判断命令
+    if getattr(args, "command", "start") == "stop":
+        # 只需要gres等参数用于初始化Config
+        config = Config(
+            gres=args.gres,
+            nodes=args.nodes,
+            qos=args.qos,
+            job_name=args.job_name,
+            time=args.time,
+            gpu_type=args.gpu_type,
+        )
+        hai_ecs = HaiECS(config)
+        hai_ecs.stop_enode_job()
+    else:
+        # start
+        config = Config(
+            gres=args.gres,
+            nodes=args.nodes,
+            qos=args.qos,
+            job_name=args.job_name,
+            time=args.time,
+            gpu_type=args.gpu_type,
+        )
+        hai_ecs = HaiECS(config)
+        hai_ecs()
