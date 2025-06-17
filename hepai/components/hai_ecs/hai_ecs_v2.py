@@ -21,17 +21,18 @@ class Config:
     # kvm_param: str
     nodes: int = 1
     # chdir: str = None
-    nodelist: str = None
-    exclude: str = None
+    # nodelist: str = None
+    # exclude: str = None
     job_name: str = "auto"
     time: str = "121m"
-    daemon: bool = False
+    # daemon: bool = False
     gpu_type: str = "A800"  # options: A800, L40, K100AI
-    qos: str = "normal"
+    qos: str = "gpunormal"
     
     def __post_init__(self):
         self._convert_walltime()
         self._auto_job_name()
+        self._check_gpu_type()
         
     def _auto_job_name(self):
         """自动生成job_name"""
@@ -58,16 +59,23 @@ class Config:
                     self.time = f"{hours:02d}:{minutes:02d}:00"
                 elif unit == 'd':
                     self.time = f"{value * 24:02d}:00:00"
+                    
+    def _check_gpu_type(self):
+        """检查gpu_type是否在允许的范围内"""
+        allowed_gpu_types = ["a800", "l40", "k100ai"]
+        self.gpu_type = self.gpu_type.lower()  # 转换为小写以便比较
+        if self.gpu_type not in allowed_gpu_types:
+            raise ValueError(f"Invalid gpu_type: {self.gpu_type}, allowed types are: {allowed_gpu_types}")
 
 
 def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
-    parser.add_argument('--gres', type=str, default="gpu:1", help='Generic resource, default is `gpu:1`.')
+    parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource, default is `gpu:1`.')
     parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service")
-    parser.add_argument('-J', '--job-name', type=str, default="auto", help="Name of the job.")
-    parser.add_argument('-t', '--time', default="121m", help="Walltime of the machine, default is 120 minutes")
-    parser.add_argument('-g', '--gpu-type', type=str, default="A800", help="Type of GPU, default is `A800`, options: `A800`, `L40`, `K100AI`.")
+    parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name.")
+    parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
+    parser.add_argument('-tp', '--gpu-type', type=str, default="A800", help="Type of GPU. Default is `A800`, options: `A800`, `L40`, `K100AI`.")
     
     
     # parser.add_argument('--partition', type=str, default="gpu", help="Partition to use, default is `gpu`.")
@@ -76,9 +84,9 @@ def parse_args() -> Config:
     # parser.add_argument('--chdir', type=str, help="Change to directory before running job.")
     
     # TODO：设置和排除nodelist
-    parser.add_argument('--nodelist', type=str, help="Specifies the list of nodes to use.")
-    parser.add_argument('--exclude', type=str, help="Specifies the list of nodes to exclude.")
-    parser.add_argument('-d', '--daemon', action='store_true', help="Running in the background, only submitting task")
+    # parser.add_argument('--nodelist', type=str, help="Specifies the list of nodes to use.")
+    # parser.add_argument('--exclude', type=str, help="Specifies the list of nodes to exclude.")
+    # parser.add_argument('-d', '--daemon', action='store_true', help="Running in the background, only submitting task")
     
 
     args = parser.parse_args()
