@@ -6,7 +6,10 @@ import time
 from pathlib import Path
 from threading import Thread
 
-import cv2
+try:
+    import cv2
+except:
+    pass
 import math
 import numpy as np
 from PIL import Image, ExifTags

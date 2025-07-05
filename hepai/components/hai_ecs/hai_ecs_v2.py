@@ -29,6 +29,7 @@ class Config:
     # daemon: bool = False
     gpu_type: str = "A800"  # options: A800, L40, K100AI
     qos: str = "gpunormal"
+    debug: bool = False  # 是否开启调试模式
     
     def __post_init__(self):
         self.gpu_type_partition_map = {
@@ -118,6 +119,7 @@ def parse_args() -> Config:
     parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name.")
     parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
     parser.add_argument('-tp', '--gpu-type', type=str, default='A800', help="Type of GPU. Default is `A800`, options: `A800`, `L40`, `K100AI`.")
+    parser.add_argument('--debug', action='store_true', help="Enable debug mode. Default is False.")
     args = parser.parse_args()
     return args
 
@@ -192,6 +194,7 @@ class AIEmailFetcher:
         
 
 class HaiECS:
+    """基于Ink的Elastic Cloud Server (ECS)作业提交和管理工具"""
 
     def __init__(self, config) -> None:
         self.cfg: Config = config
@@ -200,7 +203,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        # self.username, self.uid = 'zdzhang', 21927
+        self.username, self.uid = 'zdzhang', 21927
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         # print(f'Current user: {self.username}, uid: {self.uid}, email: {self.email}')
         
@@ -292,6 +295,7 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
             raise RuntimeError(f"请求失败: {e}")
         data = resp_json.get("data", {})
         
+        
         cinfo = ConnectionInfo(**data)
         return cinfo
     
@@ -319,6 +323,8 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
         except Exception as e:
             raise RuntimeError(f"请求失败: {e}, \n{resp.text}")
         data = resp_json.get("data", [])
+        if self.cfg.debug:
+            print(f"[DEBUG] Response text: {resp.text}")
         
         job_status_list = [JobStatus(**item) for item in data]
         return job_status_list
@@ -370,6 +376,10 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
             raise RuntimeError(f"请求失败: {e}: {resp.text}")
         
         data = resp_json.get("data", {})
+        
+        if self.cfg.debug:
+            print(f"[DEBUG] Response text: {resp.text}")
+            
         job_info = SubmittedJobInfo(**data)
         
         print(f"Job submitted, job_id: `{job_info.jobId}`")
@@ -464,7 +474,9 @@ if __name__ == "__main__":
             job_name=args.job_name,
             time=args.time,
             gpu_type=args.gpu_type,
+            debug=args.debug
         )
+    config.debug = True
     hai_ecs = HaiECS(config)
     
     # 判断命令

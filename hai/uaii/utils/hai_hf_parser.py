@@ -1,7 +1,7 @@
-try:
-    from .hf_argparser import HfArgumentParser
-except:
-    from hf_argparser import HfArgumentParser
+# try:
+from .hf_argparser import HfArgumentParser
+# except:
+    # from hf_argparser import HfArgumentParser
     
 def parse_args(dataclasses_types,
         args=None,

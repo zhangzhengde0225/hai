@@ -5,7 +5,7 @@ import os
 import argparse
 import shutil
 from pathlib import Path
-import cv2
+# import cv2
 import numpy as np
 from easydict import EasyDict
 from PIL import Image
@@ -18,6 +18,7 @@ import yaml
 
 def detect(opt):
 	# 设置
+	import cv2
 	cuda = opt.device != 'cpu'
 	device_id = [int(x) for x in opt.device.split(',')] if cuda else None
 	torch_device = torch_utils.select_device(device=opt.device, batch_size=opt.batch_size)

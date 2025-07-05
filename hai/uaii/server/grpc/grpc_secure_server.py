@@ -6,10 +6,9 @@
 # coding=utf8
 import os, sys
 from pathlib import Path
-# import grpc
-# from grpc import ssl_server_credentials
+
 import time
-import numpy as np
+
 import damei as dm
 # from concurrent import futures
 import json
@@ -18,7 +17,11 @@ import hai
 
 pydir = Path(os.path.abspath(__file__)).parent
 
-from . import grpc_pb2_grpc, grpc_pb2
+from . import grpc_pb2_grpc
+try:
+    from . import grpc_pb2
+except ImportError:
+    pass
 
 logger = dm.getLogger('xai_server')
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -54,7 +57,7 @@ class XAIService(grpc_pb2_grpc.GrpcServiceServicer):
         data_type = kwargs.pop('data_type', None)
         if data_type is None or data_type == type(data):
             return data
-       
+        import numpy as np
         if data_type in [np.ndarray, 'np.ndarray', 'numpy.ndarray']:
             data = np.array(data)
         else:  # TODO: 支持其他类型数据转换
@@ -62,6 +65,7 @@ class XAIService(grpc_pb2_grpc.GrpcServiceServicer):
         return data
 
     def data_info(self, data):
+        import numpy as np
         if data is None:
             return ''
         elif isinstance(data, np.ndarray):
@@ -95,6 +99,7 @@ class XAIService(grpc_pb2_grpc.GrpcServiceServicer):
         logger.info(f'Return: \nStatus: {status} \nData: \n{data} {type(data)}')
 
         # 3.封装和返回结果
+        import numpy as np
         if isinstance(data, str):
             data = data.encode('utf-8')
         elif isinstance(data, np.ndarray):

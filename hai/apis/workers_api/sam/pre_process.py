@@ -1,17 +1,20 @@
 
 import os, sys
-import cv2
+# import cv2  # delay import
 import base64
-import numpy as np  
+
 
 
 def load_img(img_path):
+    import cv2
     assert os.path.exists(img_path), f"图片{img_path}不存在"
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
 def sam_pre_process(data):
+    import cv2
+    import numpy as np  # delay import
     
     input_points = data.pop('input_points', None)
     input_labels = data.pop('input_labels', None)
@@ -57,6 +60,7 @@ def sam_pre_process(data):
     return new_data
 
 def sam_post_process(data):
+    import numpy as np  
     # return data
     if isinstance(data[0], dict):
         only_mask = False

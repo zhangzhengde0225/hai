@@ -8,7 +8,7 @@ This script is free for non-commercial use. Please contact zdzhang@ihep.ac.cn fo
 """
 
 # from utils import *
-import cv2
+# import cv2
 import os, sys
 from pathlib import Path
 here = Path(__file__).parent
@@ -29,6 +29,7 @@ class SegmentViaSam():
         # assert api_key is not None, "请设置环境变量HEPAI_API_KEY"
         
     def load_img(self, img_path):
+        import cv2
         assert os.path.exists(img_path), f"图片{img_path}不存在"
         img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -54,6 +55,7 @@ class SegmentViaSam():
             if os.path.isfile(img):
                 img = self.load_img(img)
         if isinstance(img, np.ndarray):  # 图片，转换为base64
+            import cv2
             img = cv2.imencode('.jpg', img)[1]
             img = str(base64.b64encode(img))[2:-1]
             

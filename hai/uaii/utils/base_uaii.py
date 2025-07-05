@@ -5,7 +5,7 @@ import collections
 import os, sys
 from statistics import mode
 from select import select
-import numpy as np
+
 import copy
 import damei as dm
 # import cv2

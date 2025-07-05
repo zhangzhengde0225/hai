@@ -1,5 +1,4 @@
 import os, sys
-import numpy as np
 import logging
 from threading import Thread
 import time
