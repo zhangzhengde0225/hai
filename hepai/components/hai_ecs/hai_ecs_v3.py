@@ -195,18 +195,39 @@ class AIEmailFetcher:
 
 class APIKeyFetcher:
     """根据邮箱，从HepAI平台获取API Key"""
-    from hepai import HepAI
-    default_base_url = "https://aiapi.ihep.ac.cn/apiv2"
-    base_url = os.getenv("HEPAI_API_BASE_URL", default_base_url)  # 可以通过环境变量覆盖默认值
-    api_key = os.getenv("HAIINK_ADMIN_API_KEY")
-    assert api_key is not None, "Please set the environment variable HAIINK_ADMIN_API_KEY with your API key."
-    client = HepAI(base_url=base_url, api_key=api_key)
+    
+    mode = "server"
+    mode = "local"
+    
+    
     
     def fetch_api_key(self, email: str) -> str:
-        from hepai.types import APIKeyInfo
-        key_info: APIKeyInfo = self.client.fetch_api_key(username=email)
         
-        return key_info.api_key
+        if self.mode == "server":
+            from hepai import HepAI
+            default_base_url = "https://aiapi.ihep.ac.cn/apiv2"
+            base_url = os.getenv("HEPAI_API_BASE_URL", default_base_url)  # 可以通过环境变量覆盖默认值
+            api_key = os.getenv("HAIINK_ADMIN_API_KEY")
+            assert api_key is not None, "Please set the environment variable HAIINK_ADMIN_API_KEY with your API key."
+            client = HepAI(base_url=base_url, api_key=api_key)
+            from hepai.types import APIKeyInfo
+            key_info: APIKeyInfo = client.fetch_api_key(username=email)
+            return key_info.api_key
+        elif self.mode == "local":
+            # 本地模式，直接从文件中读取API Key
+            dir_path = f'{Path.home()}/.ink'
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path, exist_ok=True)
+            key_file = os.path.join(dir_path, 'haiink_api_key')
+            if not key_file.exists():
+                raise FileNotFoundError(f"API Key file not found: {key_file}. Please create it with your API key.")
+            with open(key_file, 'r') as f:
+                api_key = f.read().strip()
+            if not api_key:
+                raise ValueError("API Key file is empty. Please check the file content.")
+            return api_key
+        else:
+            raise ValueError(f"Invalid mode: {self.mode}. Supported modes are 'server' and 'local'.")
         
         
 
@@ -223,7 +244,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        self.username, self.uid = 'zdzhang', 21927
+        # self.username, self.uid = 'zdzhang', 21927
         # self.username, self.uid = 'zhangyiyu', 21628
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         self.ink_token = self.key_fetcher.fetch_api_key(email=self.email)
