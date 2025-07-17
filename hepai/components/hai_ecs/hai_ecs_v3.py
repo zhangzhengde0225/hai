@@ -207,7 +207,15 @@ class APIKeyFetcher:
             from hepai import HepAI
             default_base_url = "https://aiapi.ihep.ac.cn/apiv2"
             base_url = os.getenv("HEPAI_API_BASE_URL", default_base_url)  # 可以通过环境变量覆盖默认值
-            api_key = os.getenv("HAIINK_ADMIN_API_KEY")
+            # api_key = os.getenv("HAIINK_ADMIN_API_KEY")
+            # 从当前文件./INK_KEY中读取API Key
+            key_file = Path(__file__).parent / "INK_KEY"
+            if not key_file.exists():
+                raise FileNotFoundError(f"API Key file not found: {key_file}. Please create it with your API key.")
+            with open(key_file, 'r') as f:
+                api_key = f.read().strip()
+            if not api_key:
+                raise ValueError("API Key file is empty. Please check the file content.")
             assert api_key is not None, "Please set the environment variable HAIINK_ADMIN_API_KEY with your API key."
             client = HepAI(base_url=base_url, api_key=api_key)
             from hepai.types import APIKeyInfo
