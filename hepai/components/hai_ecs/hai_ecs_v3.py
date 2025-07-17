@@ -197,7 +197,7 @@ class APIKeyFetcher:
     """根据邮箱，从HepAI平台获取API Key"""
     
     mode = "server"
-    mode = "local"
+    # mode = "local"
     
     
     
