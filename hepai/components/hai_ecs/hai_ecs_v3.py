@@ -348,7 +348,7 @@ class HaiECS:
                 else:
                     raise RuntimeError(f"作业 {job_id} 状态异常: {job_status.jobStatus}，请联系管理员")
             if time.time() - start_time > timeout:
-                raise TimeoutError(f"轮询作业状态超时（{timeout}秒），作业ID: {job_id}，请联系管理员hepai@ihep.ac.cn")
+                raise TimeoutError(f"轮询作业状态超时（{timeout}秒），作业ID: {job_id}，请手动查询或联系管理员hepai@ihep.ac.cn")
             time.sleep(interval)
             
 
