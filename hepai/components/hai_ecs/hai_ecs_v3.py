@@ -279,7 +279,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        self.username, self.uid = 'zdzhang', 21927
+        # self.username, self.uid = 'zdzhang', 21927
         # self.username, self.uid = 'zhangyiyu', 21628
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         self.ink_token = self.key_fetcher.fetch_api_key(email=self.email)
@@ -587,7 +587,7 @@ if __name__ == "__main__":
             gpu_type=args.gpu_type,
             debug=args.debug
         )
-    config.debug = True
+    # config.debug = True
     hai_ecs = HaiECS(config)
     
     # 判断命令
