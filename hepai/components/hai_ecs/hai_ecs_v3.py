@@ -204,7 +204,8 @@ class APIKeyFetcher:
     def fetch_api_key(self, email: str) -> str:
         
         if self.mode == "server":
-            from hepai import HepAI
+            # from hepai import HepAI
+            import requests
             default_base_url = "https://aiapi.ihep.ac.cn/apiv2"
             base_url = os.getenv("HEPAI_API_BASE_URL", default_base_url)  # 可以通过环境变量覆盖默认值
             # api_key = os.getenv("HAIINK_ADMIN_API_KEY")
@@ -217,10 +218,36 @@ class APIKeyFetcher:
             if not api_key:
                 raise ValueError("API Key file is empty. Please check the file content.")
             assert api_key is not None, "Please set the environment variable HAIINK_ADMIN_API_KEY with your API key."
-            client = HepAI(base_url=base_url, api_key=api_key)
-            from hepai.types import APIKeyInfo
-            key_info: APIKeyInfo = client.fetch_api_key(username=email)
-            return key_info.api_key
+            # client = HepAI(base_url=base_url, api_key=api_key)
+            payload = {
+                "username": email,
+                }
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+                }
+            resp = requests.post(
+                f"{base_url}/key/fetch_api_key",
+                json=payload,
+                headers=headers,
+            )
+            try:
+                resp.raise_for_status()  # 检查请求是否成功
+                resp_json = resp.json()
+            except Exception as e:
+                raise RuntimeError(f"读取专属API Key失败: {e}, \n{resp.text}")
+
+            key = resp_json["api_key"]
+            key_alias = resp_json.get("alias", "Default")
+            if not key:
+                raise RuntimeError(f"Failed to fetch API Key for user `{email}`. Please check your email or contact support.")
+            assert "for-haiink" in key_alias, "The fetched API Key is not for HAIINK, please check your email or contact support."
+            return key
+            # from hepai.types import APIKeyInfo
+            # key_info: APIKeyInfo = client.fetch_api_key(username=email)
+            
+            # return key_info.api_key
+
         elif self.mode == "local":
             # 本地模式，直接从文件中读取API Key
             dir_path = f'{Path.home()}/.ink'
@@ -252,7 +279,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        # self.username, self.uid = 'zdzhang', 21927
+        self.username, self.uid = 'zdzhang', 21927
         # self.username, self.uid = 'zhangyiyu', 21628
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         self.ink_token = self.key_fetcher.fetch_api_key(email=self.email)
