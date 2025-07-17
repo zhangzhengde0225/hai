@@ -203,7 +203,7 @@ class HaiECS:
         
         # 自动获取用户名
         self.username, self.uid = self._get_username()
-        self.username, self.uid = 'zdzhang', 21927
+        # self.username, self.uid = 'zdzhang', 21927
         self.email = AIEmailFetcher.fetch_email(username=self.username)
         # print(f'Current user: {self.username}, uid: {self.uid}, email: {self.email}')
         

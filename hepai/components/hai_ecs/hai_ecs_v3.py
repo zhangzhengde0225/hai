@@ -232,7 +232,7 @@ class APIKeyFetcher:
         
 
 class HaiECS:
-    """基于Ink的Elastic Cloud Server (ECS)作业提交和管理工具"""
+    """基于Slurm的Elastic Cloud Server (ECS)作业提交和管理工具"""
 
     def __init__(self, config) -> None:
         self.base_url = "http://aiweb02.ihep.ac.cn:8005/api"
