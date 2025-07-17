@@ -114,11 +114,12 @@ def parse_args() -> Config:
     parser = argparse.ArgumentParser(description='HepAI ECS command line tool to run virtual machines.')
     parser.add_argument('command', nargs='?', default='start', choices=['start', 'stop', 'status'], help="start or stop ECS. Default is start.")
     parser.add_argument('-g', '--gres', type=str, default="gpu:1", help='Generic resource. Default is `gpu:1`, which means 1 GPU. You can also set `gpu:2`, `dcu:1`, etc.')
+    parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
+    parser.add_argument('-tp', '--gpu-type', type=str, default='L40', help="Type of GPU. Default is `L40`, options: `L40`, `A800`, `K100AI`.")
+
     parser.add_argument('-N', '--nodes', type=int, default=1, help="Number of nodes. Default is 1.")
     parser.add_argument('-q', '--qos', type=str, default="gpunormal", help="Set Quality of Service, defualt is `gpunormal` or `dcunormal`.")
     parser.add_argument('-j', '--job-name', type=str, default="auto", help="Name of the job. Default is `auto`, which will generate a random name starting with `ecs_` and followed by 4 random letters.")
-    parser.add_argument('-t', '--time', default="120m", help="Walltime of the machine. Default is `120m`. `m` for `minutes`, `h` for hours, `d` for days.")
-    parser.add_argument('-tp', '--gpu-type', type=str, default='L40', help="Type of GPU. Default is `L40`, options: `L40`, `A800`, `K100AI`.")
     parser.add_argument('--debug', action='store_true', help="Enable debug mode. Default is False.")
     args = parser.parse_args()
     return args
