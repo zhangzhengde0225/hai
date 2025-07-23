@@ -5,25 +5,26 @@ here = Path(__file__).parent
 import os
 api_key = os.getenv("DDF_ZDZHANG_API_KEY")
 api_key = os.getenv("HEPAI_API_KEY")
+api_key = "Hi-nIghqFDqJazCTrGExKbxrWDiUXfEwPCRhniMxGlUsqUfFci"
 
 
 # 配置自定义 API base
 base_url = "https://aiapi.ihep.ac.cn/apiv2"
+base_url="http://localhost:42601/apiv2"
 client = openai.OpenAI(
     # base_url="http://localhost:8000/apiv2",
-    # base_url="http://localhost:42601/apiv2",
     base_url=base_url,
     api_key=api_key,  # 只要不是空即可，mock服务不会校验
 )
 
-test_file = f"{here.parent.parent.parent}/assets/A-I-HEP.png"
+test_file = f"{here.parent.parent.parent}/assets/A-I-HEP图标.png"
 
 
 def test_upload_file():
     print("1. 上传文件 (fine-tune)...")
     file_obj = client.files.create(
         file=open(test_file, "rb"),
-        purpose="fine-tune"
+        purpose="user_data"
         )
     print(f"Response:", file_obj)
     # 新增预览提示
