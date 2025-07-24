@@ -68,6 +68,7 @@ class HClientConfig:
     default_headers: Mapping[str, str] = field(default=None, metadata={"description": "The default headers for all requests"})
     default_query: Mapping[str, object] = field(default=None, metadata={"description": "The default query parameters for all requests"})
     enable_openai: bool = field(default=True, metadata={"description": "Whether to enable openai resources"})
+    enable_anthropic: bool = field(default=True, metadata={"description": "Whether to enable anthropic resources"})
     proxy: str = field(default=None, metadata={"description": "The default proxy for all requests"})
 
     max_connections: int = field(default=1000, metadata={"description": "The maximum number of connections to keep open"})
@@ -177,7 +178,41 @@ class HClient(SyncAPIClient):
             # self.with_raw_response = OpenAIWithRawResponse(self)
             # self.with_streaming_response = OpenAIWithStreamedResponse(self)
 
+        if self.config.enable_anthropic:
+            """集成anthropic的resources"""
+            # from openai import resources
+            # from openai._client import OpenAIWithRawResponse, OpenAIWithStreamedResponse
+            # from .anthropic_api import resources
+            # # self._default_stream_cls = HClient.Stream
+            # self.anthropic = resources.Anthropic(self)
+            # self.with_raw_response = OpenAIWithRawResponse(self)
+            # self.with_streaming_response = OpenAIWithStreamedResponse(self)
+            # from anthropic import Anthropic
+            try:
+                import anthropic
+            except ImportError:
+                raise ImportError(
+                    "Please install the `anthropic` package to use the Anthropic resources, you can install it by `pip install anthropic`"
+                )
+            self._anthropic: anthropic.Anthropic | None = None
+            self._anthropic_params = {
+                "api_key": self.api_key,
+                "base_url": self.config.base_url,  # type: ignore[call-arg]
+                "timeout": self.config.timeout,  # type: ignore[call-arg]
+                "max_retries": self.config.max_retries,  # type: ignore[call-arg]
+                "http_client": self.config.http_client,  # type: ignore[call-arg]
+                "default_headers": self.config.default_headers,
+                "default_query": self.config.default_query,
+                "_strict_response_validation": self.config._strict_response_validation,  # type: ignore[call-arg]
+            }
+                
     
+    @property
+    def anthropic(self):
+        if self._anthropic is None:
+            from anthropic import Anthropic
+            self._anthropic = Anthropic(**self._anthropic_params)
+        return self._anthropic
     
     @property
     def Stream(self):
@@ -205,7 +240,7 @@ class HClient(SyncAPIClient):
             **self._custom_headers,
         }
     
-    def stream_to_generator(self, stream_obj: Stream) -> Generator:
+    def stream_to_generator(self, stream_obj: "Stream") -> Generator:
         """make a stream object to a generator that fit to client stream decoder"""
         for x in stream_obj:
             # print(x)
@@ -315,7 +350,7 @@ class AsyncHClient(AsyncAPIClient):
             **self._custom_headers,
         }
 
-    async def stream_to_generator(self, stream_obj: Stream) -> AsyncGenerator:
+    async def stream_to_generator(self, stream_obj: "Stream") -> AsyncGenerator:
         """Make a stream object to an async generator that fits the client stream decoder"""
         async for x in stream_obj:
             yield f"data: {json.dumps(x)}\n\n"

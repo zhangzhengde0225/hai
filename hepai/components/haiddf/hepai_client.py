@@ -40,7 +40,6 @@ class HepAIClient(HClient):
         self.key = resources.Key(self)
         self.user = resources.User(self)
 
-
      ## --- 关于Worker的函数 --- ## 
     def list_workers(self):
         return self.worker.list_workers()

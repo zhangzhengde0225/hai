@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.07.24 v1.1.39 支持anthropic的API，支持从HepAI Client中直接使用Anthropic模型。
 + 2025.07.12 v1.1.38 更新Hai-ECS v3，支持ink专属秘钥验证，保证安全性。
 + 2025.07.06 v1.1.37 将复杂依赖项从`requirements.txt`中移除，改为在`setup.py`中定义。现在可以通过`pip install hepai[full]`来安装所有依赖。
 + 2025.06.16 v1.1.36 修复config_file默认加载错误的任务
