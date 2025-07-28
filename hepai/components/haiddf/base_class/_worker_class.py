@@ -237,7 +237,10 @@ class HRModel(HRemoteModel):
         try:
             main_type, args = type_str.split('[', 1)
             main_type = main_type.split('.')[-1]  # 提取主类型名
-            args = args.rstrip(']')
+            # args = args.rstrip(']')
+            last_bracket = args.rfind(']')
+            if last_bracket != -1:
+                args = args[:last_bracket]  # 保留内部所有括号
             return f"{main_type}[{args}]"
         except:
             return type_str
