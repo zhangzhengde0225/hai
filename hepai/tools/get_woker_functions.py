@@ -2,7 +2,18 @@ from hepai import HRModel
 import asyncio, os  
 from functools import wraps
 from inspect import Parameter, Signature
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import (
+    Any, 
+    Callable, 
+    Dict, 
+    List, 
+    Optional, 
+    Tuple, 
+    Type, 
+    Union,
+    AsyncGenerator,
+    Generator,
+    )
 
 
 def _build_sync_func(func_name: str, func_doc: str, func_sig: List[Dict], return_type_str: str, model: HRModel):
