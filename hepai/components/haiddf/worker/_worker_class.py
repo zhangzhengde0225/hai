@@ -27,12 +27,13 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
     controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
+    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
+    
     controller_prefix: str = field(default="/apiv2", metadata={"help": "Controller's route prefix"})
     
     speed: int = field(default=1, metadata={"help": "Model's speed"})
     limit_model_concurrency: int = field(default=5, metadata={"help": "Limit the model's concurrency"})
     stream_interval: float = field(default=0., metadata={"help": "Extra interval for stream response"})
-    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
     permissions: str = field(default='users: admin', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     description: str = field(default='This is a demo worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
     author: str = field(default=None, metadata={"help": "Model's author"})

@@ -20,3 +20,5 @@ from ..base_class._worker_class import (
 from ..base_class._user_class import (
     UserInfo, UserDeletedInfo, APIKeyInfo, APIKeyDeletedInfo,
     )
+
+from ..base_class._agent_class import AgentInfo

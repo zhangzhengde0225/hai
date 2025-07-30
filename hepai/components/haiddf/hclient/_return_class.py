@@ -6,6 +6,7 @@ from typing import Any, List, Dict
 from dataclasses import dataclass, field
 from datetime import datetime
 from ._related_class import WorkerInfo, UserInfo, APIKeyInfo
+from ._related_class import AgentInfo
 from ._types import Stream
 # from .oai_base_client._models import BaseModel
 
@@ -194,4 +195,21 @@ class HAPIKeyListPage(HListPage):
             table_data["user_id"].append(api_key_info.user_id)
         return table_data
 
+    
+@dataclass
+class HAgentListPage(HListPage):
+    """用户Client从服务器端获取到List类的消息后解析该对象"""
+    data: List[dict] = field(default_factory=list, metadata={'description': 'List of data'})
+
+    def __post_init__(self):
+        # 解析代理数据
+        self.data = self.parse_agent_info(self.data)
+
+    def parse_agent_info(self, data_list: List[dict]) -> List[dict]:
+        agent_infos = []
+        for item in data_list:
+            agent_info = AgentInfo(**item)
+            agent_infos.append(agent_info)
+        return agent_infos
+    
     

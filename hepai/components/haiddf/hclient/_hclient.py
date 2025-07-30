@@ -77,6 +77,15 @@ class HClientConfig:
     version: str = field(default="2.0.0", metadata={"description": "The version of the client"})
     _strict_response_validation: bool = field(default=False, metadata={"description": "Whether to strictly validate responses"})
     
+    
+    def __post_init__(self):
+        # 尝试从环境变量获取API-KEY
+        if self.api_key == NOT_GIVEN:
+            key_in_env = os.environ.get("HEPAI_API_KEY", None)
+            if key_in_env is not None:
+                self.api_key = key_in_env
+            
+    
     def to_dict(self):
         return asdict(self)
     

@@ -44,7 +44,7 @@ class CustomWorkerConfig(HWorkerConfig):
     author: str = field(default=None, metadata={"help": "Model's author"})
     api_key: str = field(default="", metadata={"help": "API key for reigster to controller, ensure the security"})
     debug: bool = field(default=False, metadata={"help": "Debug mode"})
-    type: Literal["llm", "actuator", "preceptor", "memory", "common"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
+    type: Literal["llm", "actuator", "preceptor", "memory", "common"] = field(default="agent", metadata={"help": "Specify worker type, could be help in some cases"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
 
 class CustomWorkerModel(HRModel):  # Define a custom worker model inheriting from HRModel.
