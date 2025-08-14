@@ -79,12 +79,12 @@ def get_worker_sync_functions(
         async_func = _build_sync_func(func_name, func_doc, func_sig, return_type_str, model)
         funcs.append(async_func)
     if print_func_info:
-        print(f"{"+"*40}\n")
+        print("+"*40 + "\n")
         for func in funcs:
             print(f"函数名：{func.__name__}\n")
             print(f"函数描述：\n{func.__doc__}\n")
             print(f"函数签名：\n{func.__signature__}\n")
-            print(f"{"+"*40}\n")
+            print("+"*40 + "\n")
     return funcs
 
 def _build__async_func(func_name: str, func_doc: str, func_sig: List[Dict], return_type_str: str, model: HRModel):
@@ -150,10 +150,10 @@ async def get_worker_async_functions(
         async_func = _build__async_func(func_name, func_doc, func_sig, return_type_str, model)
         funcs.append(async_func)
     if print_func_info:
-        print(f"{"+"*40}\n")
+        print("+"*40 + "\n")
         for func in funcs:
             print(f"函数名：{func.__name__}\n")
             print(f"函数描述：\n{func.__doc__}\n")
             print(f"函数签名：\n{func.__signature__}\n")
-            print(f"{"+"*40}\n")
+            print("+"*40 + "\n")
     return funcs
