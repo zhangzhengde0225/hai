@@ -312,13 +312,28 @@ class ModelResourceInfo:
     model_version: str = field(default="1.0", metadata={"help": "Model's version"})
     model_description: str =field(default="<This is model description.>", metadata={"help": "Model's description"})
     model_author: Union[str, List[str], None] = field(default="", metadata={"help": "Model's author"})
-    model_onwer: Union[str, None] = field(default="", metadata={"help": "Model's onwer"})
+    model_owner: Union[str, None] = field(default="", metadata={"help": "Model's owner"})
     model_groups: List[str] = field(default_factory=list, metadata={"help": "Model's groups"})
     model_users: List[str] = field(default_factory=list, metadata={"help": "Model's users"})
     model_functions: List[str] = field(default_factory=list, metadata={"help": "Model's functions that can be called by remote"})
+    id: Optional[str] = field(default=None, metadata={"help": "Model's id, usually set by the system"})
+    created: Optional[int] = field(default=None, metadata={"help": "Model's created timestamp, usually set by the system"})
+    object: Optional[str] = field(default="model", metadata={"help": "Model's object type, usually set by the system"})
+    owned_by: Optional[str] = field(default=None, metadata={"help": "Model's owned by, usually set by the system"})
+
+    def __post_init__(self):
+        if self.id is None and self.model_name:
+            self.id = self.model_name
+        if self.created is None:
+            self.created = int(time.time())
+        if self.owned_by is None and self.model_owner:
+            self.owned_by = self.model_owner
 
     def to_dict(self):
         return asdict(self)
+    
+    def __repr__(self):
+        return f'ModelResourceInfo(model_name={self.model_name!r}, model_type={self.model_type!r})'
 
 @dataclass
 class WorkerStatusInfo:
@@ -374,7 +389,7 @@ class WorkerInfo:
     status_info: WorkerStatusInfo = field(default_factory=WorkerStatusInfo, metadata={"help": "Worker's status info"})
     check_heartbeat: bool = True
     last_heartbeat: Union[int, None] = None
-    vserion: str = "2.0"
+    version: str = "2.0"
     metadata: Dict = field(default_factory=dict, metadata={"help": "Worker's metadata"})
 
     def __post_init__(self):
@@ -416,9 +431,36 @@ class WorkerInfo:
             tmp["id"] = rec.model_name
             tmp["created"] = None
             tmp["object"] = "model"
-            tmp['owned_by'] = rec.model_onwer
+            tmp['owned_by'] = rec.model_owner
             data.append(tmp)
         return data
+    
+    
+    def __repr__(self):
+        """自定义repr，resource_info很长时只显示前5和后5个"""
+        base = f"WorkerInfo(\n  id={self.id!r},\n  type={self.type!r}, "
+        n = len(self.resource_info)
+        if n > 10:
+            shown = (
+                [repr(x) for x in self.resource_info[:5]] +
+                ["..."] +
+                [repr(x) for x in self.resource_info[-5:]]
+            )
+        else:
+            shown = [repr(x) for x in self.resource_info]
+        return (
+            f"{base}\n"
+            f"  resource_info=[\n    " +
+            ",\n    ".join(shown) +
+            f"\n  ] ({n}), " +
+            f"\n  network_info={self.network_info!r}," +
+            f"\n  status_info={self.status_info!r}," +
+            f"\n  check_heartbeat={self.check_heartbeat!r}," +
+            f"\n  last_heartbeat={self.last_heartbeat!r}," +
+            f"\n  version={self.version!r}" +
+            # f"\n  metadata={self.metadata!r}," +
+            "\n)"
+        )
 
 
 from pydantic import BaseModel

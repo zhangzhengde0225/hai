@@ -15,6 +15,8 @@ from hepai import HepAI, ChatCompletion, Stream
 # base_url = "https://api.openai.com/v1"
 # base_url = "http://localhost:42901/v1"
 base_url = "https://aiapi.ihep.ac.cn/v1"
+base_url = "https://aiapi.ihep.ac.cn/apiv2"
+base_url = "http://localhost:42601/apiv2"
 
 client = HepAI(api_key=os.getenv("HEPAI_API_KEY"), base_url=base_url, max_retries=0)
 

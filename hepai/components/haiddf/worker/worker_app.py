@@ -238,6 +238,7 @@ class HWorkerAPP(FastAPI):
 
     async def get_models(self):
         mrs: List[ModelResourceInfo] = self.worker.get_model_resource_info()
+        
         return {
             "object": "list",
             "data": [mr.to_dict() for mr in mrs],

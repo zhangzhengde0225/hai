@@ -213,7 +213,7 @@ class CommonWorker:
                 model_version=self.config_dict.get("model_version", "1.0"),
                 model_description=self.config.description,
                 model_author=self.config.author,
-                model_onwer=permission.get("owner", None),
+                model_owner=permission.get("owner", None),
                 model_users=permission.get("users", []),
                 model_groups=permission.get("groups", []),
                 model_functions=model.all_remote_callables  # 
@@ -268,7 +268,7 @@ class CommonWorker:
             resource_info=self.get_model_resource_info(),
             status_info=self.get_status_info(),
             check_heartbeat=True,
-            vserion=self.config_dict.get("version", "2.0"),
+            version=self.config_dict.get("version", "2.0"),
             metadata={},
         )
         return worker_info

@@ -72,7 +72,7 @@ class HWorkerListPage(HListPage):
             "speed": [],
             "queue_length": [],
             "status": [],
-            # "model_onwer": [],
+            # "model_owner": [],
             # "model_groups": [],
             # "model_users": [],
             "host_name": [],
@@ -91,7 +91,7 @@ class HWorkerListPage(HListPage):
             table_data["speed"].append(worker_info.status_info.speed)
             table_data["queue_length"].append(worker_info.status_info.queue_length)
             table_data["status"].append(worker_info.status_info.status)
-            # table_data["model_onwer"].append([x.model_onwer for x in mress])
+            # table_data["model_owner"].append([x.model_owner for x in mress])
             # table_data["model_groups"].append([x.model_groups for x in mress])
             # table_data["model_users"].append([x.model_users for x in mress])
             # table_data["model_functions"].append([x.model_functions for x in mress])
