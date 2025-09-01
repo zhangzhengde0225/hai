@@ -17,8 +17,8 @@ from hepai.types import ChatCompletion, Stream, ChatCompletionChunk
 
 
 
-api_key=os.getenv("DDF_ZDZHANG_API_KEY")
-base_url = "https://aiapi001.ihep.ac.cn/apiv2"
+api_key=os.getenv("HEPAI_API_KEY")
+base_url = "https://aiapi.ihep.ac.cn/apiv2"
 client = HepAI(base_url=base_url, api_key=api_key)
 
 q = "Tell me a short history of Particle Physics"
