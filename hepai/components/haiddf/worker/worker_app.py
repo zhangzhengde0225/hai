@@ -256,10 +256,7 @@ class HWorkerAPP(FastAPI):
             self.release_model_semaphore(model_semaphore)
             raise e
         
-        # background_tasks = BackgroundTasks()
-        # background_tasks.add_task(self.release_model_semaphore, model)
         # background_tasks.add_task(self.release_model_semaphore, model_semaphore)
-
         self.release_model_semaphore(model_semaphore)
         return rst
     

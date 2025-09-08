@@ -394,6 +394,14 @@ async def main():
     base_url = "http://localhost:42602/apiv2"
     model = "deepseek-ai/deepseek-v3"
     
+    # base_url = "http://localhost:42601/apiv2"
+    # api_key = os.getenv("HEPAI_API_KEY")
+    
+    # base_url = "https://aiapi.ihep.ac.cn/apiv2"
+    # api_key = os.getenv("HEPAI_API_KEY")
+    # model = "deepseek-ai/deepseek-v3:671b"
+    
+    
     if not api_key:
         print("❌ 请设置 ZHIZENGZENG_API_KEY 环境变量")
         return

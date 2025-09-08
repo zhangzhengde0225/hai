@@ -134,9 +134,18 @@ class CommonWorker:
                 # 使用异步心跳以提高性能
                 try:
                     loop = asyncio.get_event_loop()
-                    asyncio.create_task(self.worker_heartbeat_async())
+                    if loop.is_running():
+                        # 在异步环境下，创建后台任务
+                        loop.create_task(self.worker_heartbeat_async())
+                    else:
+                        # 没有事件循环，回退到线程模式
+                        self.heartbeat_thread = threading.Thread(
+                            target=self.worker_heartbeat, 
+                            daemon=True,
+                            )
+                        self.heartbeat_thread.start()
                 except RuntimeError:
-                    # 如果没有事件循环，回退到线程模式
+                    # 没有事件循环，回退到线程模式
                     self.heartbeat_thread = threading.Thread(
                         target=self.worker_heartbeat, 
                         daemon=True,
