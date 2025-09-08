@@ -332,11 +332,39 @@ class AsyncHClient(AsyncAPIClient):
             self.batches = resources.AsyncBatches(self)
             self.uploads = resources.AsyncUploads(self)
 
+        if self.config.enable_anthropic:
+            """集成anthropic的resources，异步客户端使用AsyncAnthropic"""
+            try:
+                import anthropic
+                from anthropic import AsyncAnthropic
+            except ImportError:
+                raise ImportError(
+                    "Please install the `anthropic` package to use the Anthropic resources, you can install it by `pip install anthropic`"
+                )
+            self._anthropic: anthropic.AsyncAnthropic | None = None
+            self._anthropic_params = {
+                "api_key": self.api_key,
+                "base_url": self.config.base_url,  # type: ignore[call-arg]
+                "timeout": self.config.timeout,  # type: ignore[call-arg]
+                "max_retries": self.config.max_retries,  # type: ignore[call-arg]
+                "http_client": self.config.http_client,  # type: ignore[call-arg]
+                "default_headers": self.config.default_headers,
+                "default_query": self.config.default_query,
+                "_strict_response_validation": self.config._strict_response_validation,  # type: ignore[call-arg]
+            }
+
     @property
     def Stream(self):
         # return Stream
         return AsyncStream
     
+    @property
+    def anthropic(self):
+        if self._anthropic is None:
+            from anthropic import AsyncAnthropic
+            self._anthropic = AsyncAnthropic(**self._anthropic_params)
+        return self._anthropic
+
     @property
     @override
     def qs(self) -> Querystring:
@@ -359,7 +387,7 @@ class AsyncHClient(AsyncAPIClient):
             **self._custom_headers,
         }
 
-    async def stream_to_generator(self, stream_obj: "Stream") -> AsyncGenerator:
+    async def stream_to_generator(self, stream_obj: "AsyncStream") -> AsyncGenerator:
         """Make a stream object to an async generator that fits the client stream decoder"""
         async for x in stream_obj:
             yield f"data: {json.dumps(x)}\n\n"

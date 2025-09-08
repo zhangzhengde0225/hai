@@ -343,6 +343,7 @@ class WorkerStatusInfo:
     speed: int = field(default=1, metadata={"help": "Worker's speed, the number of requests that can be processed per second"})
     queue_length: int = field(default=0, metadata={"help": "Worker's queue length"})
     status: Literal["idle", "ready", "busy", "error"] = "idle"
+    start_time: Optional[float] = field(default=None, metadata={"help": "Worker's start time, timestamp"})
 
     def is_valid(self):
         """是信息是否可用，即相关信息是否已被填入，而不是None"""

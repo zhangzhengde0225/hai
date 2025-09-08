@@ -12,21 +12,26 @@ load_dotenv(f'{here.parent.parent.parent}/.env')
 api_key = os.getenv("ZHIZENGZENG_API_KEY")
 base_url = "https://api.zhizengzeng.com/v1"
 
+api_key = "sk-lZvDMeNaRjKjGtrLArHsVOFtfCLbJuuHWxrBuTIREHsjDqT"
 base_url = "http://localhost:42602/apiv2"
+model = "openai/gpt-4o"
+model = "deepseek-ai/deepseek-v3"
 
 print(f"api_key: {api_key}")
 client = HepAI(api_key=api_key, base_url=base_url) # set proxy to base_url
 
 models = client.models.list()
-for model in models:
-    print(f'  {model}')
+for m in models:
+    print(f'  {m}')
 print(f"total models: {len(models.data)}")
 
 
 from hepai import HepAI, Stream, ChatCompletionChunk, ChatCompletion
 
-q = "Sai hello"
+q = "tell me story"
+q = "hello"
 stream = True
+
 response: Stream = client.chat.completions.create(
     model=model,
     messages = [

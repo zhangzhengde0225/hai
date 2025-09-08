@@ -314,6 +314,9 @@ class TTFTReportGenerator:
         if not self.test_results:
             print("No test results to report")
             return
+        
+        output_dir = Path(output_file).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
             
         # 准备报告数据
         report_data = {
@@ -321,7 +324,7 @@ class TTFTReportGenerator:
                 "total_concurrency_levels": len(self.test_results),
                 "test_timestamp": datetime.now().isoformat(),
                 "model": self.model,
-                "base_url": self.base_url
+                "base_url": self.base_url,
             },
             "ttft_summary": {
                 "min_avg_ttft": min(r.avg_ttft for r in self.test_results),
@@ -387,6 +390,10 @@ async def main():
     api_key = os.getenv("ZHIZENGZENG_API_KEY")
     model = os.getenv("ZHIZENGZENG_MODEL", "deepseek-v3")
     
+    api_key = "sk-lZvDMeNaRjKjGtrLArHsVOFtfCLbJuuHWxrBuTIREHsjDqT"
+    base_url = "http://localhost:42602/apiv2"
+    model = "deepseek-ai/deepseek-v3"
+    
     if not api_key:
         print("❌ 请设置 ZHIZENGZENG_API_KEY 环境变量")
         return
@@ -403,6 +410,7 @@ async def main():
     try:
         # 运行TTFT测试
         concurrency_levels = [1, 5, 10, 20, 30, 50, 75, 100, 150, 200]
+        # concurrency_levels = [10, 20, 30, 50, 75, 100, 150, 200]
         # test_question = "请详细解释深度学习的基本原理，包括神经网络的结构、训练过程和主要应用领域。"
         test_question = "hello"
         

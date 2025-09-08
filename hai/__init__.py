@@ -18,9 +18,9 @@ from .apis import worker, BaseWorkerModel, WorkerArgs
 # LLM
 from .apis import LLM, Model, Models, api_key
 # from .apis import HepAI
-from .uaii.hepai_object import (
-    HepAI, HaiCompletions, ChatCompletion, ChatCompletionChunk, Stream
-    )
+# from .uaii.hepai_object import (
+#     HepAI, HaiCompletions, ChatCompletion, ChatCompletionChunk, Stream
+#     )
 from .uaii.utils.file_object import HaiFile
 from .configs import CONST
 

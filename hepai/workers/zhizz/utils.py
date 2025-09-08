@@ -1,4 +1,5 @@
-from zhizz_worker import ZhizzRemoteModel, ZhizzModelConfig
+from zhizz_worker import ZhizzModelConfig
+from llm_remote_model import LLMRemoteModel
 from hepai import HepAI
 import os
 from pathlib import Path
@@ -39,18 +40,18 @@ def load_models(model_config: "ZhizzModelConfig"):
                     need_external_api_key=model_config.need_external_api_key,
                     permission=model_config.permission,
                     version=model_config.version,
-                    use_async=model_config.use_async,
+                    enable_async=model_config.enable_async,
                     test=model_config.test
                 )
-                models.append(ZhizzRemoteModel(config=cfg))
+                models.append(LLMRemoteModel(config=cfg))
             
-            print(f"Successfully loaded {len(models)} models from zhizengzeng API")
+            print(f"Successfully loaded {len(models)} models from {base_url}.")
             return models
             
         except Exception as e:
             print(f"Failed to load models from API: {e}")
             # 如果API调用失败，回退到原来的单模型模式
-            models = [ZhizzRemoteModel(config=model_config)]
+            models = [LLMRemoteModel(config=model_config)]
     else:
         import yaml
         with open(model_config.config_file, "r", encoding="utf-8") as f:
@@ -67,7 +68,7 @@ def load_models(model_config: "ZhizzModelConfig"):
             allowed_keys = ZhizzModelConfig.__dataclass_fields__.keys()
             filtered_cfg = {k: v for k, v in m_cfg.items() if k in allowed_keys}
             cfg = ZhizzModelConfig(**filtered_cfg)
-            models.append(ZhizzRemoteModel(config=cfg))
+            models.append(LLMRemoteModel(config=cfg))
     return models
 
 def get_provider_by_model_name(model_name: str) -> str:
@@ -80,8 +81,6 @@ def get_provider_by_model_name(model_name: str) -> str:
     
     if "deepseek" in name:
         return "deepseek-ai"
-    elif "qwen" in name or "qianwen" in name or "aliyun" in name:
-        return "aliyun"
     elif "grok" in name:
         return "xAI"
     elif "ernie" in name or name == 'x1':
@@ -100,6 +99,8 @@ def get_provider_by_model_name(model_name: str) -> str:
         return "baichuan"
     elif "doubao" in name:
         return "bytedance"
+    elif any(x in name for x in ["qwen", "qianwen", "aliyun", "qwq"]):
+        return "aliyun"
     elif any(x in name for x in ["minimax", "abab"]):
         return "minimax"
     elif any(x in name for x in ["kimi", "moonshot"]):

@@ -1,5 +1,10 @@
 # 更新日志
 
++ 2025.09.09 v1.2.0 大版本更新。
+    - HepAI Worker支持了监控面板，启动后访问 http://localhost:42602 即可查看Worker的实时状态。
+    - HepAI Worker性能提升，大幅度降低延迟；一个worker即可支持数百并发。
+    - HepAI Worker支持了Anthropic的同步和异步客户端。
+    - 弃用了hepai_object，基本永久解决了与OpenAI包冲突的问题。
 + 2025.07.30 v1.1.40 支持List Agents, agents = client.agents.list()
 + 2025.07.24 v1.1.39 支持anthropic的API，支持从HepAI Client中直接使用Anthropic模型。
 + 2025.07.12 v1.1.38 更新Hai-ECS v3，支持ink专属秘钥验证，保证安全性。
