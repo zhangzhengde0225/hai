@@ -1,16 +1,23 @@
-import os
+import os, sys
 from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any
 from dataclasses import dataclass, field
 import uvicorn
+from pathlib import Path
+import asyncio
+
+here = Path(__file__).parent
+try:
+    from hepai import __version__
+except:
+    sys.path.insert(1, str(here.parent.parent.parent))
+    from hepai import __version__
+
 import hepai as hai
 from hepai import HepAI
-import asyncio
 from hepai import HRModel, HWorkerAPP, HModelConfig, HWorkerConfig
 from hepai.components.haiddf.base_class._llm_remote_model import LLMRemoteModel, LLMModelConfig
 
 
-from pathlib import Path
-here = Path(__file__).parent
 from dotenv import load_dotenv
 load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
 
