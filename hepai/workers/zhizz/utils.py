@@ -1,20 +1,21 @@
-from zhizz_worker import ZhizzModelConfig
-from llm_remote_model import LLMRemoteModel
+
+from hepai.types import LLMRemoteModel, LLMModelConfig
 from hepai import HepAI
 import os
 from pathlib import Path
+from dataclasses import asdict
 from dotenv import load_dotenv
 
 here = Path(__file__).parent
 load_dotenv(f'{here.parent.parent.parent}/.env')
 
 
-def load_models(model_config: "ZhizzModelConfig"):
+def load_models(model_config: "LLMModelConfig"):
     """加载模型配置文件中的模型"""
     if model_config.config_file is None:
         # 动态获取所有可用模型
-        api_key = os.getenv("ZHIZENGZENG_API_KEY")
-        base_url = "https://api.zhizengzeng.com/v1"
+        api_key = model_config.api_key
+        base_url = model_config.base_url
         
         client = HepAI(api_key=api_key, base_url=base_url)
         try:
@@ -31,7 +32,7 @@ def load_models(model_config: "ZhizzModelConfig"):
                     continue
                 model_name = f"{provider}/{engine}"  # 设置为provider/engine格式
                 
-                cfg = ZhizzModelConfig(
+                cfg = LLMModelConfig(
                     name=model_name,
                     engine=engine,
                     base_url=model_config.base_url,
@@ -61,13 +62,15 @@ def load_models(model_config: "ZhizzModelConfig"):
         # 假设yaml顶层是一个列表，每个元素是一个模型配置
         models = []
         for m_cfg in model_list:
-            # 只取ZhizzModelConfig支持的字段
+            # 只取LLMModelConfig支持的字段
             # 字段映射：model_name -> name
             if "model_name" in m_cfg:
                 m_cfg["name"] = m_cfg.pop("model_name")
-            allowed_keys = ZhizzModelConfig.__dataclass_fields__.keys()
+            allowed_keys = LLMModelConfig.__dataclass_fields__.keys()
             filtered_cfg = {k: v for k, v in m_cfg.items() if k in allowed_keys}
-            cfg = ZhizzModelConfig(**filtered_cfg)
+            exist_cfg_dict = asdict(model_config)
+            exist_cfg_dict.update(filtered_cfg)  # 使用yaml中的字段覆盖默认配置
+            cfg = LLMModelConfig(**exist_cfg_dict)
             models.append(LLMRemoteModel(config=cfg))
     return models
 

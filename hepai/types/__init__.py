@@ -30,4 +30,6 @@ from ..components.haiddf.hclient._hclient import (
 from ..components.haiddf.worker.worker_app import HWorkerAPP, HWorkerConfig
 from ..components.haiddf.hclient._remote_model import LRModel, RemoteModel
 
+from ..components.haiddf.base_class._llm_remote_model import LLMRemoteModel, LLMModelConfig
+
 

@@ -40,14 +40,14 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     stream_interval: float = field(default=0., metadata={"help": "Extra interval for stream response"})
     permissions: dict = field(default_factory=lambda: {'groups': ['payg']}, metadata={"help": "Model's permissions, e.g., {'groups': ['default'], 'users': ['a', 'b'], 'owner': 'c'}"})
     description: str = field(default='This is a demo worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
-    author: str = field(default=None, metadata={"help": "Model's author"})
+    author: str = field(default="hepai", metadata={"help": "Model's author"})
     debug: bool = field(default=False, metadata={"help": "Debug mode"})
     type: Literal["llm", "actuator", "preceptor", "memory", "common"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
     
     # config for common features
-    enable_secret_key: bool = field(default=True, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
-    enable_llm_router: bool = field(default=True, metadata={"help": "Enable LLM router, only for llm worker"})
+    enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
+    enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
 
 
     def __post_init__(self):
@@ -274,6 +274,8 @@ class CommonWorker:
             permission = model.permission
             if not permission:  # 如果没有设置权限，则使用worker的权限
                 permission = self.worker_permissions
+            owner = permission.get("owner", None)
+            owner = owner if owner else self.config.author
             mr = ModelResourceInfo(
                 model_name=model_name,
                 model_type=self.config_dict.get("model_type", "common"),
@@ -283,7 +285,9 @@ class CommonWorker:
                 model_owner=permission.get("owner", None),
                 model_users=permission.get("users", []),
                 model_groups=permission.get("groups", []),
-                model_functions=model.all_remote_callables  # 
+                model_functions=model.all_remote_callables,
+                created=model.created,
+                owned_by=owner,
             )
             model_resources.append(mr)
         return model_resources

@@ -166,6 +166,8 @@ class HRemoteModel(BaseWorkerModel):
         self.config.name = self.config.name if self.config.name else self.__class__.__name__
         self.name = self.config.name
         self.permission = self.config.permission
+        
+        self.created = int(time.time())
 
     @BaseWorkerModel.remote_callable
     def hello_world(self, *args, **kwargs):
@@ -427,12 +429,13 @@ class WorkerInfo:
     def to_openai_list_models(self) -> Dict:
         """转换为OpenAI格式的list_models的返回列表"""
         data = []
-        for i, rec in enumerate(self.resource_info):
+        for i, resc in enumerate(self.resource_info):
             tmp = {}
-            tmp["id"] = rec.model_name
-            tmp["created"] = None
+            owned_by = resc.model_owner if resc.model_owner else resc.model_author
+            tmp["id"] = resc.model_name
+            tmp["created"] = resc.created
             tmp["object"] = "model"
-            tmp['owned_by'] = rec.model_owner
+            tmp['owned_by'] = owned_by if isinstance(owned_by, str) else (owned_by[0] if len(owned_by) > 0 else "unknown")
             data.append(tmp)
         return data
     
@@ -475,7 +478,7 @@ class WorkerInfoItem(BaseModel):
     status_info: WorkerStatusInfo = field(default_factory=WorkerStatusInfo, metadata={"help": "Worker's status info"})
     check_heartbeat: bool = field(default=True, metadata={"help": "Check worker's heartbeat"})
     last_heartbeat: Union[int, None] = field(default=None, metadata={"help": "Worker's last heartbeat"})
-    vserion: str = field(default="2.0", metadata={"help": "Worker's version"})
+    version: str = field(default="2.0", metadata={"help": "Worker's version"})
     metadata: Dict = field(default_factory=dict, metadata={"help": "Worker's metadata"})
 
 

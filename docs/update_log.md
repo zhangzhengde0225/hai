@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.09.10 v1.2.1 s1_worker.py支持ScienceOne三个磐石模型
 + 2025.09.09 v1.2.0 大版本更新。
     - HepAI Worker支持了监控面板，启动后访问 http://localhost:42602 即可查看Worker的实时状态。
     - HepAI Worker性能提升，大幅度降低延迟；一个worker即可支持数百并发。

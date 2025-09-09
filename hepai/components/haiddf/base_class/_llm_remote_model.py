@@ -1,18 +1,14 @@
 import os
 from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any
 from dataclasses import dataclass, field
-import uvicorn
-import hepai as hai
-import time
-import asyncio
-from hepai import HepAI, AsyncHepAI
 import json
-from hepai import HRModel, HWorkerAPP, HModelConfig, HWorkerConfig
-from _message_class import (
-    Usage, DeltaMessage, ChatMessage, ChatCompletionRequest,
-    EmbeddingsRequest, ImageGenerationRequest
-)
-from fastapi.exceptions import HTTPException
+
+# from hepai import HepAI, AsyncHepAI
+from ..hepai_client import HepAIClient as HepAI
+from ..hepai_client import AsyncHepAIClient as AsyncHepAI
+
+from ._worker_class import HRModel, HModelConfig
+# from hepai import HRModel, HWorkerAPP, HModelConfig, HWorkerConfig
 
 
 class LLMRemoteModel(HRModel):

@@ -3,9 +3,9 @@ from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, An
 from dataclasses import dataclass, field
 import uvicorn
 import hepai as hai
+from hepai import HepAI
 import asyncio
 from hepai import HRModel, HWorkerAPP, HModelConfig, HWorkerConfig
-# from llm_remote_model import LLMRemoteModel, LLMModelConfig
 from hepai.components.haiddf.base_class._llm_remote_model import LLMRemoteModel, LLMModelConfig
 
 
@@ -15,34 +15,45 @@ from dotenv import load_dotenv
 load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
 
    
-def test_model():
-    api_key = os.getenv("ZHIZENGZENG_API_KEY")
+async def test_model(model_config, models: List[LLMRemoteModel]):
+    cfg: LLMModelConfig = model_config
+    # client = HepAI(api_key=cfg.api_key, base_url=cfg.base_url) # set proxy to base_url
+    # models = client.models.list()
+    # for model in models:
+    #     print(f'  {model}')
     
-    model = "gpt-4.1"
-    zhizz_model = LLMRemoteModel(config=ZhizzModelConfig(engine=model))
+    engine = models[0].engine
+    
+    llm = LLMRemoteModel(config=ZhizzModelConfig(engine=engine))
+    
+    
     stream = False  # Set to True if you want to test streaming
     stream = True
     kwargs = {
-        "model": model,
-        "messages": [{"role": "user", "content": "say hello"}],
+        "model": models[0].name,
+        "messages": [{"role": "user", "content": "hello"}],
         "stream": stream,
-        "api_key": api_key,
+        "api_key": cfg.api_key,
         "stream_options": {"include_usage": True},
     }
-    rst_coro = zhizz_model.chat_completions(**kwargs)
     if stream:
-        rst = asyncio.run(rst_coro)
-        for chunk in rst:
+        rst_gen = await llm.chat_completions(**kwargs)
+        async for chunk in rst_gen:
             print(chunk)
     else:
-        rst = asyncio.run(rst_coro)
+        rst = await llm.chat_completions(**kwargs)
         print(rst)
 
 
 @dataclass
 class ZhizzModelConfig(LLMModelConfig):
-    config_file: Optional[str] = field(default=None, metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
-    ...
+    config_file: Optional[str] = field(default=f"{here}/model_config.yaml", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
+    base_url: str = field(default="https://uni-api.cstcloud.cn/v1", metadata={"help": "Base url of the zhizengzeng API"})
+    _api_key: str = field(default="os.environ/SCIENCEONE_API_KEY", metadata={"help": "API key of the model"})
+    test: bool = field(default=True, metadata={"help": "Test model"})
+
+    def __post_init__(self):
+        return super().__post_init__()
 
 @dataclass
 class ZhizzWorkerConfig(HWorkerConfig):
@@ -68,13 +79,13 @@ if __name__ == "__main__":
     from fastapi import FastAPI
     model_config, worker_config = hai.parse_args((ZhizzModelConfig, ZhizzWorkerConfig))
     
-    if model_config.test:
-        test_model()
-        # exit(0)
     
     from hepai.workers.zhizz.utils import load_models
-
     models: List[LLMRemoteModel] = load_models(model_config)  # Load models from the configuration file.
+    
+    if model_config.test:
+        asyncio.run(test_model(model_config, models))
+  
     app: FastAPI = HWorkerAPP(models, worker_config=worker_config)  # Instantiate the APP, which is a FastAPI application.
 
     wk_info = app.worker.get_worker_info()
@@ -88,4 +99,3 @@ if __name__ == "__main__":
         # print(f" - Model: {m['name']}, Engine: {m.get('engine', 'N/A')}, Version: {m.get('version', 'N/A')}, Permission: {m.get('permission', 'N/A')}", flush=True)
     # 启动服务
     uvicorn.run(app, host=app.host, port=app.port)
-    
