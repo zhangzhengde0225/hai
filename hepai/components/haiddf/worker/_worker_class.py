@@ -380,7 +380,7 @@ class CommonWorker:
         url = self.base_url + '/worker/register_worker'
         worker_info: WorkerInfo = self.get_worker_info()
         data = worker_info.to_dict()
-
+        
         try:
             r = requests.post(url, json=data, headers=self.headers)
             if r.status_code != 200:

@@ -1,16 +1,24 @@
-import os
+import os, sys
 from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any
 from dataclasses import dataclass, field
 import uvicorn
-import hepai as hai
 import asyncio
+from pathlib import Path
+here = Path(__file__).parent
+
+try:
+    from hepai import __version__
+except:
+    sys.path.insert(1, str(here.parent.parent.parent))
+    from hepai import __version__
+
+import hepai as hai
 from hepai import HRModel, HWorkerAPP, HModelConfig, HWorkerConfig
 # from llm_remote_model import LLMRemoteModel, LLMModelConfig
 from hepai.components.haiddf.base_class._llm_remote_model import LLMRemoteModel, LLMModelConfig
 
 
-from pathlib import Path
-here = Path(__file__).parent
+
 from dotenv import load_dotenv
 load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
 
@@ -53,9 +61,8 @@ class ZhizzWorkerConfig(HWorkerConfig):
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
-    permissions: str = field(default='users: admin; groups: payg', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
+    permissions: str = field(default='users: admin; groups: payg, haichat, haiacademic, haioverleaf', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     description: str = field(default='This is a zhizz worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
-    # author: str = field(default="", metadata={"help": "Model's author"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
     limit_model_concurrency: int = field(default=1000, metadata={"help": "Limit the model's concurrency"})
     
