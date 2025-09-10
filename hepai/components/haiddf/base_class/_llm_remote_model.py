@@ -20,6 +20,7 @@ class LLMRemoteModel(HRModel):
         self.enable_async = config.enable_async
         self._client = None
         self._async_client = None
+        self._async_client_with_anthropic_url = None
 
     @property
     def client(self):
@@ -40,6 +41,25 @@ class LLMRemoteModel(HRModel):
                 proxy=self.cfg.proxy
             )
         return self._async_client
+    
+    @property
+    def async_client_with_anthropic_url(self):
+        if self._async_client_with_anthropic_url is None:
+            base_url = self.cfg.base_url
+            # 去掉v1或v2等版本号
+            if base_url.endswith("/v1") or base_url.endswith("/v2") or base_url.endswith("/v3"):
+                base_url = base_url.rsplit("/", 1)[0]
+            if not base_url.endswith("/anthropic"):
+                if base_url.endswith("/"):
+                    base_url = base_url + "anthropic"
+                else:
+                    base_url = base_url + "/anthropic"
+            self._async_client_with_anthropic_url = AsyncHepAI(
+                base_url=base_url,
+                api_key=self.cfg.api_key,
+                proxy=self.cfg.proxy
+            )
+        return self._async_client_with_anthropic_url
     
     def __repr__(self):
         return f"<LLMRemoteModel name={self.cfg.name} engine={self.cfg.engine} version={self.cfg.version}>"
@@ -278,16 +298,17 @@ class LLMRemoteModel(HRModel):
         max_tokens = kwargs.pop("max_tokens")
         stream = kwargs.pop("stream", False)
         
-        response = await self.async_client.anthropic.messages.create(
+        # response = await self.async_client.anthropic.messages.create(
+        response = await self.async_client_with_anthropic_url.anthropic.messages.create(
                 model=self.cfg.engine,
                 messages=messages,
                 max_tokens=max_tokens,
-                stream=stream,
-                extra_headers=extra_headers,
-                extra_body=extra_body,
-                extra_query=extra_query,
-                timeout=timeout,
-                **kwargs
+                # stream=stream,
+                # extra_headers=extra_headers,
+                # extra_body=extra_body,
+                # extra_query=extra_query,
+                # timeout=timeout,
+                # **kwargs
             )
         
         if stream:
