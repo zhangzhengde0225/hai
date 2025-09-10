@@ -245,7 +245,7 @@ class HWorkerAPP(FastAPI):
         model_semaphore = self.model_semaphores[model]
         await model_semaphore.acquire()
         
-        print(f"[{self.global_counter}] Acquired semaphore for model '{model}'. Current queue length: {self.get_queue_length(model)}")
+        # print(f"[{self.global_counter}] Acquired semaphore for model '{model}'. Current queue length: {self.get_queue_length(model)}")
         
         try:
             rst = await self.worker.unified_gate_async(
