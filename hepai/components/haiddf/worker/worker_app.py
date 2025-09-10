@@ -106,12 +106,15 @@ class HWorkerAPP(FastAPI):
 
     def _init_model_resources(self, models: Union[HRemoteModel, List[HRemoteModel]]):
         """初始化模型资源：信号量和查找缓存"""
+        if not isinstance(models, List):
+            models = [models]
         for i, model in enumerate(models):
             model_name = model.name
             # 为每个模型创建独立的信号量
             self.model_semaphores[model_name] = asyncio.Semaphore(self.limit_model_concurrency)
             # 建立模型名到索引的快速查找缓存
             self._model_lookup_cache[model_name] = i
+        
     
     def _init_routers(self, config: HWorkerConfig):
         
