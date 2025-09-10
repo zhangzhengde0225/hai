@@ -1,6 +1,6 @@
 # 更新日志
 
-+ 2025.09.10 v1.2.2, v1.2.3 修复llm_router的bug，修复worker_app中模型初始化的bug
++ 2025.09.10 v1.2.2, v1.2.3, v1.2.4 修复llm_router的bug，修复worker_app中模型初始化的bug，修复worker_permissions中owner必须是单个字符串的bug。
 + 2025.09.10 v1.2.1 s1_worker.py支持ScienceOne三个磐石模型
 + 2025.09.09 v1.2.0 大版本更新。
     - HepAI Worker支持了监控面板，启动后访问 http://localhost:42602 即可查看Worker的实时状态。
