@@ -3,7 +3,7 @@
 python zhizz_worker.py \
     --controller_address "https://aiapi.ihep.ac.cn" \
     --no_register False \
-    --permissions "groups: haichat, payg, drsai" \
+    --permissions "groups: haichat, payg, drsai, haioverleaf" \
     --debug True \
     $@
 
