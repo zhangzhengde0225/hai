@@ -435,7 +435,7 @@ class WorkerInfo:
             tmp["id"] = resc.model_name
             tmp["created"] = resc.created
             tmp["object"] = "model"
-            tmp['owned_by'] = owned_by if isinstance(owned_by, str) else (owned_by[0] if len(owned_by) > 0 else "unknown")
+            tmp['owned_by'] = owned_by
             data.append(tmp)
         return data
     

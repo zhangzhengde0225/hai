@@ -49,7 +49,7 @@ class ZhizzWorkerConfig(HWorkerConfig):
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: int = field(default=42602, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
-    controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
+    # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
@@ -61,7 +61,11 @@ class ZhizzWorkerConfig(HWorkerConfig):
     
     enable_secret_key: bool = field(default=True, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=True, metadata={"help": "Enable LLM router, only for llm worker"})
-
+    
+    controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
+    
+    debug: bool = field(default=True, metadata={"help": "Debug mode"})
+    
 
 if __name__ == "__main__":
     import uvicorn
@@ -72,7 +76,7 @@ if __name__ == "__main__":
         test_model()
         # exit(0)
     
-    from hepai.workers.zhizz.utils import load_models
+    from utils import load_models
 
     models: List[LLMRemoteModel] = load_models(model_config)  # Load models from the configuration file.
     app: FastAPI = HWorkerAPP(models, worker_config=worker_config)  # Instantiate the APP, which is a FastAPI application.
