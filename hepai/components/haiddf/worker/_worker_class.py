@@ -63,10 +63,17 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
                     perms[user_or_group] = (
                         [name.strip() for name in names.split(',')] if ',' in names else [names.strip()]
                     )
+                # 确保owner是单个字符串
+                if 'owner' in perms:
+                    if isinstance(perms['owner'], list):
+                        if len(perms['owner']) > 1:
+                            raise ValueError(f"Only one owner is allowed, but got {perms['owner']}")
+                        perms['owner'] = perms['owner'][0]
                 self.permissions = perms
             except Exception as e:
                 raise ValueError(f"Failed to parse permissions string: {self.permissions}. Error: {e}")
-
+        
+        
     def update_from_dict(self, d: Dict):
         """更新配置"""
         for k, v in d.items():

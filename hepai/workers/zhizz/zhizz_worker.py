@@ -61,7 +61,7 @@ class ZhizzWorkerConfig(HWorkerConfig):
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
-    permissions: str = field(default='users: admin; groups: payg, haichat, haiacademic, haioverleaf', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
+    permissions: str = field(default='users: admin; groups: payg, haichat, haiacademic, haioverleaf; owner: zdzhang', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     description: str = field(default='This is a zhizz worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
     limit_model_concurrency: int = field(default=1000, metadata={"help": "Limit the model's concurrency"})
