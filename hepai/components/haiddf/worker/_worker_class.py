@@ -289,6 +289,7 @@ class CommonWorker:
                 permission = self.worker_permissions
             owner = permission.get("owner", None)
             owner = owner if owner else self.config.author
+     
             mr = ModelResourceInfo(
                 model_name=model_name,
                 model_type=self.config_dict.get("model_type", "common"),
