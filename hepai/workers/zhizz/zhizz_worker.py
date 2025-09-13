@@ -45,12 +45,28 @@ def test_model():
     else:
         rst = asyncio.run(rst_coro)
         print(rst)
+        
+
+async def test_anthropic_model():
+    api_key = os.getenv("ZHIZENGZENG_API_KEY")
+    model = "claude-sonnet-4-20250514"
+    q = "hello"
+    
+    zhizz_model = LLMRemoteModel(config=ZhizzModelConfig(engine=model))
+    rst_coro = await zhizz_model.anthropic_messages(
+        model=model,
+        messages=[{"role": "user", "content": q}],
+        max_tokens=1024,
+        stream=True,
+        )    
+    async for chunk in rst_coro:
+        print(chunk)
 
 
 @dataclass
 class ZhizzModelConfig(LLMModelConfig):
     config_file: Optional[str] = field(default=None, metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
-    ...
+    test: bool = field(default=False, metadata={"help": "Test model"})
 
 @dataclass
 class ZhizzWorkerConfig(HWorkerConfig):
@@ -80,7 +96,11 @@ if __name__ == "__main__":
     model_config, worker_config = hai.parse_args((ZhizzModelConfig, ZhizzWorkerConfig))
     
     if model_config.test:
-        test_model()
+        # test_model()
+        import asyncio
+        asyncio.run(test_anthropic_model())
+        # test_anthropic_model()
+        pass
         # exit(0)
     
     from utils import load_models

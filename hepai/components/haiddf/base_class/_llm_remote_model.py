@@ -1,7 +1,9 @@
 import os
-from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any
+from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any, AsyncGenerator
 from dataclasses import dataclass, field
 import json
+
+# from anthropic.types import Message
 
 # from hepai import HepAI, AsyncHepAI
 from ..hepai_client import HepAIClient as HepAI
@@ -116,11 +118,10 @@ class LLMRemoteModel(HRModel):
         return False
 
     async def response_to_stream_async(self, response):
+        """stream object to string generator"""
         async for chunk in response:
             chunk_data = chunk.model_dump()
             yield f'data: {json.dumps(chunk_data)}\n\n'
-            
-            # print(chunk_data)  # Debugging output, can be removed later
 
     def request_openai(
             self, 
@@ -153,6 +154,10 @@ class LLMRemoteModel(HRModel):
         oai_params.pop("model", None)
         oai_params.pop("messages", None)
         extra_body: Dict = oai_params.pop("extra_body", {})
+        
+        stream_options = oai_params.pop("stream_options", {})
+        if stream:
+            stream_options["include_usage"] = True  # 强制返回usage信息
     
         response = await self.async_client.chat.completions.create(
             model=self.engine, 
@@ -160,6 +165,7 @@ class LLMRemoteModel(HRModel):
             stream=stream,
             extra_headers=extra_headers,
             extra_body=extra_body,
+            stream_options=stream_options,
             **oai_params
             )
         return response
@@ -186,14 +192,18 @@ class LLMRemoteModel(HRModel):
             kwargs.pop("top_p", None)
 
         if should_stream:
+            not_stream_to_str = kwargs.pop("not_stream_to_str", False)
             response = await self.request_openai_async(
                 oai_messages=oai_messages,
                 stream=True,
                 extra_headers=extra_headers,
                 **kwargs
             )
-            gen = self.response_to_stream_async(response)
-            return gen
+            if not_stream_to_str:
+                return response
+            else:
+                gen = self.response_to_stream_async(response)
+                return gen
         else:
             response = await self.request_openai_async(
                 oai_messages=oai_messages,
@@ -224,9 +234,6 @@ class LLMRemoteModel(HRModel):
         response = await self.async_client.embeddings.create(
                 input=input,
                 model=self.cfg.engine,
-                # dimensions=request.dimensions,
-                # encoding_format=request.encoding_format,
-                # user=request.user,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 extra_query=extra_query,
@@ -264,9 +271,30 @@ class LLMRemoteModel(HRModel):
         )
         return response
     
+    
+    
     @HRModel.remote_callable
-    async def anthropic_messages(self, *args, **kwargs):
+    async def anthropic_messages(self, *args, **kwargs) -> Union[Dict, AsyncGenerator]:
         """Anthropic Messages API接口"""
+        modelx = kwargs.get("model")
+        # if modelx == "claude-sonnet-4-20250514"
+        # kwargs['stream'] = False  # Anthropic的接口不支持stream参数，这里强制设为False
+        stream = kwargs.get("stream", False)
+        
+        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
+            # 如果是moonshot或openai开头的模型，走openai接口
+            from . import general
+            oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
+            if stream:
+                oai_params.update({"not_stream_to_str": True})  # 强制返回对象，不转换为字符串流
+                rst = await self.chat_completions(**oai_params)
+                gen = general.convert_openai_to_anthropic_format_stream(rst, return_dict=False)
+                return gen
+            else:
+                rst = await self.chat_completions(**oai_params)
+                rst2 = await general.convert_object_openai_to_anthropic(rst)
+                return rst2
+        
         if self.cfg.need_external_api_key:
             api_key = kwargs.pop("api_key", None)
             if not api_key:
@@ -293,29 +321,65 @@ class LLMRemoteModel(HRModel):
         if "max_tokens" not in kwargs:
             raise ValueError("max_tokens parameter is required")
             
-        model = kwargs.pop("model")
+        modelx = kwargs.pop("model")
         messages = kwargs.pop("messages")
         max_tokens = kwargs.pop("max_tokens")
         stream = kwargs.pop("stream", False)
         
-        # response = await self.async_client.anthropic.messages.create(
-        response = await self.async_client_with_anthropic_url.anthropic.messages.create(
+        if stream:
+            gen = self.anthropic_stream(
                 model=self.cfg.engine,
                 messages=messages,
                 max_tokens=max_tokens,
-                # stream=stream,
-                # extra_headers=extra_headers,
-                # extra_body=extra_body,
-                # extra_query=extra_query,
-                # timeout=timeout,
-                # **kwargs
-            )
-        
-        if stream:
-            gen: Generator = self.response_to_stream_async(response)
+                extra_headers=extra_headers,
+                extra_body=extra_body,
+                extra_query=extra_query,
+                timeout=timeout,
+                **kwargs
+                )
             return gen
         else:
-            return response
+            rst = await self.async_client_with_anthropic_url.anthropic.messages.create(
+                    model=self.cfg.engine,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    stream=stream,
+                    extra_headers=extra_headers,
+                    extra_body=extra_body,
+                    extra_query=extra_query,
+                    timeout=timeout,
+                    **kwargs
+                )
+            # rst = rst.model_dump()
+            return rst
+        
+    async def anthropic_stream(
+            self,
+            model,
+            messages,
+            max_tokens,
+            extra_headers=None,
+            extra_body=None,
+            extra_query=None,
+            timeout=None,
+            **kwargs) -> AsyncGenerator:
+        
+        async with self.async_client_with_anthropic_url.anthropic.messages.stream(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            extra_headers=extra_headers,
+            extra_body=extra_body,
+            extra_query=extra_query,
+            timeout=timeout,
+            **kwargs
+            ) as async_message_stream:
+            # i = 0
+            async for chunk in async_message_stream:
+                # print(f"{i} {chunk}")
+                # i += 1
+                data = chunk.model_dump()
+                yield f"event: {chunk.type}\ndata: {json.dumps(data)}\n\n"
      
      
 @dataclass

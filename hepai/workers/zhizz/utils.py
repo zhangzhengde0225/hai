@@ -30,7 +30,9 @@ def load_models(model_config: "LLMModelConfig"):
                 if provider is None:
                     print(f"Skipping unknown provider model: {model}")
                     continue
-                model_name = f"{provider}/{engine}"  # 设置为provider/engine格式
+                # model_name = f"{provider}/{engine}"  # 设置为provider/engine格式
+                
+                model_name = model
                 
                 cfg = LLMModelConfig(
                     name=model_name,

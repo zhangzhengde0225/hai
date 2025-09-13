@@ -51,21 +51,6 @@ class LLMRouterGroup:
         if "model" not in request_body:
             raise HTTPException(status_code=400, detail="[LLMRouterGroup] This `model` must be specified")
         model = request_body["model"]
-        # if "claude" in model.lower():
-        #     transformed, model = model_aliases_to_real_name(model)
-        #     if transformed:
-        #         request_body["model"] = model
-        #     if "claude" in model.lower():
-        #         request_body["stream"] = False
-        #     if "max_tokens" not in request_body:
-        #         request_body["max_tokens"] = 2048
-        #     function = "anthropic_messages"
-        #     postprocess_funcs = [general.convert_claude_to_openai_format]
-        # else:
-        #     function = "chat_completions"
-        #     postprocess_funcs = []
-        # if user_auth.resc_attr.resource_type == "worker":
-        #     request_body = self.update_request_body_for_worker(request_body, user_auth)
         self.count += 1
         # await save_minitor_log(logger, user_auth)
         func_params = FunctionParamsItem(
@@ -77,9 +62,6 @@ class LLMRouterGroup:
             model=model, 
             function="chat_completions",
         )
-        # if postprocess_funcs:
-        #     for func in postprocess_funcs:
-        #         rst = await func(rst)
         return rst
 
     async def embeddings(self, request: Request, user_auth = api_key_auth):

@@ -174,34 +174,34 @@ class HRemoteModel(BaseWorkerModel):
         """An example of a function that returns a string"""
         return f"Hello world! You are using the HepAI worker model with args: `{args}`, kwargs: `{kwargs}`"
 
-    @BaseWorkerModel.remote_callable
-    def get_int(self, a: int = 1, b: int = 2) -> int:
-        """An example of a function that returns an int type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_int(self, a: int = 1, b: int = 2) -> int:
+    #     """An example of a function that returns an int type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_float(self, a: float = 1.1, b: float = 2.2) -> float:
-        """An example of a function that returns a float type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_float(self, a: float = 1.1, b: float = 2.2) -> float:
+    #     """An example of a function that returns a float type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_list(self, a: List[int] = [1, 2], b: List[int] = [3, 4]) -> List[int]:
-        """An example of a function that returns a list type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_list(self, a: List[int] = [1, 2], b: List[int] = [3, 4]) -> List[int]:
+    #     """An example of a function that returns a list type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_dict(self, a: Dict[str, int] = {"a1": 1}, b: Dict[str, int] = {"a2": 2}) -> Dict[str, int]:
-        """An example of a function that returns a dict type"""
-        return {**a, **b}
+    # @BaseWorkerModel.remote_callable
+    # def get_dict(self, a: Dict[str, int] = {"a1": 1}, b: Dict[str, int] = {"a2": 2}) -> Dict[str, int]:
+    #     """An example of a function that returns a dict type"""
+    #     return {**a, **b}
     
-    @BaseWorkerModel.remote_callable
-    def get_stream(self, data: Any = None, interval: float = 0.2):
-        """An example of a function that returns a stream type"""
+    # @BaseWorkerModel.remote_callable
+    # def get_stream(self, data: Any = None, interval: float = 0.2):
+    #     """An example of a function that returns a stream type"""
 
-        data = data if data is not None else DEFAULT_STREAM_DATA
-        for i, x in enumerate(data):
-            time.sleep(interval)  # 注：此处为了演示，故意加了延迟，实际使用时应该去掉
-            yield f"data: {json.dumps(x)}\n\n"
+    #     data = data if data is not None else DEFAULT_STREAM_DATA
+    #     for i, x in enumerate(data):
+    #         time.sleep(interval)  # 注：此处为了演示，故意加了延迟，实际使用时应该去掉
+    #         yield f"data: {json.dumps(x)}\n\n"
 
     @BaseWorkerModel.remote_callable
     def __call__(self, *args, **kwargs):

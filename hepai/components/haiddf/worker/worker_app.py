@@ -132,6 +132,10 @@ class HWorkerAPP(FastAPI):
             from .routers.llm_router import LLMRouterGroup
             llm_rg = LLMRouterGroup(prefix=config.route_prefix, parent_app=self)
             self.include_router(llm_rg.router, prefix=llm_rg.prefix, tags=llm_rg.tags)
+            
+            from .routers.anthropic_router import AnthropicRouterGroup
+            anthropic_rg = AnthropicRouterGroup(prefix=config.route_prefix, parent_app=self)
+            self.include_router(anthropic_rg.router, prefix=anthropic_rg.prefix, tags=anthropic_rg.tags)
         
     def get_worker_router(self, router_prefix: str = ""):
         # router_prefix = self.worker.config_dict.get("route_prefix", "/apiv2")

@@ -412,7 +412,7 @@ class CommonWorker:
         if heartbeat_flag:
             self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
         else:
-            self.logger.info(f"Worker register successfully: `{worker_info.id}`")
+            self.logger.info(f"Worker `{worker_info.id}` register to `{self.base_url}` successfully.")
         return True
   
     def exit_handler(self):
@@ -561,7 +561,8 @@ class CommonWorker:
                     # res =  func(**kwargs)
                     try:
                         res = await func(*args, **kwargs)
-                    except:
+                    except Exception as e:
+                        raise RuntimeError(f"Async function raised an error, please check the function. {e}")
                         # 有时候因为中间层额外引入了stream参数，而一些函数不允许接收stream参数。
                         stream = kwargs.pop("stream", False)  # 为了在客户端传输stream时，不会被kwargs接收，所以pop出来
                         res = await func(*args, **kwargs)
