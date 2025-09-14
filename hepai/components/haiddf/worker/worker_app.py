@@ -268,6 +268,7 @@ class HWorkerAPP(FastAPI):
         return rst
     
     async def worker_get_status(self):
+        """获取worker的状态信息，即WorkerStatusInfo"""
         return self.worker.get_status_info().to_dict()
     
     async def get_worker_info(
