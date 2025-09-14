@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.09.15 v1.2.8 修复了_llm_remote_model.py中anthropic模型流式输出的问题。
 + 2025.09.12 v1.2.7 修复worker_index.html打包时不上传的问题
 + 2025.09.11 v1.2.5, v1.2.6 修复了anthropic模型无法使用的bug(llm_remote_model中anthropic的base_url错误), 修复worker_permissions中owner必须是单个字符串的bug。
 + 2025.09.10 v1.2.2, v1.2.3, v1.2.4 修复llm_router的bug，修复worker_app中模型初始化的bug，
