@@ -28,12 +28,22 @@ def run():
 
 
 class CommandLineInterface(CLIFunctions):
-    def __init__(self, uaii=None, config=None):
+    def __init__(
+        self, 
+        uaii=None, 
+        api_fold_name=None,
+        root_path=None,
+        ):
         self.uaii = uaii if uaii is not None else hai.UAII()
-        self.config = config if config else hai.config # this is the hai config
+        self.api_fold_name = api_fold_name  # i.e. 'hai_api
+        self.root_path = root_path  # i.e. '/home/xxx/VSProjects/hai'
+        
+        # self.config = config if config else hai.config # this is the hai config
         self.default_model = None  # if run hai command in a folder containing a model, then set the model as default model
         self.opt = None
         self.testor = Testor()
+        
+        
     
     def _init_opt(self, opt):
         # is cwd not in sys.path, then add it
@@ -41,7 +51,8 @@ class CommandLineInterface(CLIFunctions):
         if cwd not in sys.path:
             sys.path.append(cwd)
 
-        is_in_one_module = hai.config.API_FOLD_NAME in [x for x in os.listdir('.') if os.path.isdir(x)]
+        # is_in_one_module = hai.config.API_FOLD_NAME in [x for x in os.listdir('.') if os.path.isdir(x)]
+        is_in_one_module = self.api_fold_name in [x for x in os.listdir('.') if os.path.isdir(x)]
         if is_in_one_module:
             self.default_model = os.path.basename(os.getcwd())
         self.opt = opt
@@ -169,9 +180,12 @@ class CommandLineInterface(CLIFunctions):
         
         
     def _init_a_module(self, opt):
-        cfg = self.config
-        api_fold_name = cfg.API_FOLD_NAME  # i.e. 'hai_api
-        root_path = cfg.ROOT_PATH  # i.e. '/home/xxx/VSProjects/hai'
+        # cfg = self.config
+        # api_fold_name = cfg.API_FOLD_NAME  # i.e. 'hai_api
+        # root_path = cfg.ROOT_PATH  # i.e. '/home/xxx/VSProjects/hai'
+        
+        api_fold_name = self.api_fold_name
+        root_path = self.root_path
 
         if os.path.exists(api_fold_name):
             if not opt.force:

@@ -1,0 +1,50 @@
+
+# Note: 以###{{depGroup}}###来分组
+
+###{{base}}###
+pyyaml
+easydict  # for config_loader.py
+fastapi  # for hai worker
+requests  # for hai worker
+uvicorn  # for hai worker
+openai>=1.63.0
+python-dotenv >=1.1.1
+
+
+###{{ai}}###
+numpy
+pillow
+opencv-python
+# torch>=1.7.1
+
+# for agents
+autogen-agentchat>=0.5.5
+autogen-core>=0.5.5
+autogen-ext>=0.5.5
+schedule>=1.2.2
+tiktoken>=0.9.0
+passlib>=1.7.4
+jwt>=1.3.1
+aiohttp>=3.11.11
+mcp
+python-multipart>=0.0.18
+json_schema_to_pydantic>=0.2.4
+
+
+###{{server}}###
+grpcio-tools  # for grpc_server.py
+
+###{{unknown}}###
+damei
+tqdm
+wandb  # for UNet
+
+# pydantic==2.10.0  # <2.11
+pydantic>=2.11.3
+
+python-dateutil  # for relativedelta
+httpx>=0.28.1
+markdown
+
+
+

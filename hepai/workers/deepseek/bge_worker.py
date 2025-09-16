@@ -193,6 +193,7 @@ class WorkerModel(HRModel):  # Define a custom worker model inheriting from HRMo
             extra_headers = kwargs.pop("extra_headers", {})
         extra_body: Dict = kwargs.pop("extra_body", {})
         extra_query: Dict = kwargs.pop("extra_query", {})
+        stream = kwargs.pop("stream", False)
         timeout = kwargs.pop("timeout", HepAI.NotGiven)
 
         request = EmbeddingsRequest(**kwargs)

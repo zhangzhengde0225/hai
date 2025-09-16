@@ -1,0 +1,11 @@
+
+
+models_list:
+  - model_name: scienceone/s1-base-lite
+    engine: "S1-Base-Lite"
+
+  - model_name: scienceone/s1-base-pro
+    engine: "S1-Base-Pro"
+
+  - model_name: scienceone/s1-base-ultra
+    engine: "S1-Base-Ultra"

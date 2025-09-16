@@ -24,7 +24,8 @@ class HaiLLM(object):
 
         url = kwargs.pop("url", None)
         if not url:
-            host = kwargs.pop("host", "aiapi.ihep.ac.cn")
+            # host = kwargs.pop("host", "aiapi.ihep.ac.cn")
+            host = kwargs.pop("host", "aiapi.ihep.ac.cn/apiv2")
             port = kwargs.pop("port", None)
             if port is not None:
                 url = f"http://{host}:{port}"
@@ -44,8 +45,8 @@ Alternatively, it can be provided by passing in the `api_key` parameter when cal
 """
         session = requests.Session()
         response = session.post(
-            # f'{url}/v1/chat/completions',
-            f'{url}/v1/inference',
+            f'{url}/v1/chat/completions',
+            # f'{url}/v1/inference',
             headers={"Authorization": f"Bearer {api_key}"},
             json=data,
             stream=True,

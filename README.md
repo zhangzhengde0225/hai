@@ -10,7 +10,7 @@ https://github.com/zhangzhengde0225/CDNet/archive/refs/heads/master.zip) -->
 #### 简体中文 | [English](https://github.com/zhangzhengde0225/hai/blob/main/docs/readme_en.md)
 
 # 高能AI框架HepAI
-HepAI是一个AI开源框架，是高能AI平台的核心技术，应用此技术可以加速多学科场景的科学研究，简化模型迭代和流程，是开发AI算法和应用的共性基础。
+HepAI提供了一个AI开源框架，是高能AI平台的核心技术，应用此技术可以加速多学科场景的科学研究，简化模型迭代和流程，是开发AI算法和应用的共性基础。
 
 HepAI平台本身是一个软件系统，承载AI算法模型，提供AI计算能力，打通数据通道，并开展AI培训。
 
@@ -19,6 +19,9 @@ HepAI框架集成了高能物理领域的经典和最先进（SOTA）的人工�
 <details open>
 <summary><b>News</b></summary>
 
+
+
++ [2025.04.27] v1.1.34 支持原opendrsai智能体与多智能体协作框架，将from drsai 改为 from hepai.agents即可，具体见 https://code.ihep.ac.cn/hepai/drsai
 + [2024.12.22] v1.1.16 支持远程模型！[点此查看详情](https://aiapi001.ihep.ac.cn/mkdocs/workers/)
 + [2024.05.16] v1.1.9 HepAI Client支持GPT-4o系列模型。
 + [2024.03.26] v1.0.21 Make LLM request like OpenAI via HepAI object.
@@ -28,6 +31,8 @@ HepAI框架集成了高能物理领域的经典和最先进（SOTA）的人工�
 + [2023.01.16] 支持华为NPU服务器，如有算法国产化需求，请查阅[NPU文档](docs/computing_power/npu_power_doc.md)。
 + [2022.10.20] HAI v1.0.6-Beta 第一个测试版本发布，4个算法和3个数据集
 + [2022.08.23] HAI v1.0.0
+
++ 详细更新日志：[update_log](docs/update_log.md)
 </details>
 
 <details open>
@@ -76,45 +81,35 @@ HepAI框架集成了高能物理领域的经典和最先进（SOTA）的人工�
 ### 快速开始
 ```
 pip install hepai --upgrade
-hai -V  # 查看版本
+hepai -V  # 查看版本
 ```
 
-1. 命令行使用
+#### 1. 调用HepAI模型
 
-    ```bash
-    hai train <model_name>  # 训练模型, 例如: hai train particle_transformer
-    hai eval <model_name>
-    ```
-
-2. python库使用
-
-    python库统一接口：
-    ```python
-    import hepai as hai
-    
-    model = hai.hub.load('<model_name>')  # 加载模型
-    config = model.config  # 获取模型配置
-    config.batch_size = 32  # 修改配置
-    model.trian()  # 训练模型
-    model.eval()  # 评估模型
-    model.infer('<data>')  # 模型推理
-    hai.train('particle_transformer')
-    ```
-
-3. 部署和远程调用
-
-    跨语言、跨平台的模型部署和远程调用
-
-    服务端：
-    ```bash
-    hai start server  # 启动服务
-    ```
-    客户端
-    ```python
+```python
     from hepai import HepAI
     
-    client = HepAI()
+    client = HepAI(api_key="your_api_key")
     models = client.list_models()
-    response = client.chat.completion.create(model="hepai/xiwu_v2", prompt="你好", max_tokens=100)
+    response = client.chat.completion.create(
+        model="hepai/deepseek-r1:671b", 
+        prompt="你好",
+        )
     print(response.choices[0].text)
-    ```
+```
+
++ api_key在[HepAI平台](https://ai.ihep.ac.cn/)中自行创建获取
+
+#### 2. 使用算力资源
+
+[高能AI算力集群用户手册](https://ai.ihep.ac.cn/cp/docs/)
+
+#### X. 智能体
+
+TODO
+
+
+#### workers
+
++ PDF, PPT, Word等解析器：https://code.ihep.ac.cn/xdb/markitdown_worker
+

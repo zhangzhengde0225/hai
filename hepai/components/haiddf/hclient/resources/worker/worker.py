@@ -1,5 +1,6 @@
 
 from typing import Dict, Any
+import io
 from ..._types import Stream
 from .._resource import SyncAPIResource, AsyncAPIResource
 
@@ -9,6 +10,9 @@ from ..._return_class import (
 from ..._related_class import (
     WorkerInfo, HRemoteModel, WorkerStoppedInfo, WorkerStatusInfo,
 )
+
+# from ...openai_api._base_client import make_request_options
+from openai._base_client import make_request_options
 
 
 class Worker(SyncAPIResource):
@@ -97,12 +101,31 @@ class Worker(SyncAPIResource):
         function = target.get("function")  
         # check if need stream
         stream = kwargs.get("stream", False) if kwargs is not None else False
+
+        from typing import cast, Mapping
+        from openai._utils import deepcopy_minimal, extract_files      
+        
         # set payload
         payload = dict()
         if args:
             payload["args"] = args
         if kwargs:
             payload["kwargs"] = kwargs
+        
+        # 适配文件上传，可从file字段中提取文件
+        files = extract_files(cast(Mapping[str, object], kwargs), paths=[["file"]])
+        payload = deepcopy_minimal(payload)
+        
+        # if True:
+        #     payload = {'function_params': payload}
+        
+        extra_headers = None  # Headers
+        extra_query = None  # Query
+        extra_body = None  # Body
+        # timeout = : float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
+        
+        if files:
+            extra_headers = {"Content-Type": "multipart/form-data", **(extra_headers or {})}
 
         if stream:
             return self._post(
@@ -111,11 +134,19 @@ class Worker(SyncAPIResource):
                 stream=True,
                 stream_cls=Stream[Any],
                 cast_to=Any,
+                files=files,
+                options=make_request_options(
+                    extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body
+            ),
             )
         return self._post(
             f"{self.prefix}/unified_gate/?model={model}&function={function}",
             cast_to=Any,
             body=payload,
+            files=files,
+            options=make_request_options(
+                extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body
+            ),
         )
     
     def register(

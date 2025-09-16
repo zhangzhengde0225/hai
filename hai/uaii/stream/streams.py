@@ -2,7 +2,7 @@
 保存流的信息
 """
 import damei as dm
-import numpy as np
+
 from collections import OrderedDict
 from .stream import Stream
 
@@ -71,6 +71,7 @@ class Streams(object):
             for example:
                 [stream1, stream2, stream3], where streamx is a dict
         """
+        import numpy as np
         # print(cfgs, type(cfgs))
         if isinstance(cfgs, dict):
             cfgs = [cfgs]

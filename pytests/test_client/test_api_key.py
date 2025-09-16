@@ -71,7 +71,7 @@ class TestDDFApiKey(unittest.TestCase):
         BASE_URL = "https://aiapi.ihep.ac.cn/v1"  # 基础url
         hepai_api_key_v1 = os.getenv("HEPAI_API_KEY")
         BASE_URL2 = "https://aiapi001.ihep.ac.cn/apiv2"  # 基础url
-        hepai_api_key_v2 = os.getenv("HEPAI_API_KEY2")
+        hepai_api_key_v2 = os.getenv("HEPAI_API_KEY")
         client = HepAI(
             api_key=hepai_api_key_v2, 
             base_url = BASE_URL2)
@@ -81,5 +81,5 @@ class TestDDFApiKey(unittest.TestCase):
 if __name__ == "__main__":
     # unittest.main()
 
-    # TestDDFApiKey().test_api_key()
-    TestDDFApiKey().verify_api_key_on_ddf1()
+    TestDDFApiKey().test_api_key()
+    # TestDDFApiKey().verify_api_key_on_ddf1()

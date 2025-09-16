@@ -3,7 +3,7 @@
 """
 import sys
 
-import numpy as np
+
 import collections
 import copy
 import damei as dm
@@ -313,6 +313,7 @@ class Stream(object):
 
     def dict2info(self, info_dict):
         # 先递归地展开
+        import numpy as np
         new_info_dict = collections.OrderedDict()
         indents = []
         indent_space = 4

@@ -17,7 +17,7 @@ api_key=os.getenv("DDF_ZDZHANG_API_KEY")
 base_url = "https://aiapi001.ihep.ac.cn/apiv2"
 client = HepAI(base_url=base_url, api_key=api_key, proxy=None)
 q = "Sai hello"
-        
+
 model = "openai/gpt-4o-mini"
 # model = "openai/o1-preview"
 # 测试非流

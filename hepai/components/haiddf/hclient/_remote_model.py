@@ -67,6 +67,7 @@
 #     """
 #     ...
 
+import os
 import types
 from typing import Union
 from . import resources
@@ -138,15 +139,44 @@ class LRemoteModel:
                 )
                 return rst
             return sync_call_remote_function
-
+    
+    @property
     def functions(self):
         """
         获取远程模型提供的所有可调用函数名称。
         """
         return self.model_functions
+    
+    def connect(
+        name: str,
+        base_url: str = "https://aiapi.ihep.ac.cn/apiv2",
+        api_key: str = os.getenv("HEPAI_API_KEY"),
+        **kwargs,
+    )-> "LRemoteModel":
+        """
+        Connect to hepai resources. such as remote model, llm, etc.
+        Args:
+            name (str): The name of the resource to connect to.
+            base_url (str): The base URL of the resource.
+        """
+        from hepai import HepAI
+        assert name, "Please provide the model name, you can use `client.models.list()` to get the model name."
+        client = HepAI(
+            base_url=base_url,
+            api_key=api_key,
+            **kwargs,
+            )
+        model: LRemoteModel = client.get_remote_model(model_name=name)
+        return model
 
 
 class LRModel(LRemoteModel):
+    """
+    Alias of Local Remote Model
+    """
+    ...
+    
+class RemoteModel(LRemoteModel):
     """
     Alias of Local Remote Model
     """

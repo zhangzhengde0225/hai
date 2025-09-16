@@ -1,12 +1,13 @@
 """
 基础类的定义
 """
-
+import os
 import time
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Literal, Union, Optional, Any
 import json
 import inspect
+from inspect import signature, Parameter, ismethod, iscoroutinefunction
 
 @dataclass
 class permission:
@@ -73,8 +74,8 @@ class BaseWorkerModel:
     def connect(
         cls,
         name: str,  # 远程模型的名称
-        base_url: str,  # 远程模型的地址
-        # api_key: str = None,  # 远程模型的API Key
+        base_url: str = "https://aiapi.ihep.ac.cn/apiv2",  # 远程模型的地址
+        api_key: str = None,  # 远程模型的API Key
         **kwargs,
         ):
 
@@ -83,10 +84,12 @@ class BaseWorkerModel:
         # 将 httpx 的日志记录级别调整为 WARNING
         logging.getLogger("httpx").setLevel(logging.WARNING)
         
+        api_key = api_key if api_key else os.environ.get("HEPAI_API_KEY")
+        
         from hepai import HepAI
         client = HepAI(
             base_url=base_url,
-            # api_key=api_key,
+            api_key=api_key,
             **kwargs,
             )
 
@@ -163,40 +166,42 @@ class HRemoteModel(BaseWorkerModel):
         self.config.name = self.config.name if self.config.name else self.__class__.__name__
         self.name = self.config.name
         self.permission = self.config.permission
+        
+        self.created = int(time.time())
 
     @BaseWorkerModel.remote_callable
     def hello_world(self, *args, **kwargs):
         """An example of a function that returns a string"""
         return f"Hello world! You are using the HepAI worker model with args: `{args}`, kwargs: `{kwargs}`"
 
-    @BaseWorkerModel.remote_callable
-    def get_int(self, a: int = 1, b: int = 2) -> int:
-        """An example of a function that returns an int type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_int(self, a: int = 1, b: int = 2) -> int:
+    #     """An example of a function that returns an int type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_float(self, a: float = 1.1, b: float = 2.2) -> float:
-        """An example of a function that returns a float type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_float(self, a: float = 1.1, b: float = 2.2) -> float:
+    #     """An example of a function that returns a float type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_list(self, a: List[int] = [1, 2], b: List[int] = [3, 4]) -> List[int]:
-        """An example of a function that returns a list type"""
-        return a + b
+    # @BaseWorkerModel.remote_callable
+    # def get_list(self, a: List[int] = [1, 2], b: List[int] = [3, 4]) -> List[int]:
+    #     """An example of a function that returns a list type"""
+    #     return a + b
     
-    @BaseWorkerModel.remote_callable
-    def get_dict(self, a: Dict[str, int] = {"a1": 1}, b: Dict[str, int] = {"a2": 2}) -> Dict[str, int]:
-        """An example of a function that returns a dict type"""
-        return {**a, **b}
+    # @BaseWorkerModel.remote_callable
+    # def get_dict(self, a: Dict[str, int] = {"a1": 1}, b: Dict[str, int] = {"a2": 2}) -> Dict[str, int]:
+    #     """An example of a function that returns a dict type"""
+    #     return {**a, **b}
     
-    @BaseWorkerModel.remote_callable
-    def get_stream(self, data: Any = None, interval: float = 0.2):
-        """An example of a function that returns a stream type"""
+    # @BaseWorkerModel.remote_callable
+    # def get_stream(self, data: Any = None, interval: float = 0.2):
+    #     """An example of a function that returns a stream type"""
 
-        data = data if data is not None else DEFAULT_STREAM_DATA
-        for i, x in enumerate(data):
-            time.sleep(interval)  # 注：此处为了演示，故意加了延迟，实际使用时应该去掉
-            yield f"data: {json.dumps(x)}\n\n"
+    #     data = data if data is not None else DEFAULT_STREAM_DATA
+    #     for i, x in enumerate(data):
+    #         time.sleep(interval)  # 注：此处为了演示，故意加了延迟，实际使用时应该去掉
+    #         yield f"data: {json.dumps(x)}\n\n"
 
     @BaseWorkerModel.remote_callable
     def __call__(self, *args, **kwargs):
@@ -204,10 +209,100 @@ class HRemoteModel(BaseWorkerModel):
 
 class HRModel(HRemoteModel):
     """
-    Alias of HRemoteModel
+    Alias of HepAI Remote Model
     """
-    ...
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
+        self.register_functions: List[Dict[str, str]] = self.load_functions()
+
+    def _clean_type_str(self, annotation):
+        """类型注解清洗方法"""
+        if annotation == Parameter.empty:
+            return "Any"
+        
+        # 处理标准类型
+        if isinstance(annotation, type):
+            return annotation.__name__
+        
+        # 处理typing模块类型
+        type_str = str(annotation)
+        
+        # 去除模块前缀
+        type_str = type_str.replace('typing.', '')
+        
+        # 处理特殊类型
+        if '[' not in type_str:  # 简单类型
+            return type_str.split('.')[-1]  # 获取最终类型名
+        
+        # 处理泛型类型 (如List[int])
+        try:
+            main_type, args = type_str.split('[', 1)
+            main_type = main_type.split('.')[-1]  # 提取主类型名
+            # args = args.rstrip(']')
+            last_bracket = args.rfind(']')
+            if last_bracket != -1:
+                args = args[:last_bracket]  # 保留内部所有括号
+            return f"{main_type}[{args}]"
+        except:
+            return type_str
+    
+    def load_functions(self) -> List[Dict[str, str]]:
+        register_functions = []
+        # 遍历当前类及其所有父类
+        for cls in self.__class__.__mro__:
+            # 仅处理CustomWorkerModel及其子类（假设CustomWorkerModel是基类）
+            if cls is HRModel or issubclass(cls, HRModel):
+                for attr_name in dir(cls):
+                    attr = getattr(cls, attr_name)
+                    # 检查类属性是否被标记为remote_callable
+                    if getattr(attr, "is_remote_callable", False):
+                        if attr.is_remote_callable:
+                            # 获取实例对应的属性（处理可能的实例覆盖）
+                            instance_attr = getattr(self, attr_name)
+                            if callable(instance_attr):
+                                # 获取原始函数（处理装饰器包装）
+                                raw_func = getattr(instance_attr, '__wrapped__', instance_attr)
+                                # 处理异步函数
+                                if iscoroutinefunction(raw_func):
+                                    sig = signature(raw_func)
+                                else:
+                                    sig = signature(instance_attr)
+                                
+                                # 构建参数结构
+                                params = []
+                                for param in sig.parameters.values():
+                                    if param.name == 'self' and ismethod(instance_attr):
+                                        continue  # 跳过实例方法的self参数
+                                    params.append({
+                                        "name": param.name,
+                                        # "type": str(param.annotation) if param.annotation != Parameter.empty else "Any",
+                                        "type": self._clean_type_str(param.annotation) if param.annotation != Parameter.empty else "Any",
+                                        "default": param.default if param.default != Parameter.empty else None
+                                    })
+                                
+                                register_functions.append({
+                                    "__name__": attr_name,
+                                    "__doc__": instance_attr.__doc__,
+                                    "__signature__": params,
+                                    # "__return__": str(sig.return_annotation) if sig.return_annotation != Parameter.empty else "Any"
+                                    "__return__": self._clean_type_str(sig.return_annotation) if sig.return_annotation != Parameter.empty else "Any",
+                                })
+        other_functions = ['__call__', 'get_dict', 'get_float', 'get_int', 'get_list', 'get_stream', 'hello_world', 'get_register_functions']
+        # 过滤掉不需要的函数
+        register_functions = [func for func in register_functions if func['__name__'] not in other_functions]
+        return register_functions
+
+    @HRemoteModel.remote_callable
+    async def get_register_functions(self) -> list[dict[str, str]]:
+        """
+        获取当前模型中可调用的函数列表
+
+        Returns:
+            List[Dict[str, str]]: 注册函数列表，包含函数名、函数描述、函数签名
+        """
+        return self.register_functions
+    
 
 @dataclass
 class ModelResourceInfo:
@@ -219,13 +314,28 @@ class ModelResourceInfo:
     model_version: str = field(default="1.0", metadata={"help": "Model's version"})
     model_description: str =field(default="<This is model description.>", metadata={"help": "Model's description"})
     model_author: Union[str, List[str], None] = field(default="", metadata={"help": "Model's author"})
-    model_onwer: Union[str, None] = field(default="", metadata={"help": "Model's onwer"})
+    model_owner: Union[str, None] = field(default="", metadata={"help": "Model's owner"})
     model_groups: List[str] = field(default_factory=list, metadata={"help": "Model's groups"})
     model_users: List[str] = field(default_factory=list, metadata={"help": "Model's users"})
     model_functions: List[str] = field(default_factory=list, metadata={"help": "Model's functions that can be called by remote"})
+    id: Optional[str] = field(default=None, metadata={"help": "Model's id, usually set by the system"})
+    created: Optional[int] = field(default=None, metadata={"help": "Model's created timestamp, usually set by the system"})
+    object: Optional[str] = field(default="model", metadata={"help": "Model's object type, usually set by the system"})
+    owned_by: Optional[str] = field(default=None, metadata={"help": "Model's owned by, usually set by the system"})
+
+    def __post_init__(self):
+        if self.id is None and self.model_name:
+            self.id = self.model_name
+        if self.created is None:
+            self.created = int(time.time())
+        if self.owned_by is None and self.model_owner:
+            self.owned_by = self.model_owner
 
     def to_dict(self):
         return asdict(self)
+    
+    def __repr__(self):
+        return f'ModelResourceInfo(model_name={self.model_name!r}, model_type={self.model_type!r})'
 
 @dataclass
 class WorkerStatusInfo:
@@ -235,6 +345,7 @@ class WorkerStatusInfo:
     speed: int = field(default=1, metadata={"help": "Worker's speed, the number of requests that can be processed per second"})
     queue_length: int = field(default=0, metadata={"help": "Worker's queue length"})
     status: Literal["idle", "ready", "busy", "error"] = "idle"
+    start_time: Optional[float] = field(default=None, metadata={"help": "Worker's start time, timestamp"})
 
     def is_valid(self):
         """是信息是否可用，即相关信息是否已被填入，而不是None"""
@@ -281,7 +392,7 @@ class WorkerInfo:
     status_info: WorkerStatusInfo = field(default_factory=WorkerStatusInfo, metadata={"help": "Worker's status info"})
     check_heartbeat: bool = True
     last_heartbeat: Union[int, None] = None
-    vserion: str = "2.0"
+    version: str = "2.0"
     metadata: Dict = field(default_factory=dict, metadata={"help": "Worker's metadata"})
 
     def __post_init__(self):
@@ -318,14 +429,42 @@ class WorkerInfo:
     def to_openai_list_models(self) -> Dict:
         """转换为OpenAI格式的list_models的返回列表"""
         data = []
-        for i, rec in enumerate(self.resource_info):
+        for i, resc in enumerate(self.resource_info):
             tmp = {}
-            tmp["id"] = rec.model_name
-            tmp["created"] = None
+            owned_by = resc.model_owner if resc.model_owner else resc.model_author
+            tmp["id"] = resc.model_name
+            tmp["created"] = resc.created
             tmp["object"] = "model"
-            tmp['owned_by'] = rec.model_onwer
+            tmp['owned_by'] = owned_by
             data.append(tmp)
         return data
+    
+    
+    def __repr__(self):
+        """自定义repr，resource_info很长时只显示前5和后5个"""
+        base = f"WorkerInfo(\n  id={self.id!r},\n  type={self.type!r}, "
+        n = len(self.resource_info)
+        if n > 10:
+            shown = (
+                [repr(x) for x in self.resource_info[:5]] +
+                ["..."] +
+                [repr(x) for x in self.resource_info[-5:]]
+            )
+        else:
+            shown = [repr(x) for x in self.resource_info]
+        return (
+            f"{base}\n"
+            f"  resource_info=[\n    " +
+            ",\n    ".join(shown) +
+            f"\n  ] ({n}), " +
+            f"\n  network_info={self.network_info!r}," +
+            f"\n  status_info={self.status_info!r}," +
+            f"\n  check_heartbeat={self.check_heartbeat!r}," +
+            f"\n  last_heartbeat={self.last_heartbeat!r}," +
+            f"\n  version={self.version!r}" +
+            # f"\n  metadata={self.metadata!r}," +
+            "\n)"
+        )
 
 
 from pydantic import BaseModel
@@ -339,7 +478,7 @@ class WorkerInfoItem(BaseModel):
     status_info: WorkerStatusInfo = field(default_factory=WorkerStatusInfo, metadata={"help": "Worker's status info"})
     check_heartbeat: bool = field(default=True, metadata={"help": "Check worker's heartbeat"})
     last_heartbeat: Union[int, None] = field(default=None, metadata={"help": "Worker's last heartbeat"})
-    vserion: str = field(default="2.0", metadata={"help": "Worker's version"})
+    version: str = field(default="2.0", metadata={"help": "Worker's version"})
     metadata: Dict = field(default_factory=dict, metadata={"help": "Worker's metadata"})
 
 

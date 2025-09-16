@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HepAI Worker 监控面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 1.6em;
+            margin-bottom: 0;
+            display: inline;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header .subtitle {
+            font-size: 1em;
+            color: #e0e0e0;
+            margin-left: 16px;
+            display: inline;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-item h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .info-item p {
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .monitor-section {
+            margin-top: 30px;
+        }
+        
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .monitor-header h2 {
+            color: #333;
+            font-size: 1.8em;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .model-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .model-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .model-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 8px;
+        }
+        
+        .model-functions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .function-tag {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 HepAI Worker 监控面板</h1><span class="subtitle">实时监控 Worker 状态和性能指标</span>
+        </div>
+        
+        <div class="card">
+            <div class="info-grid" id="workerInfo">
+                <div class="loading">正在加载 Worker 信息...</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="monitor-section">
+                <div class="monitor-header">
+                    <h2>📊 实时监控</h2>
+                    <button class="refresh-btn" onclick="refreshData()">刷新数据</button>
+                </div>
+                
+                <div class="metrics-grid" id="metricsGrid">
+                    <div class="loading">正在加载监控数据...</div>
+                </div>
+                
+                <div class="model-details">
+                    <h3>🎯 模型详情</h3>
+                    <div class="model-list" id="modelList">
+                        <div class="loading">正在加载模型信息...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const prefix = '/apiv2';
+        let refreshInterval;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWorkerInfo();
+            loadMonitoringData();
+            
+            // 每3秒自动刷新监控数据（更频繁的更新）
+            refreshInterval = setInterval(loadMonitoringData, 3000);
+        });
+        
+        // 加载Worker基本信息
+        async function loadWorkerInfo() {
+            try {
+                const response = await fetch(`${prefix}/worker/get_worker_info`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                displayWorkerInfo(data);
+            } catch (error) {
+                console.error('加载Worker信息失败:', error);
+                document.getElementById('workerInfo').innerHTML = 
+                    '<div class="error">无法加载Worker信息: ' + error.message + '</div>';
+            }
+        }
+        
+        // 显示Worker信息
+        function displayWorkerInfo(data) {
+            const workerInfo = document.getElementById('workerInfo');
+            const networkInfo = data.network_info || {};
+            const statusInfo = data.status_info || {};
+            const resourceInfo = data.resource_info || [];
+            const metadata = data.metadata || {};
+            let permissionsStr = 'N/A';
+            if (metadata.permissions) {
+                if (Array.isArray(metadata.permissions)) {
+                    permissionsStr = metadata.permissions.join(', ');
+                } else if (typeof metadata.permissions === 'object') {
+                    permissionsStr = Object.entries(metadata.permissions).map(([k, v]) => `${k}: ${v}`).join(', ');
+                } else {
+                    permissionsStr = String(metadata.permissions);
+                }
+            }
+
+            workerInfo.innerHTML = `
+                <div class="info-item">
+                    <h3>🏷️ Worker 基本信息</h3>
+                    <p><strong>ID:</strong> ${data.id || 'N/A'}</p>
+                    <p><strong>类型:</strong> ${data.type || 'common'}</p>
+                    <p><strong>地址:</strong> ${networkInfo.worker_address || 'N/A'}</p>
+                    <p><strong>状态:</strong> <span class="status-indicator status-online"></span>在线</p>
+                    <p><strong>运行时间:</strong> ${formatUptime(metadata.uptime || 0)}</p>
+                </div>
+                
+                <div class="info-item">
+                    <h3>🌐 资源/状态信息</h3>
+                    <p><strong>模型数量:</strong> ${resourceInfo.length}</p>
+                    <p><strong>并发限制:</strong> ${metadata.limit_model_concurrency || 5}</p>
+                    <p><strong>速度:</strong> ${statusInfo.speed ? statusInfo.speed.toFixed(2) + ' req/s' : 'N/A'}</p>
+                    <p><strong>队列长度:</strong> ${statusInfo.queue_length || 0}</p>
+                    <p><strong>上次心跳:</strong> ${data.last_heartbeat ? new Date(statusInfo.last_heartbeat * 1000).toLocaleString() : 'N/A'}</p>
+                    <!-- <p><strong>启动时间:</strong> ${statusInfo.start_time ? new Date(statusInfo.start_time * 1000).toLocaleString() : 'N/A'}</p> -->
+                </div>
+                
+                <div class="info-item">
+                    <h3>📝 描述信息</h3>
+                    <p><strong>描述:</strong> ${metadata.description || 'HepAI Worker'}</p>
+                    <p><strong>作者:</strong> ${metadata.author || 'N/A'}</p>
+                    <p><strong>权限:</strong> ${permissionsStr}</p>
+                    </div>
+            `;
+        }
+        
+        // 加载监控数据
+        async function loadMonitoringData() {
+            try {
+                // 并行获取状态和模型信息
+                const [statusResponse, modelsResponse, monitorResponse] = await Promise.all([
+                    fetch(`${prefix}/worker_get_status`),
+                    fetch(`${prefix}/worker/models`),
+                    fetch(`${prefix}/worker/monitor_status`)
+                ]);
+                
+                if (!statusResponse.ok || !modelsResponse.ok || !monitorResponse.ok) {
+                    throw new Error('Failed to fetch monitoring data');
+                }
+                
+                const statusData = await statusResponse.json();
+                const modelsData = await modelsResponse.json();
+                const monitorData = await monitorResponse.json();
+                
+                displayMetrics(statusData, monitorData);
+                displayModelList(modelsData.data || [], monitorData.model_status || {});
+                
+            } catch (error) {
+                console.error('加载监控数据失败:', error);
+                document.getElementById('metricsGrid').innerHTML = 
+                    '<div class="error">无法加载监控数据: ' + error.message + '</div>';
+            }
+        }
+        
+        // 显示监控指标
+        function displayMetrics(statusData, monitorData) {
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            const totalActive = monitorData.total_active || 0;
+            const totalQueue = monitorData.total_queue || 0;
+            const totalLimit = monitorData.total_limit || 5;
+            const uptime = monitorData.uptime || 0;
+            const globalCounter = monitorData.global_counter || 0;
+            
+            const uptimeFormatted = formatUptime(Math.floor(uptime));
+            
+            // 计算利用率
+            const utilizationRate = totalLimit > 0 ? Math.round((totalActive / totalLimit) * 100) : 0;
+            
+            metricsGrid.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${totalActive}</div>
+                    <div class="metric-label">正在处理</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value">${totalQueue}</div>
+                    <div class="metric-label">等待队列</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value">${utilizationRate}%</div>
+                    <div class="metric-label">利用率</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value">${globalCounter}</div>
+                    <div class="metric-label">总请求数</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-value">${monitorData.model_count || 0}</div>
+                    <div class="metric-label">加载模型数</div>
+                </div>
+                
+                <!-- <div class="metric-card">
+                    <div class="metric-value">${uptimeFormatted}</div>
+                    <div class="metric-label">运行时间</div>
+                </div> -->
+            `;
+        }
+        
+        // 显示模型列表
+        function displayModelList(models, modelStatus) {
+            const modelList = document.getElementById('modelList');
+            
+            if (!models || models.length === 0) {
+                modelList.innerHTML = '<div class="loading">暂无模型信息</div>';
+                return;
+            }
+            
+            const modelItems = models.map(model => {
+                const modelName = model.model_name || 'Unknown Model';
+                const status = modelStatus[modelName] || {
+                    active: 0, queue: 0, available: 0, limit: 5
+                };
+                
+                const utilizationRate = status.limit > 0 ? Math.round((status.active / status.limit) * 100) : 0;
+                
+                return `
+                <div class="model-item">
+                    <div class="model-name">🤖 ${modelName}</div>
+                    <p><strong>类型:</strong> ${model.model_type || 'N/A'}</p>
+                    
+                    <div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span><strong>活跃:</strong> ${status.active}</span>
+                            <span><strong>队列:</strong> ${status.queue}</span>
+                            <span><strong>可用:</strong> ${status.available}</span>
+                            <span><strong>限制:</strong> ${status.limit}</span>
+                        </div>
+                        <div style="background: #ddd; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="background: ${utilizationRate > 80 ? '#dc3545' : utilizationRate > 50 ? '#ffc107' : '#28a745'}; 
+                                        height: 100%; width: ${utilizationRate}%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <small style="color: #666;">利用率: ${utilizationRate}%</small>
+                    </div>
+                    
+                    <p><strong>可用函数:</strong></p>
+                    <div class="model-functions">
+                        ${(model.model_functions || []).map(func => 
+                            `<span class="function-tag">${func}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+            `}).join('');
+            
+            modelList.innerHTML = modelItems;
+        }
+        
+        // 格式化运行时间
+        function formatUptime(seconds) {
+            if (seconds < 60) return `${seconds}秒`;
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}小时`;
+            return `${Math.floor(seconds / 86400)}天`;
+        }
+        
+        // 手动刷新数据
+        function refreshData() {
+            loadMonitoringData();
+            
+            // 视觉反馈
+            const btn = document.querySelector('.refresh-btn');
+            btn.style.background = '#28a745';
+            btn.textContent = '刷新中...';
+            
+            setTimeout(() => {
+                btn.style.background = '#667eea';
+                btn.textContent = '刷新数据';
+            }, 1000);
+        }
+        
+        // 页面卸载时清理定时器
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>

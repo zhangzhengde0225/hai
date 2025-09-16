@@ -1,30 +1,14 @@
 
-damei
+# Note: 以###{{depGroup}}###来分组
+
+###{{base}}###
+pyyaml
 easydict  # for config_loader.py
-
-numpy
-opencv-python
-
-# torch>=1.7.1
-pillow
-tqdm
-
-wandb  # for UNet
-
-# grpcio  # for grpc_server.py
-grpcio-tools  # for grpc_server.py
-# protobuf  # for grpc_server.py
-# requests  # for hai dataset_utils
-
 fastapi  # for hai worker
+requests  # for hai worker
 uvicorn  # for hai worker
-
 openai>=1.63.0
-
-python-dateutil  # for relativedelta
-
-httpx>=0.28.1
-
-markdown
+anthropic>=0.59.0
+python-dotenv >=1.1.1
 
 

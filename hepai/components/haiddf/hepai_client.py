@@ -39,7 +39,7 @@ class HepAIClient(HClient):
         self.worker = resources.Worker(self)
         self.key = resources.Key(self)
         self.user = resources.User(self)
-
+        self.agents = resources.Agents(self)
 
      ## --- 关于Worker的函数 --- ## 
     def list_workers(self):
@@ -192,6 +192,13 @@ class HepAIClient(HClient):
         Fetch API Key by username
         """
         return self.key.fetch_api_key(username=username)
+    
+    ## --- 关于Agents的函数 --- ##
+    def list_agents(self):
+        """
+        List all agents
+        """
+        return self.agents.list_agents()
 
 class AsyncHepAIClient(AsyncHClient):
     """
@@ -213,6 +220,7 @@ class AsyncHepAIClient(AsyncHClient):
         super().__init__(config, **overrides)
 
         self.worker = resources.AsyncWorker(self)
+        self.agents = resources.AsyncAgents(self)
 
         # TODO: AsyncUser and AsyncKey
         # self.key = resources.AsyncKey(self)
@@ -333,3 +341,10 @@ class AsyncHepAIClient(AsyncHClient):
     
     async def verify_api_key(self, api_key: str, version: str = "v2"):
         return await self.key.get_info(api_key=api_key, version=version)
+    
+    ## --- 关于Agents的函数 --- ##
+    async def list_agents(self):
+        """
+        List all agents asynchronously
+        """
+        return await self.agents.list_agents()

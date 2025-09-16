@@ -2,6 +2,16 @@ hepai/workers/deepseek/*.log
 hepai/workers/deepseek/*.txt
 hepai/workers/deepseek/*.out
 
+hepai/workers/zhizz/concurrency_tests/*plots*
+
+
+output.png
+A-I-HEP图标.png
+A-I-HEP.png
+hepai/components/haiddf/hclient/openai_api/adapted_openai  
+hepai/components/haiddf/hclient/openai_api/adapted_openai2
+hepai/components/hai_ecs/INK_KEY
+
 trials/
 assets/A-I-HEP.png
 
@@ -152,3 +162,12 @@ dmypy.json
 
 # 明确不忽略adapted_openai下的lib
 !hepai/components/haiddf/hclient/openai_api/adapted_openai/lib
+
+
+
+# 忽略pipeline和openwebui的执行文件
+.webui_secret_key
+hepai/agents/backend/owebui_pipeline/pipelines/pipelines/drsai_pipeline/*.json
+hepai/agents/backend/owebui_pipeline/pipelines/pipelines/failed/
+hepai/agents/backend/owebui_pipeline/pipelines/pipelines/__init__/
+

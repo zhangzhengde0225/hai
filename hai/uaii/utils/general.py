@@ -2,8 +2,8 @@
 uaii general
 """
 import damei as dm
-import numpy as np
-from PIL import Image
+
+
 from io import BytesIO
 
 from ..datasets.dataset_utils import get_file, extract_archive
@@ -17,6 +17,7 @@ def single_plot(result, orig_img, target_names):
     :param target_names: 目标类别list
     :return:
     """
+    import numpy as np
     if result is None or len(result.shape) == 1:
         return orig_img
     else:
@@ -123,8 +124,7 @@ def load_image_from_bytes(image_bytes):
     :param image_bytes:
     :return:
     """
+    from PIL import Image
     image_bytes = BytesIO(image_bytes)
     img = Image.open(image_bytes)
-    # img.load()
-    # img_array = np.array(img)
     return img

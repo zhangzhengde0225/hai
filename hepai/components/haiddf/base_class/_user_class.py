@@ -96,7 +96,7 @@ class UserInfo:
     umt_id: Optional[int] = field(default=None, metadata={'description': 'Foreign key or reference ID for external systems.'})
     email: Optional[str] = field(default=None, metadata={'description': 'Email address of the user.'})
     cluster_uid: Optional[int] = field(default=None, metadata={'description': 'Cluster unique identifier, possibly used in multi-tenant systems.'})
-
+    balance: Optional[float] = field(default=0.0, metadata={'description': 'User balance, possibly for billing or credits.'})
 
     def __post_init__(self):
         if isinstance(self.id, uuid.UUID):  # 如果id是uuid4类型，转换为str

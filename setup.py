@@ -14,10 +14,10 @@ from setuptools import find_packages, setup, Command
 
 
 NAME = 'hepai'
-DESCRIPTION = 'High energy phscis Artificial Intelligence plateform, HAI.'
-URL = 'https://github.com/zhangzhengde0225/hai'
-EMAIL = 'zdzhang@ihep.ac.cn'
-AUTHOR = 'Zhengde Zhang'
+DESCRIPTION = 'High energy physics Artificial Intelligence platform, HAI.'
+URL = 'https://github.com/hepaihub/hepai'
+EMAIL = 'zdzhang@ihep.ac.cn; xiongdb@ihep.ac.cn'
+AUTHOR = 'Zhengde Zhang, Dongbo Xiong'
 REQUIRES_PYTHON = '>=3.10.0'
 
 with open(f'hai/version.py') as f:
@@ -31,25 +31,31 @@ with open(f'hai/version.py') as f:
 print(f'Installing {NAME}, version: {VERSION}')
 
 
-def read_requirements():
-    with open('requirements.txt') as f:
-        return f.read().splitlines()
+def read_requirements(filename='requirements.txt'):
+    """读取 requirements 文件并过滤掉注释和空行"""
+    requirements = []
+    try:
+        with open(filename) as f:
+            for line in f:
+                line = line.strip()
+                # 跳过空行、注释行和分组标记行
+                if line and not line.startswith('#') and not line.startswith('###'):
+                    requirements.append(line)
+    except FileNotFoundError:
+        print(f"Warning: {filename} not found")
+        requirements = []
+    return requirements
 
+def read_full_requirements():
+    """读取完整的 requirements-full.txt 文件"""
+    return read_requirements('requirements-full.txt')
+
+# 基础依赖 - 从 requirements.txt 读取
 REQUIRED = read_requirements()
-# REQUIRED = []
-# REQUIRED = [
-# 	"damei",
-#     "numpy",
-# 	# "opencv-python",
-# 	"easydict",
-#     "grpcio-tools",
-#     "requests"
-# ]
 
-# What packages are optional?
+# 完整依赖配置
 EXTRAS = {
-    # 'rsa': ['rsa'],
-    # 'fancy feature': ['django'],
+    'full': read_full_requirements(),
 }
 
 # The rest you shouldn't have to touch too much :)

@@ -1,0 +1,59 @@
+
+
+models_list:
+  # 1.deepseek系列模型
+  - model_name: deepseek-ai/deepseek-v3-1-250821
+    engine: "deepseek-v3-1-250821"
+
+  - model_name: deepseek-ai/deepseek-r1-250528
+    engine: "deepseek-r1-250528"
+
+  - model_name: deepseek-ai/deepseek-r1-250120
+    engine: "deepseek-r1-250120"
+
+  - model_name: deepseek-ai/deepseek-v3-250324
+    engine: "deepseek-v3-250324"
+
+  ## 1.1配置latest版本的模型
+  - model_name: deepseek-ai/deepseek-v3-1
+    engine: "deepseek-v3-1-250821"
+
+  - model_name: deepseek-ai/deepseek-r1
+    engine: "deepseek-r1-250528"
+
+  - model_name: deepseek-ai/deepseek-v3
+    engine: "deepseek-v3-250324"
+
+  # 2.月之暗面
+  - model_name: moonshot/kimi-k2-250711
+    engine: "kimi-k2-250711"
+
+  ## 2.1 配置latest版本的模型
+  - model_name: moonshot/kimi-k2
+    engine: "kimi-k2-250711"
+
+  
+  # 3.Doubao
+  - model_name: bytedance/doubao-embedding-large
+    engine: "doubao-embedding-large-text-250515"
+
+  - model_name: bytedance/doubao-embedding
+    engine: "doubao-embedding-text-240715"
+
+  - model_name: bytedance/doubao-embedding-vision
+    engine: "doubao-embedding-vision-250615"
+
+  - model_name: bytedance/doubao-seedream-4.0
+    engine: "doubao-seedream-4-0-250828"
+  
+  - model_name: bytedance/doubao-seed-1.6
+    engine: "doubao-seed-1-6-250615"
+
+  - model_name: bytedance/doubao-seed-1.6-thinking
+    engine: "doubao-seed-1-6-thinking-250715"
+
+  - model_name: bytedance/doubao-seed-1.6-flash
+    engine: "doubao-seed-1-6-flash-250828"
+  
+  - model_name: bytedance/doubao-seed-1.6-vision
+    engine: "doubao-seed-1-6-vision-250815"

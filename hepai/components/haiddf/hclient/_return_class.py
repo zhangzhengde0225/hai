@@ -6,6 +6,7 @@ from typing import Any, List, Dict
 from dataclasses import dataclass, field
 from datetime import datetime
 from ._related_class import WorkerInfo, UserInfo, APIKeyInfo
+from ._related_class import AgentInfo
 from ._types import Stream
 # from .oai_base_client._models import BaseModel
 
@@ -20,6 +21,9 @@ class HListPage:
     first_id: str = None
     last_id: str = None
     has_more: bool = False
+    offset: int = field(default=None, metadata={'description': 'Offset for pagination'})
+    total: int = field(default=None, metadata={'description': 'Total number of items'})
+    page_number: int = field(default=None, metadata={'description': 'Page number'})
 
     def __len__(self):
         return len(self.data)
@@ -68,7 +72,7 @@ class HWorkerListPage(HListPage):
             "speed": [],
             "queue_length": [],
             "status": [],
-            # "model_onwer": [],
+            # "model_owner": [],
             # "model_groups": [],
             # "model_users": [],
             "host_name": [],
@@ -87,7 +91,7 @@ class HWorkerListPage(HListPage):
             table_data["speed"].append(worker_info.status_info.speed)
             table_data["queue_length"].append(worker_info.status_info.queue_length)
             table_data["status"].append(worker_info.status_info.status)
-            # table_data["model_onwer"].append([x.model_onwer for x in mress])
+            # table_data["model_owner"].append([x.model_owner for x in mress])
             # table_data["model_groups"].append([x.model_groups for x in mress])
             # table_data["model_users"].append([x.model_users for x in mress])
             # table_data["model_functions"].append([x.model_functions for x in mress])
@@ -103,7 +107,7 @@ class HWorkerListPage(HListPage):
 class HUserListPage(HListPage):
     """用户Client从服务器端获取到List类的消息后解析该对象"""
     data: List[UserInfo] = field(default_factory=List[UserInfo], metadata={'description': 'List of data'})
-
+ 
     def __post_init__(self):
         # 解析用户数据
         self.data = self.parse_user_info(self.data)
@@ -191,4 +195,21 @@ class HAPIKeyListPage(HListPage):
             table_data["user_id"].append(api_key_info.user_id)
         return table_data
 
+    
+@dataclass
+class HAgentListPage(HListPage):
+    """用户Client从服务器端获取到List类的消息后解析该对象"""
+    data: List[dict] = field(default_factory=list, metadata={'description': 'List of data'})
+
+    def __post_init__(self):
+        # 解析代理数据
+        self.data = self.parse_agent_info(self.data)
+
+    def parse_agent_info(self, data_list: List[dict]) -> List[dict]:
+        agent_infos = []
+        for item in data_list:
+            agent_info = AgentInfo(**item)
+            agent_infos.append(agent_info)
+        return agent_infos
+    
     

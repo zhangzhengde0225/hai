@@ -19,7 +19,7 @@ class TestGPT4o(unittest.TestCase):
     api_key=os.getenv("DDF_ZDZHANG_API_KEY")
     base_url=os.getenv("DDF_BASE_URL")
 
-    base_url = "https://aiapi001.ihep.ac.cn/apiv2/v1"
+    base_url = "https://aiapi001.ihep.ac.cn/apiv2"
     client = HepAI(
                 api_key=api_key,
                 base_url=base_url,

@@ -22,25 +22,58 @@ from .utils import get_uuid
 
 @dataclass
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
+    # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: int = field(default=4260, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
+    
+    # config for controller connection
+    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
     controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     controller_prefix: str = field(default="/apiv2", metadata={"help": "Controller's route prefix"})
+    controller_key: str = field(default="", metadata={"help": "API key for reigster to controller, ensure the security, you must provide it if the `controller` requires authentication"})
     
+    # config for model
     speed: int = field(default=1, metadata={"help": "Model's speed"})
-    limit_model_concurrency: int = field(default=5, metadata={"help": "Limit the model's concurrency"})
+    limit_model_concurrency: int = field(default=100, metadata={"help": "Limit the model's concurrency"})
     stream_interval: float = field(default=0., metadata={"help": "Extra interval for stream response"})
-    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
-    permissions: str = field(default='users: admin', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
+    permissions: dict = field(default_factory=lambda: {'groups': ['payg']}, metadata={"help": "Model's permissions, e.g., {'groups': ['default'], 'users': ['a', 'b'], 'owner': 'c'}"})
     description: str = field(default='This is a demo worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
-    author: str = field(default=None, metadata={"help": "Model's author"})
-    api_key: str = field(default="", metadata={"help": "API key for reigster to controller, ensure the security"})
+    author: str = field(default="hepai", metadata={"help": "Model's author"})
     debug: bool = field(default=False, metadata={"help": "Debug mode"})
     type: Literal["llm", "actuator", "preceptor", "memory", "common"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
+    
+    # config for common features
+    enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
+    enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
 
+
+    def __post_init__(self):
+        if isinstance(self.permissions, str):
+            try:
+                perms = dict()
+                for a in self.permissions.split(';'):
+                    if ':' not in a:
+                        raise ValueError(f"Invalid permissions format: '{a}'")
+                    user_or_group, names = map(str.strip, a.split(':', 1))
+                    if user_or_group not in ['owner', 'users', 'groups']:
+                        raise ValueError(f"Invalid key in permissions: '{user_or_group}'")
+                    perms[user_or_group] = (
+                        [name.strip() for name in names.split(',')] if ',' in names else [names.strip()]
+                    )
+                # 确保owner是单个字符串
+                if 'owner' in perms:
+                    if isinstance(perms['owner'], list):
+                        if len(perms['owner']) > 1:
+                            raise ValueError(f"Only one owner is allowed, but got {perms['owner']}")
+                        perms['owner'] = perms['owner'][0]
+                self.permissions = perms
+            except Exception as e:
+                raise ValueError(f"Failed to parse permissions string: {self.permissions}. Error: {e}")
+        
+        
     def update_from_dict(self, d: Dict):
         """更新配置"""
         for k, v in d.items():
@@ -80,14 +113,22 @@ class CommonWorker:
         self.app = app  # "HWorkerAPP" 
         self.speed = self.config_dict.get("speed", 1)  # 这是worker的
         self.status = "idle"
+        self.start_time = time.time()
 
         # 初始化信息
         worker_id = self.config_dict.get("worker_id", None)
         self.worker_id = worker_id if worker_id else get_uuid(lenth=15, prefix="wk-")
         self.stream_interval = self.config_dict.get("stream_interval", 0)
-        self.api_key = self.config_dict.get("api_key", "") 
+        self.controller_key = self.config_dict.get("controller_key", "")
         # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         self.models: List[HRemoteModel] = self._check_models(models)
+        self._model_names = [m.name for m in self.models]
+        unique_model_names = set(self._model_names)
+        if len(unique_model_names) != len(self._model_names):
+            raise ValueError(f"Model names should be unique, but got {self._model_names}")
+        
+        # 建立快速查找的模型映射
+        self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
 
         # flag
         self._is_deleted_in_controller = False  # a flag to indicate whether the worker is deleted in controller
@@ -97,11 +138,26 @@ class CommonWorker:
         if not self.config.no_register:
             success: bool = self.register_to_controller()
             if success:  # sent hartbeat every 60s
-                self.heartbeat_thread = threading.Thread(
-                    target=self.worker_heartbeat, 
-                    daemon=True,
-                    )
-                self.heartbeat_thread.start()
+                # 使用异步心跳以提高性能
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # 在异步环境下，创建后台任务
+                        loop.create_task(self.worker_heartbeat_async())
+                    else:
+                        # 没有事件循环，回退到线程模式
+                        self.heartbeat_thread = threading.Thread(
+                            target=self.worker_heartbeat, 
+                            daemon=True,
+                            )
+                        self.heartbeat_thread.start()
+                except RuntimeError:
+                    # 没有事件循环，回退到线程模式
+                    self.heartbeat_thread = threading.Thread(
+                        target=self.worker_heartbeat, 
+                        daemon=True,
+                        )
+                    self.heartbeat_thread.start()
             else:  # if not success, flags as local worker only
                 self._is_deleted_in_controller = True
 
@@ -109,6 +165,7 @@ class CommonWorker:
         # 用于适配controllre端主动向worker发送删除worker时
         atexit.register(self.exit_handler)
 
+        
         self.status = "ready"
 
     @property
@@ -125,6 +182,12 @@ class CommonWorker:
         """deprecated in v2.1 for multi-model"""
         raise DeprecationWarning("This property is deprecated in v2.1 for multi-model, please use `worker_id` instead.")
         # return self.model.name or self.model.__class__.__name__
+        
+    @property
+    def model_names(self) -> List[str]:
+        if not self._model_names:
+            self._model_names = [m.name for m in self.models]
+        return self._model_names
     
     def _check_models(self, models: List[HRemoteModel] | HRemoteModel) -> List[HRemoteModel]:
         """检查模型是否符合要求"""
@@ -160,6 +223,12 @@ class CommonWorker:
                 perms[user_or_group] = (
                     [name.strip() for name in names.split(',')] if ',' in names else [names.strip()]
                 )
+            # 确保owner是单个字符串
+            if 'owner' in perms:
+                if isinstance(perms['owner'], list):
+                    if len(perms['owner']) > 1:
+                        raise ValueError(f"Only one owner is allowed, but got {perms['owner']}")
+                    perms['owner'] = perms['owner'][0]
         else:
             raise ValueError(f"permissions should be str or dict, but got {type(permissions)}")
         return perms
@@ -172,8 +241,20 @@ class CommonWorker:
             config_dict[k] = v
         return config_dict
     
+    async def worker_heartbeat_async(self):
+        """异步心跳函数，避免阻塞"""
+        heartbeat_interval = self.config_dict.get("heartbeat_interval", 60)
+        while True:
+            await asyncio.sleep(heartbeat_interval)
+            # 使用线程池执行同步的注册操作
+            loop = asyncio.get_event_loop()
+            try:
+                await loop.run_in_executor(None, self.register_to_controller, True)
+            except Exception as e:
+                self.logger.error(f"Heartbeat failed: {e}")
+    
     def worker_heartbeat(self):
-        """间隔发送心跳的函数"""
+        """间隔发送心跳的函数 - 保留用于向后兼容"""
         heartbeat_interval = self.config_dict.get("heartbeat_interval", 60)
         while True:
             time.sleep(heartbeat_interval)
@@ -206,16 +287,21 @@ class CommonWorker:
             permission = model.permission
             if not permission:  # 如果没有设置权限，则使用worker的权限
                 permission = self.worker_permissions
+            owner = permission.get("owner", None)
+            owner = owner if owner else self.config.author
+     
             mr = ModelResourceInfo(
                 model_name=model_name,
                 model_type=self.config_dict.get("model_type", "common"),
                 model_version=self.config_dict.get("model_version", "1.0"),
                 model_description=self.config.description,
                 model_author=self.config.author,
-                model_onwer=permission.get("owner", None),
+                model_owner=permission.get("owner", None),
                 model_users=permission.get("users", []),
                 model_groups=permission.get("groups", []),
-                model_functions=model.all_remote_callables  # 
+                model_functions=model.all_remote_callables,
+                created=model.created,
+                owned_by=owner,
             )
             model_resources.append(mr)
         return model_resources
@@ -250,7 +336,12 @@ class CommonWorker:
             speed=self.speed,
             queue_length=self.app.get_queue_length(),
             status=self.status,
+            start_time=self.start_time,
         )
+    
+    def get_model_by_name(self, model_name: str) -> Optional[HRemoteModel]:
+        """快速获取模型对象"""
+        return self._model_map.get(model_name)
     
     async def shutdown_worker(self) -> None:
         await asyncio.sleep(1)
@@ -260,15 +351,21 @@ class CommonWorker:
         """
         Dynamically get worker info
         """
+        status_info = self.get_status_info()
         worker_info = WorkerInfo(
             id=self.worker_id,
             type=self.config.type,
             network_info=self.network_info,
             resource_info=self.get_model_resource_info(),
-            status_info=self.get_status_info(),
+            status_info=status_info,
             check_heartbeat=True,
-            vserion=self.config_dict.get("version", "2.0"),
-            metadata={},
+            version=self.config_dict.get("version", "2.0"),
+            metadata={"description": self.config.description, 
+                      "author": self.config.author,
+                      "limit_model_concurrency": self.config.limit_model_concurrency,
+                      "permissions": self.worker_permissions,
+                      "uptime": time.time() - (status_info.start_time if status_info.start_time else time.time()),
+                      },
         )
         return worker_info
     
@@ -284,7 +381,7 @@ class CommonWorker:
     @property
     def headers(self) -> dict:
         headers = {
-            'Authorization': f'Bearer {self.api_key}',
+            'Authorization': f'Bearer {self.controller_key}' if self.controller_key else '',
             'Content-Type': 'application/json'
         }
         return headers
@@ -297,7 +394,7 @@ class CommonWorker:
         url = self.base_url + '/worker/register_worker'
         worker_info: WorkerInfo = self.get_worker_info()
         data = worker_info.to_dict()
-
+        
         try:
             r = requests.post(url, json=data, headers=self.headers)
             if r.status_code != 200:
@@ -308,13 +405,14 @@ class CommonWorker:
                 pass
             else:
                 if self.config.debug:
-                    raise f'Register worker to controller failed. Error: {e}'
+                    # raise f'Register worker to controller failed. Error: {e}'
+                    raise ValueError(f'Register worker to controller failed. Error: {e}')
                 self.logger.warning(f"Register worker to controller failed, pass...")
                 return False
         if heartbeat_flag:
             self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
         else:
-            self.logger.info(f"Worker register successfully: `{worker_info.id}`")
+            self.logger.info(f"Worker `{worker_info.id}` register to `{self.base_url}` successfully.")
         return True
   
     def exit_handler(self):
@@ -364,13 +462,10 @@ class CommonWorker:
             else:
                 raise HTTPException(status_code=400, detail=f"Model is required, but got None, and there are {len(self.models)} models in the worker `{self.worker_id}`")  
         else:
-            req_models: List[HRemoteModel] = [m for m in self.models if m.name == model]
-            if len(req_models) == 0:  # 无此模型
+            # 使用快速查找替代列表推导式
+            req_model: HRemoteModel = self._model_map.get(model)
+            if req_model is None:
                 raise HTTPException(status_code=404, detail=f"Model `{model}` does not exist in the worker `{self.worker_id}`")
-            elif len(req_models) > 1:  # 有多个同名模型
-                raise HTTPException(status_code=400, detail=f"Model `{model}` is not unique in the worker `{self.worker_id}`")
-            else:  # 有且只有一个被匹配到的模型
-                req_model = req_models[0]
                 
         has_function = hasattr(req_model, function)
         if not has_function:
@@ -443,13 +538,10 @@ class CommonWorker:
             else:
                 raise HTTPException(status_code=400, detail=f"Model is required, but got None, and there are {len(self.models)} models in the worker `{self.worker_id}`")  
         else:
-            req_models: List[HRemoteModel] = [m for m in self.models if m.name == model]
-            if len(req_models) == 0:  # 无此模型
+            # 使用快速查找替代列表推导式
+            req_model: HRemoteModel = self._model_map.get(model)
+            if req_model is None:
                 raise HTTPException(status_code=404, detail=f"Model `{model}` does not exist in the worker `{self.worker_id}`")
-            elif len(req_models) > 1:  # 有多个同名模型
-                raise HTTPException(status_code=400, detail=f"Model `{model}` is not unique in the worker `{self.worker_id}`")
-            else:  # 有且只有一个被匹配到的模型
-                req_model = req_models[0]
                 
         has_function = hasattr(req_model, function)
         if not has_function:
@@ -469,7 +561,8 @@ class CommonWorker:
                     # res =  func(**kwargs)
                     try:
                         res = await func(*args, **kwargs)
-                    except:
+                    except Exception as e:
+                        raise RuntimeError(f"Async function raised an error, please check the function. {e}")
                         # 有时候因为中间层额外引入了stream参数，而一些函数不允许接收stream参数。
                         stream = kwargs.pop("stream", False)  # 为了在客户端传输stream时，不会被kwargs接收，所以pop出来
                         res = await func(*args, **kwargs)
@@ -512,8 +605,8 @@ class CommonWorker:
                     raise HTTPException(status_code=504, detail=error_msg)
                 ## TODO: 其他报错类型转换为合适的报错状态码
                 error_msg2 = f"{e_class}: {str(e)}"
-                print(f"A一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
+                print(f"[CommonWorker]一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
                 raise HTTPException(status_code=400, detail=f'{error_msg2}\n{error_msg2}')
         else:
             raise HTTPException(status_code=404, detail=f"Function `{function}` does not exist or is not callable in the worker `{self.worker_id}`")
-    
+

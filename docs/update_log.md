@@ -1,5 +1,26 @@
 # 更新日志
 
++ 2025.09.15 v1.2.8 修复了_llm_remote_model.py中anthropic模型流式输出的问题。
++ 2025.09.12 v1.2.7 修复worker_index.html打包时不上传的问题
++ 2025.09.11 v1.2.5, v1.2.6 修复了anthropic模型无法使用的bug(llm_remote_model中anthropic的base_url错误), 修复worker_permissions中owner必须是单个字符串的bug。
++ 2025.09.10 v1.2.2, v1.2.3, v1.2.4 修复llm_router的bug，修复worker_app中模型初始化的bug，
++ 2025.09.10 v1.2.1 s1_worker.py支持ScienceOne三个磐石模型
++ 2025.09.09 v1.2.0 大版本更新。
+    - HepAI Worker支持了监控面板，启动后访问 http://localhost:42602 即可查看Worker的实时状态。
+    - HepAI Worker性能提升，大幅度降低延迟；一个worker即可支持数百并发。
+    - HepAI Worker支持了Anthropic的同步和异步客户端。
+    - 弃用了hepai_object，基本永久解决了与OpenAI包冲突的问题。
++ 2025.07.30 v1.1.40 支持List Agents, agents = client.agents.list()
++ 2025.07.24 v1.1.39 支持anthropic的API，支持从HepAI Client中直接使用Anthropic模型。
++ 2025.07.12 v1.1.38 更新Hai-ECS v3，支持ink专属秘钥验证，保证安全性。
++ 2025.07.06 v1.1.37 将复杂依赖项从`requirements.txt`中移除，改为在`setup.py`中定义。现在可以通过`pip install hepai[full]`来安装所有依赖。
++ 2025.06.16 v1.1.36 修复config_file默认加载错误的任务
++ 2025.06.10 v1.1.35 修复RemoteModel由文件系统产生的bug
++ 2025.04.27 v1.1.34 支持原opendrsai智能体与多智能体协作框架，将from drsai 改为 from hepai.agents即可，具体见 https://code.ihep.ac.cn/hepai/drsai。修复了hai.LLM.chat()方法的bug。
++ 2025.04.25 v1.1.33 支持agents，from hepai.agents import AssistantAgent
++ 2025.04.22 v1.1.32 更新HepAI Client，支持openai 1.75.0，不再使用本地openai文件，支持pydantic>=2.11
++ 2025.04.01 v1.1.31 fix bug，自动安装pydantic版本2.10，如果高于2.11会报错
++ 2025.03.17 v1.1.30 HWorkerAPP现在可传入Fastapi的参数了。
 + 2025.02.22 v1.1.29 适配openai v1.60.0
 + 2025.02.18 v1.1.27 支持deepseek worker
 + 2025.02.14 v1.1.26 client支持`fetch_api_key`方法。

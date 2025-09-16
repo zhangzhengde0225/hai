@@ -1,14 +1,14 @@
 import os
 try:
     import cv2
+    import numpy as np
 except:
     pass
 from pathlib import Path
-import numpy as np
+
 import damei as dm
 from copy import deepcopy
 
-from .datasets import LoadStreams, LoadImages
 
 
 class Dataloader(object):
@@ -27,6 +27,7 @@ class Dataloader(object):
             raise NotImplementedError(f'source "{source}" type {type(source)} not supported')
 
     def get_dataset(self, source):
+        from .datasets import LoadStreams, LoadImages
         imgsz = self.imgsz
         video_suffix = self.video_suffix
         webcam = source.isnumeric() or source.startswith(('rtsp://', 'rtmp://', 'http://')) or source.endswith('.txt')

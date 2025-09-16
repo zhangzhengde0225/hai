@@ -5,7 +5,6 @@
 import hai
 import argparse
 import os
-import numpy as np
 import damei as dm
 # from damei.nn.api.utils import Config
 from ..utils.config_loader import PyConfigLoader as Config

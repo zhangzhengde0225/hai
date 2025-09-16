@@ -50,11 +50,18 @@ from .workers_api.model import HaiModel as Model
 from .workers_api.model import HaiModel as Models
 
 
-hai_config = Config(f'{__pydir__.parent}/configs/Base/hai_config.py')
+# hai_config = Config(f'{__pydir__.parent}/configs/Base/hai_config.py')
 # from ..configs.Base.hai_config import root_path, weights_root
 # root_path = f'{Path(__pydir__).parent.parent}'
 
-init_register = InitRegister(internal_dir=hai_config.root_path)
+from ..configs import CONST
+
+# init_register = InitRegister(internal_dir=hai_config.root_path)
+init_register = InitRegister(internal_dir=CONST.ROOT_PATH)
 uaii = UAII()
-cli = CommandLineInterface(uaii=uaii, config=hai_config)
+cli = CommandLineInterface(
+    uaii=uaii, 
+    api_fold_name=CONST.API_FOLD_NAME,
+    root_path=CONST.ROOT_PATH,
+    )
 api_key = os.getenv('HEPAI_API_KEY')

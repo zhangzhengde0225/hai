@@ -8,7 +8,7 @@ from .apis import MODULES, SCRIPTS, IOS, init_register
 from .apis import Config
 from .apis import UAII, uaii, cli
 from .apis import hub
-from .apis import hai_config as config  # inclue hai root_path, weights_root and other configs
+# from .apis import hai_config as config  # inclue hai root_path, weights_root and other configs
 from .apis import grpc_secure_server
 from .apis import Testor
 from .apis import argparse, parse_args_into_dataclasses, parse_args
@@ -18,10 +18,11 @@ from .apis import worker, BaseWorkerModel, WorkerArgs
 # LLM
 from .apis import LLM, Model, Models, api_key
 # from .apis import HepAI
-from .uaii.hepai_object import (
-    HepAI, HaiCompletions, ChatCompletion, ChatCompletionChunk, Stream
-    )
+# from .uaii.hepai_object import (
+#     HepAI, HaiCompletions, ChatCompletion, ChatCompletionChunk, Stream
+#     )
 from .uaii.utils.file_object import HaiFile
+from .configs import CONST
 
 
 # from xsensing_ai.modules import *  # 加载项目的模块
@@ -43,7 +44,8 @@ external_folders = [
     # '~/VSProjects/FINet',
     'repos']
 
-if config.API_FOLD_NAME in os.listdir('.'):
+# if config.API_FOLD_NAME in os.listdir('.'):
+if CONST.API_FOLD_NAME in os.listdir('.'):
     external_folders.insert(0, f'{os.getcwd()}')
 
 init_register(internal_modules=internal_modules, external_folders=external_folders)

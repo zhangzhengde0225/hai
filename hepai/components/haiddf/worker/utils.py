@@ -1,4 +1,17 @@
 
+
+from typing import Optional
+import platform
+import uuid
+import os
+import hashlib
+import random
+import ast
+import json
+from fastapi.requests import Request
+
+
+    
 def get_uuid(lenth, prefix=None):
     import uuid
     if prefix:
@@ -159,3 +172,66 @@ def run_standlone_worker_demo(logger=None):
             # return
             raise ValueError("Worker started, but worker_id not found.")
         
+        
+def get_simple_machine_seed():
+    # 组合多个系统标识
+    identifiers = [
+        platform.node(),          # 主机名
+        platform.machine(),       # 架构
+        str(uuid.getnode()),      # MAC地址
+        os.path.expanduser('~'),  # 用户目录路径
+    ]
+    
+    # 添加环境变量中的唯一标识（如果存在）
+    env_keys = ['HOSTNAME', 'COMPUTERNAME', 'USER', 'USERNAME']
+    for key in env_keys:
+        if key in os.environ:
+            identifiers.append(os.environ[key])
+    
+    # 生成种子
+    combined = ''.join(identifiers)
+    seed_hash = hashlib.sha256(combined.encode('utf-8')).hexdigest()
+    return int(seed_hash[:8], 16)     
+        
+def gen_one_key(prefix='sk-', lenth=47, seed=None):
+    import string
+    import time
+    # 生成所有可能的字符集合
+    all_chars = string.ascii_letters
+    
+    seed = seed if seed is not None else int(time.time())
+    # random.seed(time.time())
+    rng = random.Random(seed)
+    # 生成47位随机字符串
+    random_string = ''.join(rng.choice(all_chars) for _ in range(lenth))
+    random_string = f'{prefix}{random_string}'
+    # print(random_string)
+    return random_string
+
+
+async def read_request_body(request: Optional[Request]) -> dict:
+    """
+    Asynchronous function to read the request body and parse it as JSON or literal data.
+
+    Parameters:
+    - request: The request object to read the body from
+
+    Returns:
+    - dict: Parsed request data as a dictionary
+    """
+    try:
+        request_data: dict = {}
+        if request is None:
+            return request_data
+        body = await request.body()
+
+        if body == b"" or body is None:
+            return request_data
+        body_str = body.decode()
+        try:
+            request_data = ast.literal_eval(body_str)
+        except:
+            request_data = json.loads(body_str)
+        return request_data
+    except:
+        return {}

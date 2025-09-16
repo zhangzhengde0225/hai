@@ -2,8 +2,7 @@
 from typing import Any, Dict, List, Tuple, Union
 from dataclasses import dataclass
 from io import BytesIO
-from PIL import Image
-import numpy as np
+
 
 @dataclass
 class HaiFile:
@@ -16,6 +15,9 @@ class HaiFile:
 
     def __post_init__(self):
         if self.type_ == 'image':
+            from PIL import Image
+            import numpy as np
+
             self.data = BytesIO(self.data)
             img = Image.open(self.data)
             self.data = np.array(img)
@@ -38,6 +40,7 @@ class HaiFile:
         if not file_path:
             raise ValueError("Please specify the file path, or the save_dir and filename.")
         if self.type_ == 'image':
+            from PIL import Image
             img = Image.fromarray(self.data)
             img.save(file_path)
         else:

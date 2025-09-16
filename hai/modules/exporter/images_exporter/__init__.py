@@ -1,10 +1,10 @@
 import os, sys
 from pathlib import Path
 pydir = Path(os.path.abspath(__file__)).parent
-import cv2
+
 import shutil
 import json
-import numpy as np
+
 
 import damei as dm
 # from damei.nn.api import MODULES, SCRIPTS, IOS
@@ -86,10 +86,12 @@ class VisExporter(AbstractOutput):
         """
         保存图像
         """
+        import cv2
         save_dir = self.save_dir if self.save_dir else '.'
         cv2.imwrite(f'{save_dir}/{save_name}', img)
 
     def save_json(self, path, img, pred, names):
+        import numpy as np
 
         h, w, c = img.shape
 
