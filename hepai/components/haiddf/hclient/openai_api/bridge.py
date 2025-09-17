@@ -64,7 +64,11 @@ from openai._types import (
     ModelBuilderProtocol,
 )
 from openai._utils import SensitiveHeadersFilter, is_dict, is_list, asyncify, is_given, lru_cache, is_mapping
-from openai._compat import PYDANTIC_V2, model_copy, model_dump
+try:
+    from openai._compat import PYDANTIC_V2, model_copy, model_dump
+except:
+    from openai._compat import PYDANTIC_V1, model_copy, model_dump
+
 # from openai._models import GenericModel, FinalRequestOptions, validate_type, construct_type
 from openai._models import GenericModel, FinalRequestOptions, validate_type
 from .utils import hepai_construct_type as construct_type
