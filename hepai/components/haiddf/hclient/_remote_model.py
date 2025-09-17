@@ -88,6 +88,7 @@ class LRemoteModel:
         self.wr: Union[resources.AsyncWorker, resources.Worker] = worker_resource
         if not isinstance(worker_info, WorkerInfo):
             raise ValueError(f"Failed to get remote model: {worker_info}")
+        self.worker_info = worker_info
         self.model_resource = worker_info.get_model_resource(model_name=name)
         self.model_functions = self.model_resource.model_functions
         
@@ -168,6 +169,18 @@ class LRemoteModel:
             )
         model: LRemoteModel = client.get_remote_model(model_name=name)
         return model
+    
+    def get_info(self, refresh: bool = False):
+        """
+        Get the model resource information.
+        """
+        if refresh:
+            winfo = self.wr.get_info(worker_id=self.worker_info.id)
+            assert isinstance(winfo, WorkerInfo), f"Failed to get worker info: {winfo}"
+            self.worker_info = winfo
+            self.model_resource = self.worker_info.get_model_resource(model_name=self.name)
+            self.model_functions = self.model_resource.model_functions
+        return self.worker_info
 
 
 class LRModel(LRemoteModel):
