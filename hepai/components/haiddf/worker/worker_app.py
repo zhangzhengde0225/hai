@@ -143,13 +143,18 @@ class HWorkerAPP(FastAPI):
         router.post("/worker_unified_gate/")(self.worker_unified_gate)
         router.post("/worker_unified_gate/{function}")(self.worker_unified_gate)
         router.post("/worker_unified_gate/{model}/{function}")(self.worker_unified_gate)  # 多模型模式下，需要指定模型
-        router.get("/worker_get_status")(self.worker_get_status)
-        router.post("/shutdown_worker")(self.shutdown_worker)
-        
+        router.post("/worker/unified_gate/")(self.worker_unified_gate)  # 这个路由是为了与controller相同的格式，使得client也能调用
+        router.post("/worker/unified_gate/{function}")(self.worker_unified_gate)
+        router.post("/worker/unified_gate/{model}/{function}")(self.worker_unified_gate)  # 多模型模式下，需要指定模型
+
         router.post("/worker/get_worker_info")(self.get_worker_info)  # 这个路由是为了与controller相同的格式，使得client也能调用
-        router.post("/worker/unified_gate")(self.worker_unified_gate)  # 这个路由是为了与controller相同的格式，使得client也能调用
         router.get("/worker/models")(self.get_models)
         router.get("/worker/monitor_status")(self.get_monitor_status)  # 监控状态接口
+        router.get("/worker/get_status")(self.worker_get_status)
+        router.get("/worker_get_status")(self.worker_get_status)
+        router.post("/worker/shutdown")(self.shutdown_worker)
+        router.post("/shutdown_worker")(self.shutdown_worker)
+        
         return router
 
     @classmethod

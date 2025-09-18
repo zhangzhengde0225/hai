@@ -14,7 +14,7 @@ from ..components.haiddf.base_class._user_class import (
 
 from ..components.haiddf.base_class._worker_class import (
     WorkerInfo, WorkerNetworkInfo, ModelResourceInfo, WorkerStatusInfo, WorkerStoppedInfo,
-    HRemoteModel, HRModel, HModelConfig,
+    HRemoteModel, HRModel, HModelConfig, HCloudModel
     )
 
 from ..components.haiddf.hclient._return_class import (

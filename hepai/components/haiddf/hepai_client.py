@@ -14,7 +14,7 @@ from .hclient._remote_model import LRemoteModel
 
 @dataclass
 class HepAIClientConfig(HClientConfig):
-    base_url: str = "https://aiapi001.ihep.ac.cn/apiv2"
+    base_url: str = "https://aiapi.ihep.ac.cn/apiv2"
 
 
 class HepAIClient(HClient):
@@ -89,6 +89,18 @@ class HepAIClient(HClient):
         Get a remote model
         """
         return self.worker.get_remote_model(model_name=model_name)
+    
+    def connect_remote_model(self, model_name: str) -> LRemoteModel:
+        """
+        Connect to a remote model
+        """
+        return self.worker.get_remote_model(model_name=model_name)
+    
+    def connect_to(self, model_name: str) -> LRemoteModel:
+        """
+        alias Connect to a remote model
+        """
+        return self.connect_remote_model(model_name=model_name)
     
     def request_worker(
             self,

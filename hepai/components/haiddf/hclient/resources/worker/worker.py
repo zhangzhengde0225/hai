@@ -88,7 +88,10 @@ class Worker(SyncAPIResource):
         if not isinstance(worker_info, WorkerInfo):
             raise ValueError(f"Failed to get remote model: {worker_info}")
         from ..._remote_model import LRemoteModel
-        return LRemoteModel(name=model_name, worker_info=worker_info, worker_resource=self)
+        return LRemoteModel(
+            name=model_name, 
+            worker_info=worker_info, 
+            worker_resource=self)
 
     def request(
             self,

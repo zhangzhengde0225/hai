@@ -88,16 +88,17 @@ class LRemoteModel:
         self.wr: Union[resources.AsyncWorker, resources.Worker] = worker_resource
         if not isinstance(worker_info, WorkerInfo):
             raise ValueError(f"Failed to get remote model: {worker_info}")
-        self.worker_info = worker_info
-        self.model_resource = worker_info.get_model_resource(model_name=name)
-        self.model_functions = self.model_resource.model_functions
+        self._worker_info = worker_info
+        self._model_resource = worker_info.get_model_resource(model_name=name)
+        self._model_functions = self._model_resource.model_functions
+        self._model_function_details = None
         
         # 如果远程模型没有可调用函数，则抛出异常
-        if len(self.model_functions) == 0:
+        if len(self._model_functions) == 0:
             raise ValueError(f"Remote model `{self.name}` has no functions that can be called remotely. Please check the worker model.")
 
         # 根据资源类型（同步/异步）注册远程函数
-        for func in self.model_functions:
+        for func in self._model_functions:
             method = self._create_remote_method(name, func)
             setattr(self, func, types.MethodType(method, self))
 
@@ -146,9 +147,34 @@ class LRemoteModel:
         """
         获取远程模型提供的所有可调用函数名称。
         """
-        return self.model_functions
+        return self._model_functions
+    
+    @property
+    def function_details(self):
+        """
+        获取远程模型提供的所有可调用函数的详细信息。
+        """
+        if self._model_function_details is None:
+            self._model_function_details = self._create_remote_method(self.name, "get_register_functions")()
+        return self._model_function_details
+    
+    @property
+    def model_info(self):
+        
+        """
+        Get the model resource information.
+        """
+        return self._model_resource
+    
+    @property
+    def worker_info(self):
+        """
+        Get the worker information.
+        """
+        return self._worker_info 
     
     def connect(
+        self,
         name: str,
         base_url: str = "https://aiapi.ihep.ac.cn/apiv2",
         api_key: str = os.getenv("HEPAI_API_KEY"),
@@ -181,6 +207,14 @@ class LRemoteModel:
             self.model_resource = self.worker_info.get_model_resource(model_name=self.name)
             self.model_functions = self.model_resource.model_functions
         return self.worker_info
+    
+    
+    def get_registered_functions(self):
+        """
+        Get the registered functions of the remote model.
+        """
+        return self._create_remote_method(self.name, "get_register_functions")()
+    
 
 
 class LRModel(LRemoteModel):

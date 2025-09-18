@@ -24,7 +24,7 @@ from .utils import get_uuid
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=4260, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
+    port: int = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
     

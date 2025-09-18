@@ -11,7 +11,8 @@ except:
 
 
 
-from hepai import HepAI, LRModel
+from hepai import HepAI, LRModel, HRModel
+HRModel.connect
 
 # from hepai.types import HRemoteModel
 

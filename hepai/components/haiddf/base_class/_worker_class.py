@@ -168,6 +168,8 @@ class HRemoteModel(BaseWorkerModel):
         self.permission = self.config.permission
         
         self.created = int(time.time())
+        
+        self.register_functions: List[Dict[str, str]] = self.load_functions()
 
     @BaseWorkerModel.remote_callable
     def hello_world(self, *args, **kwargs):
@@ -207,15 +209,7 @@ class HRemoteModel(BaseWorkerModel):
     def __call__(self, *args, **kwargs):
         return f"Hello world! You are calling function `__call__` of the HepAI remote model with args: `{args}`, kwargs: `{kwargs}`"
 
-class HRModel(HRemoteModel):
-    """
-    Alias of HepAI Remote Model
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.register_functions: List[Dict[str, str]] = self.load_functions()
-
+    
     def _clean_type_str(self, annotation):
         """类型注解清洗方法"""
         if annotation == Parameter.empty:
@@ -293,7 +287,7 @@ class HRModel(HRemoteModel):
         register_functions = [func for func in register_functions if func['__name__'] not in other_functions]
         return register_functions
 
-    @HRemoteModel.remote_callable
+    @BaseWorkerModel.remote_callable
     async def get_register_functions(self) -> list[dict[str, str]]:
         """
         获取当前模型中可调用的函数列表
@@ -302,6 +296,21 @@ class HRModel(HRemoteModel):
             List[Dict[str, str]]: 注册函数列表，包含函数名、函数描述、函数签名
         """
         return self.register_functions
+    
+    
+class HRModel(HRemoteModel):
+    """
+    Alias of HepAI Remote Model
+    """
+    ...
+    
+class HCloudModel(HRemoteModel):
+    """
+    The Cloud Model of HAI Framework
+    """
+    ...
+
+        
     
 
 @dataclass
