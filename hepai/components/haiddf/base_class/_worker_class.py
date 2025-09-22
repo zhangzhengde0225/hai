@@ -33,7 +33,7 @@ class HModelConfig:
     enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
 
 
-from ..worker.singletons import mcp_manager
+# from ..worker.singletons import mcp_manager
 
 class BaseWorkerModel:
  
