@@ -23,6 +23,9 @@ from ._related_class import WorkerStoppedInfo, WorkerInfoRequest
 from . import utils
 from .singletons import authorizer
 
+#
+from .mcp_adapter.utils import build_mcp_kwargs_for_starlette
+
 class FunctionParamsItem(BaseModel):
     args: List = []
     kwargs: Dict = {}
@@ -68,7 +71,11 @@ class HWorkerAPP(FastAPI):
         # 从 worker_overrides 中删除 FastAPI 的参数
         for k in fastapi_kwargs.keys():
             worker_overrides.pop(k)
+        mcp_kwargs = build_mcp_kwargs_for_starlette(models)
+        fastapi_kwargs.update(mcp_kwargs)
         super().__init__(**fastapi_kwargs)
+        
+        
         self.logger = self.get_logger(logger)
         worker_config = worker_config if worker_config is not None else HWorkerConfig()
         assert isinstance(worker_config, HWorkerConfig), f"worker_config should be an instance of HWorkerConfig"
@@ -93,7 +100,6 @@ class HWorkerAPP(FastAPI):
         # 初始化模型信号量和缓存
         self._init_model_resources(models=models)
         self._init_routers(config=worker_config)
-        
         
         self.worker = CommonWorker(
             app=self, models=models, worker_config=worker_config, 
@@ -138,10 +144,10 @@ class HWorkerAPP(FastAPI):
             self.include_router(anthropic_rg.router, prefix=anthropic_rg.prefix, tags=anthropic_rg.tags)
             
         # 4 mcp router
-        if config.enable_mcp:
-            from .mcp_adapter.mcp_router import MCPRouterGroup
-            mcp_rg = MCPRouterGroup(prefix=config.route_prefix, parent_app=self)
-            self.include_router(mcp_rg.router, prefix=mcp_rg.prefix, tags=mcp_rg.tags)
+        # if config.enable_mcp:
+        #     from .mcp_adapter.mcp_router import MCPRouterGroup
+        #     mcp_rg = MCPRouterGroup(prefix=config.route_prefix, parent_app=self)
+        #     self.include_router(mcp_rg.router, prefix=mcp_rg.prefix, tags=mcp_rg.tags)
         
     def get_worker_router(self, router_prefix: str = ""):
         # router_prefix = self.worker.config_dict.get("route_prefix", "/apiv2")

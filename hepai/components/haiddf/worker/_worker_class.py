@@ -48,7 +48,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for common features
     enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
-    enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
+    # enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
 
 
     def __post_init__(self):

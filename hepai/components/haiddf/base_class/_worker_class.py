@@ -4,10 +4,17 @@
 import os
 import time
 from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Literal, Union, Optional, Any
+from collections.abc import Callable
+from typing import (
+    List, Dict, Literal, Union, Optional, Any, TypeAlias
+    
+    )
 import json
 import inspect
 from inspect import signature, Parameter, ismethod, iscoroutinefunction
+
+
+AnyFunction: TypeAlias = Callable[..., Any]
 
 @dataclass
 class permission:
@@ -23,10 +30,79 @@ class HModelConfig:
     name: str = field(default=None, metadata={"help": "Model's name"})
     permission: Union[str, Dict] = field(default=None, metadata={"help": "Model's permission, separated by ;, e.g., 'groups: all; users: a, b; owner: c', will inherit from worker permissions if not setted"})
     version: str = field(default="2.0", metadata={"help": "Model's version"})
+    enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
+
+
+from ..worker.singletons import mcp_manager
 
 class BaseWorkerModel:
+ 
+    # _mcp: Any = None  # 占位，避免mypy报错
+    
+    # @property
+    # def mcp(self):
+    #     if self._mcp is None:
+    #         from mcp.server.fastmcp import FastMCP
+    #         self._mcp = FastMCP(name=self.name)
+    #     return self._mcp
+    
+    # @mcp.setter
+    # def mcp(self, value):
+    #     self._mcp = value
+    
     @classmethod
-    def remote_callable(cls, func):
+    def remote_callable(
+        cls,
+        name: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        annotations:  None = None,
+        structured_output: bool | None = None,
+        **decorator_kwargs,
+    ) -> Callable[[AnyFunction], AnyFunction]:
+        """
+        用来修饰一个函数，使得其可以被远程调用，未修饰的函数不能被远程调用
+        Decorator to mark a method as remotely callable.
+        """
+        
+        enable_mcp = decorator_kwargs.pop("enable_mcp", False)
+        
+        # def decorator(func):
+        #     func.is_remote_callable = True
+        #     # 可以在这里添加更多基于decorator_args和decorator_kwargs的处理
+        def decorator(fn: AnyFunction) -> AnyFunction:
+            mcp_manager.register_mcp(name, fn)
+            cls().mcp.add_tool(
+                fn,
+                name=name,
+                title=title,
+                description=description,
+                annotations=annotations,
+                structured_output=structured_output,
+            )
+            return fn
+
+        # 如果没有参数直接调用，则返回装饰器函数
+        # if len(decorator_args) == 1 and callable(decorator_args[0]):
+        #     # 这种情况是直接 @HRModel.remote_callable 使用，没有括号
+        #     # return decorator(decorator_args[0])
+        #     func = decorator_args[0]
+        #     func.is_remote_callable = True
+        #     return func
+        if callable(name):
+            # 说明是@BaseWorkerModel.remote_callable直接修饰函数的形式
+            func = name
+            func.is_remote_callable = True
+            return func
+        else:
+            return decorator
+       
+    
+    @classmethod
+    def remote_callable_backup(
+        cls, 
+        func
+        ):
         """
         用来修饰一个函数，使得其可以被远程调用，未修饰的函数不能被远程调用
         Decorator to mark a method as remotely callable.
@@ -170,6 +246,18 @@ class HRemoteModel(BaseWorkerModel):
         self.created = int(time.time())
         
         self.register_functions: List[Dict[str, str]] = self.load_functions()
+        
+        enable_mcp = self.config.enable_mcp if hasattr(self.config, 'enable_mcp') else False
+        if enable_mcp:
+            from mcp.server.fastmcp import FastMCP
+            self.mcp = FastMCP(name=self.name)
+            remote_callables = self.all_remote_callables
+            for func_name in remote_callables:
+                func = getattr(self, func_name)
+                self.mcp.add_tool(func)
+        else:
+            self.mcp = None
+        
 
     @BaseWorkerModel.remote_callable
     def hello_world(self, *args, **kwargs):

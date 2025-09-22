@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2-25.09.23 v1.2.12 新增mcp_adapter，现在HModelConfig添加`mcp_enabled`参数后，可以通过MCP协议调用worker中的方法，具体见`hepai/components/haiddf/worker/mcp_adapter`中的示例代码。
 + 2025.09.18 v1.2.11 更新了部署云模型的文档、示例代码和一些接口。
 + 2025.09.17 v1.2.9, v1.2.10 修复openai bridge支持openai>=1.109的问题；支持LRModel.get_info(refresh=True)来刷新worker和模型信息。
 + 2025.09.15 v1.2.8 修复了_llm_remote_model.py中anthropic模型流式输出的问题。

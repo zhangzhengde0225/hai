@@ -5,3 +5,7 @@
 from .authorizer import Authorizer
 
 authorizer = Authorizer()
+
+from .mcp_adapter.mcp_manager import MCPManager
+
+mcp_manager = MCPManager()

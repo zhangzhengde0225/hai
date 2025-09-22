@@ -1,3 +1,7 @@
+"""
+Deprecated
+"""
+
 from typing import List, Callable, Dict
 from dataclasses import field, dataclass
 from fastapi import APIRouter, Depends, HTTPException
