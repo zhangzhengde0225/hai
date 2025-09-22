@@ -136,6 +136,12 @@ class HWorkerAPP(FastAPI):
             from .routers.anthropic_router import AnthropicRouterGroup
             anthropic_rg = AnthropicRouterGroup(prefix=config.route_prefix, parent_app=self)
             self.include_router(anthropic_rg.router, prefix=anthropic_rg.prefix, tags=anthropic_rg.tags)
+            
+        # 4 mcp router
+        if config.enable_mcp:
+            from .mcp_adapter.mcp_router import MCPRouterGroup
+            mcp_rg = MCPRouterGroup(prefix=config.route_prefix, parent_app=self)
+            self.include_router(mcp_rg.router, prefix=mcp_rg.prefix, tags=mcp_rg.tags)
         
     def get_worker_router(self, router_prefix: str = ""):
         # router_prefix = self.worker.config_dict.get("route_prefix", "/apiv2")

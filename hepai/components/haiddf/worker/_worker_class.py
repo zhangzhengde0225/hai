@@ -24,7 +24,7 @@ from .utils import get_uuid
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
+    port: Union[int, str, None] = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
     
@@ -48,9 +48,18 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for common features
     enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
+    enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
 
 
     def __post_init__(self):
+        if isinstance(self.port, str):
+            if self.port.lower() == 'none':
+                self.port = None
+            else:
+                try:
+                    self.port = int(self.port)
+                except ValueError:
+                    self.port = None
         if isinstance(self.permissions, str):
             try:
                 perms = dict()

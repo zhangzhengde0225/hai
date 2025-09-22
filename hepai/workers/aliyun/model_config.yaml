@@ -1,6 +1,14 @@
 
 
 models_list:
-  # 1.deepseek系列模型
   - model_name: aliyun/qwen3-max-preview
     engine: "qwen3-max-preview"
+
+  - model_name: aliyun/qwen3-coder-plus
+    engine: "qwen3-coder-plus"
+
+  - model_name: aliyun/qwen3-coder-flash
+    engine: "qwen3-coder-flash"
+
+
+

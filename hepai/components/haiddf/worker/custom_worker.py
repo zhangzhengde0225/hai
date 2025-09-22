@@ -16,6 +16,7 @@ except:
     sys.path.insert(1, str(here.parent.parent.parent))
     from haiddf.version import __version__
 from haiddf._types import HWorkerModel, HWorkerArgs
+# from hepai._types import HWorkerModel, HWorkerArgs
 from worker_app import HWorkerAPP
 
 # 继承HWorkerModel类，实现自定义类
