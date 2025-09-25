@@ -158,7 +158,8 @@ class LLMRemoteModel(HRModel):
         stream_options = oai_params.pop("stream_options", {})
         if stream:
             stream_options["include_usage"] = True  # 强制返回usage信息
-    
+        else:
+            stream_options=HepAI.NotGiven
         response = await self.async_client.chat.completions.create(
             model=self.engine, 
             messages=oai_messages, 
