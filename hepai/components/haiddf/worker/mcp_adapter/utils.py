@@ -33,7 +33,8 @@ def build_lifespan_for_starlette(models: List[HRemoteModel]):
     return _lifespan if models_with_mcp else None
 
 def build_mcp_kwargs_for_starlette(
-    models: HRemoteModel | List[HRemoteModel]
+    models: HRemoteModel | List[HRemoteModel],
+    route_prefix: str = "/apiv2"
     ):
     """
     To adapte to mcp server, the additional kwargs are needed.
@@ -55,7 +56,7 @@ def build_mcp_kwargs_for_starlette(
         if not model.config.enable_mcp:
             continue
         # routes.append(Mount("/math", model.mcp.streamable_http_app()))
-        route_path = "/" + model.name
+        route_path = f'{route_prefix}/{model.name}'
         routes.append(Mount(route_path, model.mcp.streamable_http_app()))
         
     # 创建 lifespan 函数

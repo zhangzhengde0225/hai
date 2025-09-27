@@ -42,8 +42,8 @@ async def lifespan(app: Starlette):
 # Create the Starlette app and mount the MCP servers
 app = Starlette(
     routes=[
-        # Mount("/echo", echo_mcp.streamable_http_app()),
-        Mount("/", math_mcp.streamable_http_app()),
+        Mount("/echo", echo_mcp.streamable_http_app()),
+        Mount("/math", math_mcp.streamable_http_app()),
     ],
     lifespan=lifespan,
 )

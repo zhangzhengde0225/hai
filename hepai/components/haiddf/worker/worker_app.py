@@ -71,7 +71,7 @@ class HWorkerAPP(FastAPI):
         # 从 worker_overrides 中删除 FastAPI 的参数
         for k in fastapi_kwargs.keys():
             worker_overrides.pop(k)
-        mcp_kwargs = build_mcp_kwargs_for_starlette(models)
+        mcp_kwargs = build_mcp_kwargs_for_starlette(models, route_prefix=worker_config.route_prefix)
         fastapi_kwargs.update(mcp_kwargs)
         super().__init__(**fastapi_kwargs)
         
