@@ -56,7 +56,8 @@ def build_mcp_kwargs_for_starlette(
         if not model.config.enable_mcp:
             continue
         # routes.append(Mount("/math", model.mcp.streamable_http_app()))
-        route_path = f'{route_prefix}/{model.name}'
+        # route_path = f'{route_prefix}/{model.name}'
+        route_path = f"{route_prefix}/mcp/{model.model_id}"  # full path: /apiv2/mcp/{model_id}
         routes.append(Mount(route_path, model.mcp.streamable_http_app()))
         
     # 创建 lifespan 函数

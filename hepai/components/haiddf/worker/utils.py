@@ -18,6 +18,24 @@ def get_uuid(lenth, prefix=None):
         return prefix + str(uuid.uuid4())[:lenth-len(prefix)]
     return str(uuid.uuid4())[:lenth]
 
+def gen_one_id(lenth, prefix='wk-', extra_indicators: Optional[list] = None) -> str:
+    """
+    在相同的机器、相同的用户、相同的模型名称时，生成相同的id
+    """
+    indentifiers = get_simple_machine_indicator()
+    if extra_indicators:
+        indentifiers.extend(extra_indicators)
+    # namespace_dns = uuid.NAMESPACE_DNS
+    uuid_v5 = uuid.uuid5(
+        namespace=uuid.NAMESPACE_DNS,
+        name='-'.join(indentifiers)
+    )
+    if prefix:
+        gened_id = prefix + str(uuid_v5)[:lenth-len(prefix)]
+    else:
+        gened_id = str(uuid_v5)[:lenth]
+    return gened_id
+
 def get_hostname():
     import socket
     return socket.gethostname()
@@ -171,9 +189,9 @@ def run_standlone_worker_demo(logger=None):
             # print(" Worker started, but worker_id not found.")
             # return
             raise ValueError("Worker started, but worker_id not found.")
-        
-        
-def get_simple_machine_seed():
+
+
+def get_simple_machine_indicator() -> list:
     # 组合多个系统标识
     identifiers = [
         platform.node(),          # 主机名
@@ -187,6 +205,19 @@ def get_simple_machine_seed():
     for key in env_keys:
         if key in os.environ:
             identifiers.append(os.environ[key])
+    return identifiers
+
+
+def get_simple_machine_seed(extra_indicators: Optional[list] = None) -> int:
+    """
+    根据机器的标识信息生成一个简单的种子数，可用于随机数生成或其他需要唯一标识的场景。
+    机器的标识信息包括主机名、架构、MAC地址、用户目录路径、HOSTNAME、COMPUTERNAME、USER、USERNAME，以及额外的标识信息（如果提供）。
+    """
+    
+    identifiers = get_simple_machine_indicator()
+    
+    if extra_indicators:
+        identifiers.extend(extra_indicators)
     
     # 生成种子
     combined = ''.join(identifiers)

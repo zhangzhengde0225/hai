@@ -18,7 +18,8 @@ from ._related_class import (
     HRemoteModel
 )
 
-from .utils import get_uuid
+# from .utils import get_uuid
+from . import utils
 
 @dataclass
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
@@ -125,16 +126,20 @@ class CommonWorker:
         self.start_time = time.time()
 
         # 初始化信息
-        worker_id = self.config_dict.get("worker_id", None)
-        self.worker_id = worker_id if worker_id else get_uuid(lenth=15, prefix="wk-")
-        self.stream_interval = self.config_dict.get("stream_interval", 0)
-        self.controller_key = self.config_dict.get("controller_key", "")
-        # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         self.models: List[HRemoteModel] = self._check_models(models)
         self._model_names = [m.name for m in self.models]
         unique_model_names = set(self._model_names)
         if len(unique_model_names) != len(self._model_names):
             raise ValueError(f"Model names should be unique, but got {self._model_names}")
+        
+        worker_id = self.config_dict.get("worker_id", None)
+        indicators = ["worker"] + self._model_names
+        self.worker_id = worker_id if worker_id else utils.gen_one_id(
+            lenth=15, prefix="wk-", extra_indicators=indicators
+        )
+        self.stream_interval = self.config_dict.get("stream_interval", 0)
+        self.controller_key = self.config_dict.get("controller_key", "")
+        # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         
         # 建立快速查找的模型映射
         self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
@@ -309,6 +314,7 @@ class CommonWorker:
                 model_users=permission.get("users", []),
                 model_groups=permission.get("groups", []),
                 model_functions=model.all_remote_callables,
+                id=model.model_id,
                 created=model.created,
                 owned_by=owner,
             )

@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.10.01 v1.2.14 worker支持了mcp，可以通过在HModelConfig中添加`mcp_enabled=True`来启用mcp协议，具体见`hepai/components/haiddf/worker/mcp_adapter`中的示例代码。
 + 2025.09.27 v1.2.13 zzd修复了LLMRemoteModel中embeddings接口重复model参数报错的bug。
 + 2025.09.25 v1.2.13 hmf修复了非流式访问阿里云模型报错的bug。
 + 2025.09.23 v1.2.12 新增mcp_adapter，现在HModelConfig添加`mcp_enabled`参数后，可以通过MCP协议调用worker中的方法，具体见`hepai/components/haiddf/worker/mcp_adapter`中的示例代码。

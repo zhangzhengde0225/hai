@@ -34,13 +34,15 @@ class CustomWorkerConfig(HWorkerConfig):
     type: Literal["common", "llm", "actuator", "preceptor", "memory"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
     speed: int = field(default=1, metadata={"help": "Model's speed"})
     limit_model_concurrency: int = field(default=100, metadata={"help": "Limit the model's concurrency"})
-    permissions: str = field(default='users: admin;groups: payg', metadata={"help": "Worker's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
+    permissions: str = field(default='users: admin;groups: payg;owner:zdzhang@ihep.ac.cn', metadata={"help": "Worker's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     author: str = field(default=None, metadata={"help": "Model's author"})
     description: str = field(default='This is a custom remote worker created by HepAI.', metadata={"help": "Model's description"})
     
     # config for controller connection
-    controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
-    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
+    # controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
+    controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
+    
+    no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
 
 class CustomWorkerModel(HRModel):  # Define a custom worker model inheriting from HRModel.
     def __init__(self, config: HModelConfig):

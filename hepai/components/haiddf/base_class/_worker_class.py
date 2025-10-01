@@ -241,6 +241,10 @@ class HRemoteModel(BaseWorkerModel):
         self.config.name = name if name is not None else self.config.name
         self.config.name = self.config.name if self.config.name else self.__class__.__name__
         self.name = self.config.name
+        
+        from ..worker import utils
+        self.model_id = utils.gen_one_id(lenth=15, prefix="md-", extra_indicators=["model", self.name])
+      
         self.permission = self.config.permission
         
         self.created = int(time.time())
@@ -432,7 +436,7 @@ class ModelResourceInfo:
         return asdict(self)
     
     def __repr__(self):
-        return f'ModelResourceInfo(model_name={self.model_name!r}, model_type={self.model_type!r})'
+        return f'ModelResourceInfo(model_id={self.id!r}, model_name={self.model_name!r}, model_type={self.model_type!r})'
 
 @dataclass
 class WorkerStatusInfo:
