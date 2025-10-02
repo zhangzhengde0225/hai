@@ -49,6 +49,11 @@ def build_mcp_kwargs_for_starlette(
     if not models_with_mcp:  # no models with MCP enabled
         return {}
     
+    mcp_transports = set(model.config.mcp_transport for model in models_with_mcp)
+    if len(mcp_transports) > 1:
+        raise ValueError(f"All models must have the same mcp_transport, but got: {mcp_transports}")
+    mcp_transport = mcp_transports.pop()
+    
     routes = []
     # lifespan = None
         
@@ -58,13 +63,26 @@ def build_mcp_kwargs_for_starlette(
         # routes.append(Mount("/math", model.mcp.streamable_http_app()))
         # route_path = f'{route_prefix}/{model.name}'
         route_path = f"{route_prefix}/mcp/{model.model_id}"  # full path: /apiv2/mcp/{model_id}
-        routes.append(Mount(route_path, model.mcp.streamable_http_app()))
         
-    # 创建 lifespan 函数
-    lifespan_func = build_lifespan_for_starlette(models_with_mcp)
-        
-    return {
-        "routes": routes,
-        "lifespan": lifespan_func
-    }
-        
+        if mcp_transport == "streamable-http":
+            routes.append(Mount(route_path, model.mcp.streamable_http_app()))
+        elif mcp_transport == "sse":
+            routes.append(Mount(route_path, model.mcp.sse_app()))
+        else:
+            raise ValueError(f"Unsupported mcp_transport: {mcp_transport}, only 'sse' and 'streamable-http' are supported.")
+    
+    
+    
+    if mcp_transport == "streamable-http":
+        # 创建 lifespan 函数
+        lifespan_func = build_lifespan_for_starlette(models_with_mcp)
+        return {
+            "routes": routes,
+            "lifespan": lifespan_func
+        }
+    else:  # sse does not need lifespan
+        return {
+            "routes": routes,
+            # "lifespan": lifespan
+        }
+            

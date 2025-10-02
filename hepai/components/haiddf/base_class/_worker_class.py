@@ -31,7 +31,7 @@ class HModelConfig:
     permission: Union[str, Dict] = field(default=None, metadata={"help": "Model's permission, separated by ;, e.g., 'groups: all; users: a, b; owner: c', will inherit from worker permissions if not setted"})
     version: str = field(default="2.0", metadata={"help": "Model's version"})
     enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
-
+    mcp_transport: Literal["sse", "streamable-http"] = field(default="streamable-http", metadata={"help": "MCP transport type, could be 'sse' or 'streamable-http'"})
 
 # from ..worker.singletons import mcp_manager
 

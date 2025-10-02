@@ -12,7 +12,9 @@ from mcp.client.streamable_http import streamablehttp_client
 async def main():
     # Connect to a streamable HTTP server
     # async with streamablehttp_client("http://localhost:42600/apiv2/mcp/md-6d670e6c-0ec/mcp") as (
-    async with streamablehttp_client("http://localhost:42601/apiv2/mcp/md-6d670e6c-0ec/mcp") as (
+    async with streamablehttp_client("http://localhost:42600/apiv2/mcp/md-6d670e6c-0ec/mcp") as (
+    # async with streamablehttp_client("http://localhost:42601/apiv2/mcp/md-6d670e6c-0ec/mcp") as (
+    # async with streamablehttp_client("http://localhost:42601/apiv2/mcp/md-6d670e6c-0ec/sse") as (
         read_stream,
         write_stream,
         _,
