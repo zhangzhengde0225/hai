@@ -34,12 +34,13 @@ async def test_model(model_config, models: List[LLMRemoteModel]):
     
     llm = LLMRemoteModel(config=ZhizzModelConfig(engine=engine))
     
+    query = "帮我测量ψ(3770) → p p̄ π⁺π⁻过程在3.774 GeV能量点上的截面，并且绘制p̄的动量谱。先规划后执行。"
     
     stream = False  # Set to True if you want to test streaming
     stream = True
     kwargs = {
         "model": models[0].name,
-        "messages": [{"role": "user", "content": "hello"}],
+        "messages": [{"role": "user", "content": query}],
         "stream": stream,
         "api_key": cfg.api_key,
         "stream_options": {"include_usage": True},
@@ -80,9 +81,9 @@ def load_models_from_config(model_config: LLMModelConfig) -> List[LLMRemoteModel
 @dataclass
 class ZhizzModelConfig(LLMModelConfig):
     config_file: Optional[str] = field(default=f"{here}/model_config.yaml", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
-    base_url: str = field(default="https://dashscope.aliyuncs.com/compatible-mode/v1", metadata={"help": "Base url of the zhizengzeng API"})
-    _api_key: str = field(default="os.environ/DASHSCOPE_API_KEY", metadata={"help": "API key of the model"})
-    test: bool = field(default=True, metadata={"help": "Test model"})
+    base_url: str = field(default="http://localhost:42887/apiv2", metadata={"help": "Base url of the zhizengzeng API"})
+    _api_key: str = field(default="os.environ/HEPAI_API_KEY", metadata={"help": "API key of the model"})
+    test: bool = field(default=False, metadata={"help": "Test model"})
 
     def __post_init__(self):
         return super().__post_init__()
