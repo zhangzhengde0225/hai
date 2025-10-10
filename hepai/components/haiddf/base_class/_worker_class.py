@@ -519,7 +519,7 @@ class WorkerInfo:
         """v2.1.2多模型模式下，获取模型信息"""
         mr = [x for x in self.resource_info if x.model_name == model_name]
         if len(mr) != 1:
-            print(f'ERROR: {self.resource_info}')
+            # print(f'ERROR: {self.resource_info}')
             raise ValueError(f'[WorkerInfo] Failed to get_model_info by name `{model_name}`, got {len(mr)} models')
         return mr[0]
     
