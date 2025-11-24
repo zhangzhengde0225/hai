@@ -50,19 +50,35 @@ from openai._utils import (
     is_type_alias_type,
     strip_annotated_type,
 )
-from openai._compat import (
-    PYDANTIC_V2,
-    ConfigDict,
-    GenericModel as BaseGenericModel,
-    get_args,
-    is_union,
-    parse_obj,
-    get_origin,
-    is_literal_type,
-    get_model_config,
-    get_model_fields,
-    field_get_default,
-)
+
+try:
+    from openai._compat import (
+        PYDANTIC_V2,
+        ConfigDict,
+        GenericModel as BaseGenericModel,
+        get_args,
+        is_union,
+        parse_obj,
+        get_origin,
+        is_literal_type,
+        get_model_config,
+        get_model_fields,
+        field_get_default,
+    )
+except ImportError:
+    from openai._compat import (
+        PYDANTIC_V1,
+        ConfigDict,
+        GenericModel as BaseGenericModel,
+        get_args,
+        is_union,
+        parse_obj,
+        get_origin,
+        is_literal_type,
+        get_model_config,
+        get_model_fields,
+        field_get_default,
+    )
 from openai._constants import RAW_RESPONSE_HEADER
 
 from openai._models import (

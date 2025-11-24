@@ -18,13 +18,14 @@ from ._related_class import (
     HRemoteModel
 )
 
-from .utils import get_uuid
+# from .utils import get_uuid
+from . import utils
 
 @dataclass
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=4260, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
+    port: Union[int, str, None] = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
     
@@ -48,9 +49,18 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for common features
     enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
+    # enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
 
 
     def __post_init__(self):
+        if isinstance(self.port, str):
+            if self.port.lower() == 'none':
+                self.port = None
+            else:
+                try:
+                    self.port = int(self.port)
+                except ValueError:
+                    self.port = None
         if isinstance(self.permissions, str):
             try:
                 perms = dict()
@@ -116,16 +126,20 @@ class CommonWorker:
         self.start_time = time.time()
 
         # 初始化信息
-        worker_id = self.config_dict.get("worker_id", None)
-        self.worker_id = worker_id if worker_id else get_uuid(lenth=15, prefix="wk-")
-        self.stream_interval = self.config_dict.get("stream_interval", 0)
-        self.controller_key = self.config_dict.get("controller_key", "")
-        # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         self.models: List[HRemoteModel] = self._check_models(models)
         self._model_names = [m.name for m in self.models]
         unique_model_names = set(self._model_names)
         if len(unique_model_names) != len(self._model_names):
             raise ValueError(f"Model names should be unique, but got {self._model_names}")
+        
+        worker_id = self.config_dict.get("worker_id", None)
+        indicators = ["worker"] + self._model_names
+        self.worker_id = worker_id if worker_id else utils.gen_one_id(
+            lenth=15, prefix="wk-", extra_indicators=indicators
+        )
+        self.stream_interval = self.config_dict.get("stream_interval", 0)
+        self.controller_key = self.config_dict.get("controller_key", "")
+        # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         
         # 建立快速查找的模型映射
         self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
@@ -300,6 +314,7 @@ class CommonWorker:
                 model_users=permission.get("users", []),
                 model_groups=permission.get("groups", []),
                 model_functions=model.all_remote_callables,
+                id=model.model_id,
                 created=model.created,
                 owned_by=owner,
             )

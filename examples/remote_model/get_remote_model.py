@@ -11,16 +11,19 @@ except:
 
 
 
-from hepai import HepAI, LRModel
+from hepai import HepAI, LRModel, HRModel
+HRModel.connect
+
 # from hepai.types import HRemoteModel
 
 # 创建HepAI客户端
 client = HepAI(base_url="http://localhost:4260/apiv2")
 
-
 # 获取一个远程模型对象
 model_name = "hepai/custom-model"
 model: LRModel = client.get_remote_model(model_name=model_name)
+
+print(model.get_info())  # 获取模型资源信息
 
 # 请求远程模型的custom_method方法
 output = model.custom_method(a=1, b=2)

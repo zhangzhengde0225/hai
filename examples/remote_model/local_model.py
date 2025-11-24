@@ -11,9 +11,9 @@ import os
 #     from hepai import __version__
 
 
-from hepai import HRModel
+from hepai import HRModel, LRModel
 
-model = HRModel.connect(
+model: LRModel = HRModel.connect(
     api_key=os.getenv("HEPAI_API_KEY", ""),
     name="hepai/custom-model",
     # base_url="http://localhost:4260/apiv2"

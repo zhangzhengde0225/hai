@@ -30,16 +30,17 @@ async def test_model(model_config, models: List[LLMRemoteModel]):
     #     print(f'  {model}')
     
     engine = models[0].engine
-    engine = models[8].engine
+    # engine = models[8].engine
     
     llm = LLMRemoteModel(config=ZhizzModelConfig(engine=engine))
     
+    query = "帮我测量ψ(3770) → p p̄ π⁺π⁻过程在3.774 GeV能量点上的截面，并且绘制p̄的动量谱。先规划后执行。"
     
     stream = False  # Set to True if you want to test streaming
     stream = True
     kwargs = {
         "model": models[0].name,
-        "messages": [{"role": "user", "content": "hello"}],
+        "messages": [{"role": "user", "content": query}],
         "stream": stream,
         "api_key": cfg.api_key,
         "stream_options": {"include_usage": True},
@@ -80,9 +81,9 @@ def load_models_from_config(model_config: LLMModelConfig) -> List[LLMRemoteModel
 @dataclass
 class ZhizzModelConfig(LLMModelConfig):
     config_file: Optional[str] = field(default=f"{here}/model_config.yaml", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
-    base_url: str = field(default="https://ark.cn-beijing.volces.com/api/v3", metadata={"help": "Base url of the zhizengzeng API"})
-    _api_key: str = field(default="os.environ/ARK_API_KEY", metadata={"help": "API key of the model"})
-    test: bool = field(default=True, metadata={"help": "Test model"})
+    base_url: str = field(default="http://localhost:42887/apiv2", metadata={"help": "Base url of the zhizengzeng API"})
+    _api_key: str = field(default="os.environ/HEPAI_API_KEY", metadata={"help": "API key of the model"})
+    test: bool = field(default=False, metadata={"help": "Test model"})
 
     def __post_init__(self):
         return super().__post_init__()
@@ -90,11 +91,10 @@ class ZhizzModelConfig(LLMModelConfig):
 @dataclass
 class ZhizzWorkerConfig(HWorkerConfig):
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=42603, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
+    port: int = field(default=42602, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
-    
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
@@ -102,6 +102,7 @@ class ZhizzWorkerConfig(HWorkerConfig):
     description: str = field(default='This is a zhizz worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
     limit_model_concurrency: int = field(default=1000, metadata={"help": "Limit the model's concurrency"})
+    type: Literal["llm", "actuator", "preceptor", "memory", "common", "drsai"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
     
     enable_secret_key: bool = field(default=True, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=True, metadata={"help": "Enable LLM router, only for llm worker"})

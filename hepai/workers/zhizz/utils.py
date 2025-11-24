@@ -118,9 +118,10 @@ def get_provider_by_model_name(model_name: str) -> str:
     elif name in ["generalv3", "4.0ultra", "pro-128k", "max-32k", "lite", 'generalv3.5']:
         return "iflytech"
     elif any(x in name for x in ["gpt", "chatgpt", "openai", "o1", "o3", "o4", "tts-1",
-                                 "text-embedding", "dall-e", "whisper-1"]):
+                                 "text-embedding", "dall-e", "whisper-1", "codex-mini", "computer-use-preview"]):
         return "openai"
     elif name in ['max-32k', "lite"]:
         return None
     else:
-        raise ValueError(f"未知模型provider: {model_name}")
+        return None
+        # raise ValueError(f"未知模型provider: {model_name}")

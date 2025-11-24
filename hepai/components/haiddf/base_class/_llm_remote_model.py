@@ -158,7 +158,8 @@ class LLMRemoteModel(HRModel):
         stream_options = oai_params.pop("stream_options", {})
         if stream:
             stream_options["include_usage"] = True  # 强制返回usage信息
-    
+        else:
+            stream_options=HepAI.NotGiven
         response = await self.async_client.chat.completions.create(
             model=self.engine, 
             messages=oai_messages, 
@@ -225,12 +226,12 @@ class LLMRemoteModel(HRModel):
         extra_body: Dict = kwargs.pop("extra_body", {})
         extra_query: Dict = kwargs.pop("extra_query", {})
         stream = kwargs.pop("stream", False)  # Embeddings一般不支持stream
+        model = kwargs.pop("model", None)
         timeout = kwargs.pop("timeout", HepAI.NotGiven)
 
         # request = EmbeddingsRequest(**kwargs)
         input = kwargs.pop("input", None)
         
-
         response = await self.async_client.embeddings.create(
                 input=input,
                 model=self.cfg.engine,

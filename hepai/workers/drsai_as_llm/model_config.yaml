@@ -1,0 +1,9 @@
+
+
+models_list:
+  - model_name: hepai/drsai
+    engine: hepai/drsai
+
+
+
+

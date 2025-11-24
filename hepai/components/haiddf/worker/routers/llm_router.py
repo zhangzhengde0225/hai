@@ -69,16 +69,27 @@ class LLMRouterGroup:
         if "model" not in request_body:
             raise HTTPException(status_code=400, detail="[LLMRouterGroup] This `model` must be specified")
         model = request_body["model"]
-        if user_auth.resc_attr.resource_type == "worker":
-            request_body = self.update_request_body_for_worker(request_body, user_auth)
         self.count += 1
-        await save_minitor_log(logger, user_auth)
-        return await self.worker.unified_gate_async(
+        # if user_auth.resc_attr.resource_type == "worker":
+        #     request_body = self.update_request_body_for_worker(request_body, user_auth)
+        # await save_minitor_log(logger, user_auth)
+        
+        func_params = FunctionParamsItem(
+            args=[],
+            kwargs=request_body
+        )
+        rst = await self.parent_app.worker_unified_gate(
+            function_params=func_params,
             model=model, 
             function="embeddings",
-            args=[],
-            kwargs=request_body,
         )
+        return rst
+        # return await self.worker.unified_gate_async(
+        #     model=model, 
+        #     function="embeddings",
+        #     args=[],
+        #     kwargs=request_body,
+        # )
 
     async def list_models(self, user_auth = api_key_auth):
         return await self.parent_app.get_models()
