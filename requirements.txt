@@ -9,6 +9,8 @@ requests  # for hai worker
 uvicorn  # for hai worker
 openai>=1.63.0
 anthropic>=0.59.0
-python-dotenv >=1.1.1
+python-dotenv>=1.1.1
+damei>=1.1.135
+numpy
 
 

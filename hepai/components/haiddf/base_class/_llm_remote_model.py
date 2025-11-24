@@ -6,6 +6,7 @@ import json
 # from anthropic.types import Message
 
 # from hepai import HepAI, AsyncHepAI
+import httpx
 from ..hepai_client import HepAIClient as HepAI
 from ..hepai_client import AsyncHepAIClient as AsyncHepAI
 
@@ -242,6 +243,53 @@ class LLMRemoteModel(HRModel):
                 **kwargs
                 )
         return response
+    
+    @HRModel.remote_callable
+    async def rerank(self, *args, **kwargs):
+        if self.cfg.need_external_api_key:
+            api_key = kwargs.pop("api_key", None)
+            if not api_key:
+                raise KeyError("You should provied API-KEY when calling this worker")
+            extra_headers = {"Authorization": f"Bearer {api_key}"}
+        else:
+            extra_headers = kwargs.pop("extra_headers", {})
+        extra_body: Dict = kwargs.pop("extra_body", {})
+        extra_query: Dict = kwargs.pop("extra_query", {})
+        stream = kwargs.pop("stream", False)
+        timeout = kwargs.pop("timeout", HepAI.NotGiven)
+
+        # request = RerankRequest(**kwargs)
+        query = kwargs.pop("query", None)
+        model = kwargs.pop("model", None)
+        top_n = kwargs.pop("top_n", 3)
+        documents = kwargs.pop("documents", None)
+        return_documents = kwargs.pop("return_documents", False)
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        headers.update(extra_headers)
+        data = {
+            "model": self.cfg.engine,
+            "query": query,
+            "top_n": top_n,
+            "documents": documents,
+            "return_documents": return_documents,
+            **extra_body
+        }
+
+        with httpx.Client() as client:
+            response = client.post(
+                f"{self.cfg.base_url}/rerank",
+                headers=headers, 
+                json=data)
+            # 检查错误
+            response.raise_for_status()
+            
+            print(f"Status Code: {response.status_code}")
+            print(f"Response: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
+
+        return response.json()
     
     @HRModel.remote_callable
     async def image_generations(self, *args, **kwargs):
