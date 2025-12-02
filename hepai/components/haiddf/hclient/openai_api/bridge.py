@@ -224,8 +224,9 @@ class HBaseAPIResponse(BaseAPIResponse):
             and not origin is list
             and not origin is dict
             and not origin is Union
+            and not origin is Any  # haiddf 修改，支持type Any
             and not issubclass(origin, BaseModel)
-            and not Any
+            # and not Any
             and not is_dataclass(origin)  # haiddf2修改，支持dataclass
         ):
             raise RuntimeError(
