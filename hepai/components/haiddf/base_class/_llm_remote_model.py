@@ -374,6 +374,7 @@ class LLMRemoteModel(HRModel):
         messages = kwargs.pop("messages")
         max_tokens = kwargs.pop("max_tokens")
         stream = kwargs.pop("stream", False)
+        kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
         if stream:
             gen = self.anthropic_stream(
@@ -412,6 +413,8 @@ class LLMRemoteModel(HRModel):
             extra_query=None,
             timeout=None,
             **kwargs) -> AsyncGenerator:
+        
+        kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
         async with self.async_client_with_anthropic_url.anthropic.messages.stream(
             model=model,
