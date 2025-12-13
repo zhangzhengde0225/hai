@@ -330,7 +330,7 @@ class LLMRemoteModel(HRModel):
         # kwargs['stream'] = False  # Anthropic的接口不支持stream参数，这里强制设为False
         stream = kwargs.get("stream", False)
         
-        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
+        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt", "claude"]):
             # 如果是moonshot或openai开头的模型，走openai接口
             from . import general
             oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
@@ -376,6 +376,27 @@ class LLMRemoteModel(HRModel):
         stream = kwargs.pop("stream", False)
         kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
+        # 20251209左右，系统提示词里包含"cahce_control": {'type': 'ephemeral'}，智增增会报错
+        system = kwargs.pop("system", None)
+        if system:
+            # 移除system消息中的cache_control字段，相当于永远不缓存，会增加开销
+            for sys_msg in system:
+                if "cache_control" in sys_msg:
+                    sys_msg.pop("cache_control")
+        # messages里也有可能有缓存字段
+        if messages:
+            for msg in messages:
+                if "cache_control" in msg:
+                    msg.pop("cache_control")
+                for content in msg.get("content", []):
+                    if isinstance(content, dict) and "cache_control" in content:
+                        content.pop("cache_control")
+        # kwargs.pop("tools", None)  # 去掉tools参数，避免报错
+        # kwargs.pop("metadata", None)  # 去掉metadata参数，避免报错
+        # kwargs.pop("thinking", None)  # 去掉thinking参数，避免报错
+        # kwargs.pop("temperature", None)  # 去掉temperature参数，避免报错
+        
+           
         if stream:
             gen = self.anthropic_stream(
                 model=self.cfg.engine,
@@ -389,6 +410,7 @@ class LLMRemoteModel(HRModel):
                 )
             return gen
         else:
+            
             rst = await self.async_client_with_anthropic_url.anthropic.messages.create(
                     model=self.cfg.engine,
                     messages=messages,
@@ -401,6 +423,9 @@ class LLMRemoteModel(HRModel):
                     **kwargs
                 )
             # rst = rst.model_dump()
+            if rst.type == 'error':
+                error_info = rst.model_extra.get('error', {})
+                raise ValueError(f"Anthropic API Error: {error_info}")
             return rst
         
     async def anthropic_stream(
@@ -413,8 +438,6 @@ class LLMRemoteModel(HRModel):
             extra_query=None,
             timeout=None,
             **kwargs) -> AsyncGenerator:
-        
-        kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
         async with self.async_client_with_anthropic_url.anthropic.messages.stream(
             model=model,

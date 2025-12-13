@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.12.13 v1.2.17 修复openai_api的bridge.py中非类（Type）的支持问题。
 + 2025.12.02 v1.2.16 修复openai_api的bridge.py中对Any类型的支持
 + 2025.11.24 v1.2.15 LLMRemoteWorker支持了/rerank模型
 + 2025.10.01 v1.2.14 worker支持了mcp，可以通过在HModelConfig中添加`mcp_enabled=True`来启用mcp协议，具体见`hepai/components/haiddf/worker/mcp_adapter`中的示例代码。

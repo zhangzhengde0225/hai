@@ -495,10 +495,13 @@ async def convert_input_anthropic_to_openai_format(request_body: Dict) -> Dict:
     if system:
         # 多条system合并为一条
         system_list = [x["text"] for x in system if isinstance(x, dict) and "text" in x]
-        _system_text = "\n".join(system_list)
+        # _system_text = "\n\n".join(system_list)
 
         # OpenAI的system prompt是messages的第一条
-        messages = [{"role": "system", "content": _system_text}] + messages
+        # messages = [{"role": "system", "content": _system_text}] + messages
+        for sys_text in reversed(system_list):
+            messages.insert(0, {"role": "system", "content": sys_text})
+
 
     # 构造OpenAI格式
     openai_body = {
