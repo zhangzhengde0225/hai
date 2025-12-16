@@ -226,6 +226,8 @@ DEFAULT_STREAM_DATA = [
     [[1, 2], [3, 4], [5, 6]],
     {"a": "b", "c": "d"},
 ]
+
+from mcp.server.fastmcp import FastMCP
     
 class HRemoteModel(BaseWorkerModel):
     """
@@ -235,6 +237,7 @@ class HRemoteModel(BaseWorkerModel):
             self,
             name: str = None,
             config: HModelConfig = None,
+            mcp: FastMCP = None,
             ):
         self.config = config if config is not None else HModelConfig()
         assert isinstance(self.config, HModelConfig), "config must be an instance of HModelConfig"
@@ -253,12 +256,16 @@ class HRemoteModel(BaseWorkerModel):
         
         enable_mcp = self.config.enable_mcp if hasattr(self.config, 'enable_mcp') else False
         if enable_mcp:
-            from mcp.server.fastmcp import FastMCP
-            self.mcp = FastMCP(name=self.name)
-            remote_callables = self.all_remote_callables
-            for func_name in remote_callables:
-                func = getattr(self, func_name)
-                self.mcp.add_tool(func)
+            if mcp is not None:
+                self.mcp = mcp
+            else:
+                # 这是把用RemoteCallable修饰的函数注册到MCP服务器上
+                from mcp.server.fastmcp import FastMCP
+                self.mcp = FastMCP(name=self.name)
+                remote_callables = self.all_remote_callables
+                for func_name in remote_callables:
+                    func = getattr(self, func_name)
+                    self.mcp.add_tool(func)
         else:
             self.mcp = None
         

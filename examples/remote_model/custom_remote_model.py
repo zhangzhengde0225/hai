@@ -18,6 +18,7 @@ import json
 import hepai
 from hepai import HRModel, HModelConfig, HWorkerConfig, HWorkerAPP
 
+
 @dataclass  # (1) model config
 class CustomModelConfig(HModelConfig):
     name: str = field(default="hepai/custom-model", metadata={"help": "Model's name"})

@@ -15,6 +15,7 @@ from .types import Stream, ChatCompletion, ChatCompletionChunk
 
 # from .components.haiddf.hepai_client import AsycnHepAIClient as AsyncHepAI
 from .types import HRModel, LRModel, HModelConfig, HWorkerConfig, HWorkerAPP, RemoteModel, HCloudModel
+from .types import HaiMCP
 from .components.utils import connect
 
 # from .agents import *

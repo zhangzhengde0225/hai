@@ -96,6 +96,12 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     
     def to_dict(self):
         return asdict(self)
+    
+    @classmethod
+    def from_dict(cls, d: Dict):
+        """从字典创建配置实例"""
+        return cls().update_from_dict(d)
+
 
 class CommonWorker:
     """
