@@ -11,7 +11,7 @@ from hepai import HaiMCP
 
 
 mcp = HaiMCP(
-    name="CTReconstruct",
+    name="hepai/add_number_tool",
     instructions="Some tools for showing and reconstructing CT images.",
     host="0.0.0.0",
     port = 42502, 
@@ -27,7 +27,8 @@ async def add(a: int, b: int) -> int:
 @dataclass
 class CustomWorkerConfig(HWorkerConfig):
     no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
-    controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
+    # controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
+    controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     permissions: str = field(default='users: admin; groups: payg; owner:zdzhang@ihep.ac.cn', metadata={"help": "Worker's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     type: str = field(default="mcp_tool", metadata={"help": "Specify worker type, could be help in some cases"})    
 
