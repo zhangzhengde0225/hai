@@ -10,3 +10,4 @@ class AgentInfo:
     owner: str = field(default=None, metadata={"help": "Owner of the agent"})
     description: str = field(default=None, metadata={"help": "Description of the agent"})
     version: str = field(default="1.0", metadata={"help": "Version of the agent"})
+    metadata: Dict = field(default_factory=dict, metadata={"help": "Additional metadata for the agent"})    

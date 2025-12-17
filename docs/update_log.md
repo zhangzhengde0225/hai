@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.12.17 v1.3.0 Worker支持metadata字段，用于支持中枢-边缘智能体协同。
 + 2025.12.16 v1.2.19 修复HaiMCP导入BUG 
 + 2025.12.16 v1.2.18 新增HaiMCP，继承FastMCP，可快速将现有MCP服务封装为HepAI Worker，具体见`examples/remote_model/mcp_to_worker.py`中的示例代码。
 + 2025.12.13 v1.2.17 修复openai_api的bridge.py中非类（Type）的支持问题。

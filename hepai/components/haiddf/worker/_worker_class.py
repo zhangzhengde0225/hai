@@ -45,6 +45,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     debug: bool = field(default=False, metadata={"help": "Debug mode"})
     type: Literal["llm", "actuator", "preceptor", "memory", "common"] = field(default="common", metadata={"help": "Specify worker type, could be help in some cases"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
+    _metadata: dict = field(default_factory=dict, metadata={"help": "Additional metadata for worker/model"})
     
     # config for common features
     enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
@@ -373,6 +374,17 @@ class CommonWorker:
         Dynamically get worker info
         """
         status_info = self.get_status_info()
+        
+        metadata = {
+            "description": self.config.description, 
+            "author": self.config.author,
+            "limit_model_concurrency": self.config.limit_model_concurrency,
+            "permissions": self.worker_permissions,
+            "uptime": time.time() - (status_info.start_time if status_info.start_time else time.time()),
+        }
+        worker_meta = self.config._metadata
+        metadata.update(worker_meta)
+        
         worker_info = WorkerInfo(
             id=self.worker_id,
             type=self.config.type,
@@ -381,12 +393,7 @@ class CommonWorker:
             status_info=status_info,
             check_heartbeat=True,
             version=self.config_dict.get("version", "2.0"),
-            metadata={"description": self.config.description, 
-                      "author": self.config.author,
-                      "limit_model_concurrency": self.config.limit_model_concurrency,
-                      "permissions": self.worker_permissions,
-                      "uptime": time.time() - (status_info.start_time if status_info.start_time else time.time()),
-                      },
+            metadata=metadata,
         )
         return worker_info
     
