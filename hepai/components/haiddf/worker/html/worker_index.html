@@ -245,7 +245,10 @@
             <div class="monitor-section">
                 <div class="monitor-header">
                     <h2>📊 实时监控</h2>
-                    <button class="refresh-btn" onclick="refreshData()">刷新数据</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="refresh-btn" onclick="window.location.href='/apiv2/dashboard'">编辑模型</button>
+                        <button class="refresh-btn" id="refresh-data-btn" onclick="refreshData()">刷新数据</button>
+                    </div>
                 </div>
                 
                 <div class="metrics-grid" id="metricsGrid">
@@ -355,22 +358,28 @@
                     fetch(`${prefix}/worker/models`),
                     fetch(`${prefix}/worker/monitor_status`)
                 ]);
-                
+
                 if (!statusResponse.ok || !modelsResponse.ok || !monitorResponse.ok) {
                     throw new Error('Failed to fetch monitoring data');
                 }
-                
+
                 const statusData = await statusResponse.json();
                 const modelsData = await modelsResponse.json();
                 const monitorData = await monitorResponse.json();
-                
+
                 displayMetrics(statusData, monitorData);
                 displayModelList(modelsData.data || [], monitorData.model_status || {});
-                
+
             } catch (error) {
                 console.error('加载监控数据失败:', error);
-                document.getElementById('metricsGrid').innerHTML = 
-                    '<div class="error">无法加载监控数据: ' + error.message + '</div>';
+                const metricsGrid = document.getElementById('metricsGrid');
+                if (metricsGrid) {
+                    metricsGrid.innerHTML = '<div class="error">无法加载监控数据: ' + error.message + '</div>';
+                }
+                const modelList = document.getElementById('modelList');
+                if (modelList) {
+                    modelList.innerHTML = '<div class="error">无法加载模型信息: ' + error.message + '</div>';
+                }
             }
         }
         
@@ -481,16 +490,18 @@
         // 手动刷新数据
         function refreshData() {
             loadMonitoringData();
-            
-            // 视觉反馈
-            const btn = document.querySelector('.refresh-btn');
-            btn.style.background = '#28a745';
-            btn.textContent = '刷新中...';
-            
-            setTimeout(() => {
-                btn.style.background = '#667eea';
-                btn.textContent = '刷新数据';
-            }, 1000);
+
+            // 视觉反馈 - 使用正确的按钮 ID
+            const btn = document.getElementById('refresh-data-btn');
+            if (btn) {
+                btn.style.background = '#28a745';
+                btn.textContent = '刷新中...';
+
+                setTimeout(() => {
+                    btn.style.background = '#667eea';
+                    btn.textContent = '刷新数据';
+                }, 1000);
+            }
         }
         
         // 页面卸载时清理定时器

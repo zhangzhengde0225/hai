@@ -50,6 +50,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config for common features
     enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
+    model_config_dir: Optional[str] = field(default=None, metadata={"help": "Directory to store model_config.yaml, if None, will try to use worker script directory or current working directory"})
     # enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
 
 
@@ -150,6 +151,28 @@ class CommonWorker:
         
         # 建立快速查找的模型映射
         self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
+
+        # 初始化模型状态管理器
+        # 确定配置文件路径：优先使用配置的目录，否则尝试从调用栈中找到 worker 脚本目录
+        if self.config.model_config_dir:
+            config_dir = self.config.model_config_dir
+        else:
+            # 尝试从调用栈中找到调用 worker 的脚本目录
+            import inspect
+            config_dir = None
+            for frame_info in inspect.stack():
+                frame_file = frame_info.filename
+                # 查找名为 *_worker.py 的文件
+                if frame_file.endswith('_worker.py') and 'hepai/components/haiddf' not in frame_file:
+                    config_dir = os.path.dirname(os.path.abspath(frame_file))
+                    break
+            # 如果找不到，使用当前工作目录
+            if config_dir is None:
+                config_dir = os.getcwd()
+
+        config_file = os.path.join(config_dir, "model_status.yaml")
+        from .model_status_manager import ModelStatusManager
+        self.model_status_manager = ModelStatusManager(worker=self, config_file=config_file)
 
         # flag
         self._is_deleted_in_controller = False  # a flag to indicate whether the worker is deleted in controller
@@ -300,17 +323,22 @@ class CommonWorker:
     def get_model_resource_info(self) -> List[ModelResourceInfo]:
         """
         v2.1 支持多模型
+        v2.2 过滤禁用的模型（用于心跳上报）
         """
 
         model_resources = []
         for model in self.models:
+            # 跳过禁用的模型
+            if not self.model_status_manager.is_model_enabled(model.name):
+                continue
+
             model_name = model.name or model.__class__.__name__
             permission = model.permission
             if not permission:  # 如果没有设置权限，则使用worker的权限
                 permission = self.worker_permissions
             owner = permission.get("owner", None)
             owner = owner if owner else self.config.author
-     
+
             mr = ModelResourceInfo(
                 model_name=model_name,
                 model_type=self.config_dict.get("model_type", "common"),

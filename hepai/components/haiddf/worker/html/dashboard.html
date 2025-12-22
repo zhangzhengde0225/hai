@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型管理 - HepAI Worker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #667eea;
+            font-size: 1.8em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-select:hover {
+            border-color: #667eea;
+        }
+
+        .collapse-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-collapse {
+            padding: 6px 12px;
+            border: 1px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-collapse:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 认证弹窗 */
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .auth-modal-content h2 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .auth-modal-content p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .auth-modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .auth-modal-content .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-error {
+            color: #dc3545;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* 消息提示 */
+        .message-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            max-width: 400px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .message-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .message-error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        .message-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* 提供者分组 */
+        .provider-group {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .provider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .provider-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapse-icon {
+            font-size: 0.8em;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .models-grid.collapsed {
+            display: none;
+        }
+
+        .provider-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* 模型列表 */
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .model-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .model-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .model-card.disabled {
+            border-left-color: #dc3545;
+            opacity: 0.7;
+        }
+
+        .model-card.hidden {
+            display: none;
+        }
+
+        .model-info {
+            flex: 1;
+        }
+
+        .model-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .model-status {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* 开关按钮 */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background-color: #ccc;
+            border-radius: 26px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch.active {
+            background-color: #28a745;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .filter-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-select {
+                flex: 1;
+            }
+
+            .collapse-controls {
+                width: 100%;
+            }
+
+            .btn-collapse {
+                flex: 1;
+            }
+
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .provider-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 模型管理控制台</h1>
+            <div class="header-actions">
+                <div class="filter-group">
+                    <label for="model-filter">显示模型:</label>
+                    <select id="model-filter" class="filter-select" onchange="applyModelFilter()">
+                        <option value="all">显示所有模型</option>
+                        <option value="enabled">仅显示启用模型</option>
+                    </select>
+                </div>
+                <div class="collapse-controls">
+                    <button class="btn-collapse" onclick="expandAllProviders()">展开所有</button>
+                    <button class="btn-collapse" onclick="collapseAllProviders()">收起所有</button>
+                </div>
+                <button class="btn btn-secondary" onclick="goBack()">返回监控面板</button>
+                <button class="btn btn-primary" id="save-btn" onclick="saveAllChanges()">保存所有更改</button>
+            </div>
+        </div>
+
+        <div id="providers-container" class="loading">
+            <div class="spinner"></div>
+            正在加载模型列表...
+        </div>
+    </div>
+
+    <!-- 认证弹窗 -->
+    <div id="auth-modal" class="auth-modal">
+        <div class="auth-modal-content">
+            <h2>🔐 管理员认证</h2>
+            <p>请输入管理员密码以访问模型管理功能</p>
+            <input type="password" id="admin-password" placeholder="输入管理员密码"
+                   onkeypress="if(event.key==='Enter') authenticate()">
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="authenticate()">确认</button>
+                <button class="btn btn-secondary" onclick="cancelAuth()">取消</button>
+            </div>
+            <div id="auth-error" class="auth-error"></div>
+        </div>
+    </div>
+
+    <!-- 消息容器 -->
+    <div id="message-container" class="message-container"></div>
+
+    <script>
+        const prefix = '/apiv2';
+        let adminPassword = localStorage.getItem('admin_password');
+        let modelsData = {};
+        let pendingChanges = {};
+        let collapsedProviders = JSON.parse(localStorage.getItem('collapsed_providers') || '{}');
+        let modelFilter = localStorage.getItem('model_filter') || 'all';  // 'all' 或 'enabled'
+
+        // 页面加载时检查认证
+        document.addEventListener('DOMContentLoaded', function() {
+            // 恢复过滤器状态
+            const filterSelect = document.getElementById('model-filter');
+            if (filterSelect) {
+                filterSelect.value = modelFilter;
+            }
+
+            if (!adminPassword) {
+                showAuthModal();
+            } else {
+                loadModels();
+            }
+        });
+
+        // 显示认证弹窗
+        function showAuthModal() {
+            document.getElementById('auth-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('admin-password').focus();
+            }, 100);
+        }
+
+        // 认证
+        async function authenticate() {
+            const password = document.getElementById('admin-password').value.trim();
+            if (!password) {
+                document.getElementById('auth-error').textContent = '请输入密码';
+                return;
+            }
+
+            // 尝试调用 API 验证密码
+            try {
+                const response = await fetch(`${prefix}/models/status`, {
+                    headers: {
+                        'Authorization': `Bearer ${password}`
+                    }
+                });
+
+                if (response.ok) {
+                    adminPassword = password;
+                    localStorage.setItem('admin_password', password);
+                    document.getElementById('auth-modal').style.display = 'none';
+                    document.getElementById('auth-error').textContent = '';
+                    loadModels();
+                } else {
+                    document.getElementById('auth-error').textContent = '密码错误，请重试';
+                }
+            } catch (error) {
+                document.getElementById('auth-error').textContent = '认证失败: ' + error.message;
+            }
+        }
+
+        // 取消认证
+        function cancelAuth() {
+            window.location.href = '/';
+        }
+
+        // 加载模型列表
+        async function loadModels() {
+            try {
+                const response = await fetch(`${prefix}/models/grouped`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminPassword}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        // 密码失效，重新认证
+                        localStorage.removeItem('admin_password');
+                        adminPassword = null;
+                        showAuthModal();
+                        return;
+                    }
+                    throw new Error('Failed to load models');
+                }
+
+                const data = await response.json();
+                modelsData = data.data;
+                pendingChanges = {};  // 重置待保存的更改
+                renderModels(modelsData);
+            } catch (error) {
+                showMessage('加载模型失败: ' + error.message, 'error');
+                document.getElementById('providers-container').innerHTML =
+                    '<div class="loading" style="color: #dc3545;">加载失败，请刷新页面重试</div>';
+            }
+        }
+
+        // 渲染模型列表
+        function renderModels(groupedModels) {
+            const container = document.getElementById('providers-container');
+            container.innerHTML = '';
+
+            if (!groupedModels || Object.keys(groupedModels).length === 0) {
+                container.innerHTML = '<div class="loading">暂无模型信息</div>';
+                return;
+            }
+
+            Object.entries(groupedModels).forEach(([provider, models]) => {
+                const providerDiv = document.createElement('div');
+                providerDiv.className = 'provider-group';
+
+                const isCollapsed = collapsedProviders[provider] || false;
+                const collapseIconClass = isCollapsed ? 'collapse-icon collapsed' : 'collapse-icon';
+                const modelsGridClass = isCollapsed ? 'models-grid collapsed' : 'models-grid';
+
+                providerDiv.innerHTML = `
+                    <div class="provider-header">
+                        <div class="provider-name" onclick="toggleProvider('${provider}')">
+                            <span class="${collapseIconClass}" id="icon-${encodeURIComponent(provider)}">▼</span>
+                            📦 ${provider}
+                        </div>
+                        <div class="provider-actions">
+                            <button class="btn btn-primary btn-sm" onclick="enableAllInProvider('${provider}')">全部启用</button>
+                            <button class="btn btn-secondary btn-sm" onclick="disableAllInProvider('${provider}')">全部禁用</button>
+                        </div>
+                    </div>
+                    <div class="${modelsGridClass}" id="provider-${encodeURIComponent(provider)}"></div>
+                `;
+
+                container.appendChild(providerDiv);
+
+                const modelsGrid = document.getElementById(`provider-${encodeURIComponent(provider)}`);
+                models.forEach(model => {
+                    const effectiveEnabled = pendingChanges.hasOwnProperty(model.name) ?
+                        pendingChanges[model.name] : model.enabled;
+
+                    // 根据过滤器决定是否隐藏
+                    const shouldHide = modelFilter === 'enabled' && !effectiveEnabled;
+
+                    const modelCard = document.createElement('div');
+                    modelCard.className = `model-card ${effectiveEnabled ? '' : 'disabled'} ${shouldHide ? 'hidden' : ''}`;
+                    modelCard.setAttribute('data-model-enabled', effectiveEnabled);
+                    modelCard.innerHTML = `
+                        <div class="model-info">
+                            <div class="model-name">${model.name}</div>
+                            <div class="model-status">${effectiveEnabled ? '✅ 已启用' : '❌ 已禁用'}</div>
+                        </div>
+                        <div class="toggle-switch ${effectiveEnabled ? 'active' : ''}"
+                             onclick="toggleModel('${model.name}', ${effectiveEnabled})"></div>
+                    `;
+                    modelsGrid.appendChild(modelCard);
+                });
+            });
+
+            // 更新保存按钮状态
+            updateSaveButtonState();
+        }
+
+        // 切换提供者展开/收起状态
+        function toggleProvider(provider) {
+            const modelsGrid = document.getElementById(`provider-${encodeURIComponent(provider)}`);
+            const icon = document.getElementById(`icon-${encodeURIComponent(provider)}`);
+
+            if (!modelsGrid || !icon) return;
+
+            const isCurrentlyCollapsed = modelsGrid.classList.contains('collapsed');
+
+            if (isCurrentlyCollapsed) {
+                modelsGrid.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+                collapsedProviders[provider] = false;
+            } else {
+                modelsGrid.classList.add('collapsed');
+                icon.classList.add('collapsed');
+                collapsedProviders[provider] = true;
+            }
+
+            // 保存到 localStorage
+            localStorage.setItem('collapsed_providers', JSON.stringify(collapsedProviders));
+        }
+
+        // 应用模型过滤器
+        function applyModelFilter() {
+            const filterSelect = document.getElementById('model-filter');
+            modelFilter = filterSelect.value;
+            localStorage.setItem('model_filter', modelFilter);
+
+            // 重新渲染模型列表
+            renderModels(modelsData);
+        }
+
+        // 展开所有提供者
+        function expandAllProviders() {
+            if (!modelsData || Object.keys(modelsData).length === 0) {
+                return;
+            }
+
+            Object.keys(modelsData).forEach(provider => {
+                const modelsGrid = document.getElementById(`provider-${encodeURIComponent(provider)}`);
+                const icon = document.getElementById(`icon-${encodeURIComponent(provider)}`);
+
+                if (modelsGrid && icon) {
+                    modelsGrid.classList.remove('collapsed');
+                    icon.classList.remove('collapsed');
+                    collapsedProviders[provider] = false;
+                }
+            });
+
+            // 保存到 localStorage
+            localStorage.setItem('collapsed_providers', JSON.stringify(collapsedProviders));
+        }
+
+        // 收起所有提供者
+        function collapseAllProviders() {
+            if (!modelsData || Object.keys(modelsData).length === 0) {
+                return;
+            }
+
+            Object.keys(modelsData).forEach(provider => {
+                const modelsGrid = document.getElementById(`provider-${encodeURIComponent(provider)}`);
+                const icon = document.getElementById(`icon-${encodeURIComponent(provider)}`);
+
+                if (modelsGrid && icon) {
+                    modelsGrid.classList.add('collapsed');
+                    icon.classList.add('collapsed');
+                    collapsedProviders[provider] = true;
+                }
+            });
+
+            // 保存到 localStorage
+            localStorage.setItem('collapsed_providers', JSON.stringify(collapsedProviders));
+        }
+
+        // 切换模型状态
+        function toggleModel(modelName, currentStatus) {
+            const newStatus = !currentStatus;
+            pendingChanges[modelName] = newStatus;
+
+            // 更新UI
+            modelsData = updateModelStatusInData(modelsData, modelName, newStatus);
+            renderModels(modelsData);
+
+            showMessage(`模型 ${modelName} 将被${newStatus ? '启用' : '禁用'}，请点击"保存所有更改"以应用`, 'info');
+        }
+
+        // 提供者内全部启用
+        function enableAllInProvider(provider) {
+            const models = modelsData[provider];
+            if (!models) return;
+
+            models.forEach(model => {
+                pendingChanges[model.name] = true;
+            });
+
+            renderModels(modelsData);
+            showMessage(`${provider} 提供者的所有模型将被启用`, 'info');
+        }
+
+        // 提供者内全部禁用
+        function disableAllInProvider(provider) {
+            const models = modelsData[provider];
+            if (!models) return;
+
+            models.forEach(model => {
+                pendingChanges[model.name] = false;
+            });
+
+            renderModels(modelsData);
+            showMessage(`${provider} 提供者的所有模型将被禁用`, 'info');
+        }
+
+        // 保存所有更改
+        async function saveAllChanges() {
+            if (Object.keys(pendingChanges).length === 0) {
+                showMessage('没有待保存的更改', 'info');
+                return;
+            }
+
+            const updates = Object.entries(pendingChanges).map(([model_name, enabled]) => ({
+                model_name,
+                enabled
+            }));
+
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '保存中...';
+
+            try {
+                const response = await fetch(`${prefix}/models/batch_update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminPassword}`
+                    },
+                    body: JSON.stringify({ updates })
+                });
+
+                if (!response.ok) {
+                    throw new Error('保存失败');
+                }
+
+                const result = await response.json();
+                pendingChanges = {};
+                showMessage('所有更改已保存', 'success');
+
+                // 重新加载模型列表
+                setTimeout(() => {
+                    loadModels();
+                }, 1000);
+
+            } catch (error) {
+                showMessage('保存失败: ' + error.message, 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '保存所有更改';
+            }
+        }
+
+        // 返回监控面板
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // 工具函数：更新数据中的模型状态
+        function updateModelStatusInData(data, modelName, enabled) {
+            const newData = JSON.parse(JSON.stringify(data));
+            Object.values(newData).forEach(models => {
+                models.forEach(model => {
+                    if (model.name === modelName) {
+                        model.enabled = enabled;
+                    }
+                });
+            });
+            return newData;
+        }
+
+        // 更新保存按钮状态
+        function updateSaveButtonState() {
+            const saveBtn = document.getElementById('save-btn');
+            const hasChanges = Object.keys(pendingChanges).length > 0;
+
+            if (hasChanges) {
+                saveBtn.style.background = '#28a745';
+                saveBtn.textContent = `保存所有更改 (${Object.keys(pendingChanges).length})`;
+            } else {
+                saveBtn.style.background = '#667eea';
+                saveBtn.textContent = '保存所有更改';
+            }
+        }
+
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('message-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${type}`;
+            messageDiv.textContent = message;
+            container.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

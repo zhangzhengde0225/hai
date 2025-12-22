@@ -21,7 +21,8 @@ def load_models(model_config: "LLMModelConfig"):
         try:
             models_res = client.models.list()
             model_names = list(set([x.id.lower() for x in models_res]))
-
+            model_names = sorted(model_names)
+            
             models = []
 
             for model in model_names:

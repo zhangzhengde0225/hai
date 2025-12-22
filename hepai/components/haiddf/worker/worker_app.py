@@ -103,12 +103,21 @@ class HWorkerAPP(FastAPI):
         # 初始化模型信号量和缓存
         self._init_model_resources(models=models)
         self._init_routers(config=worker_config)
-        
+
         self.worker = CommonWorker(
-            app=self, models=models, worker_config=worker_config, 
+            app=self, models=models, worker_config=worker_config,
             logger=self.logger)
-        
-    
+
+        # 生成管理员密码（在 worker 创建之后，因为需要 worker_id）
+        if worker_config.enable_secret_key:
+            admin_seed = utils.get_simple_machine_seed(extra_indicators=[self.worker.worker_id])
+            self.admin_password = utils.gen_one_key(prefix='admin-', lenth=20, seed=admin_seed)
+            self.logger.info(f"Admin password for model management: `{self.admin_password}`")
+            authorizer.admin_password = self.admin_password
+        else:
+            self.admin_password = None
+
+
         self._docs_content_cache = None  # 缓存docs内容
         self._html_mk_content_cache = None  # 缓存markdown内容
         self._cache_lock = asyncio.Lock()  # 缓存锁防止竞态条件
@@ -141,12 +150,17 @@ class HWorkerAPP(FastAPI):
             from .routers.llm_router import LLMRouterGroup
             llm_rg = LLMRouterGroup(prefix=config.route_prefix, parent_app=self)
             self.include_router(llm_rg.router, prefix=llm_rg.prefix, tags=llm_rg.tags)
-            
+
             from .routers.anthropic_router import AnthropicRouterGroup
             anthropic_rg = AnthropicRouterGroup(prefix=config.route_prefix, parent_app=self)
             self.include_router(anthropic_rg.router, prefix=anthropic_rg.prefix, tags=anthropic_rg.tags)
-            
-        # 4 mcp router
+
+        # 4 model manager router
+        from .routers.model_manager_router import ModelManagerRouterGroup
+        model_manager_rg = ModelManagerRouterGroup(prefix=config.route_prefix, parent_app=self)
+        self.include_router(model_manager_rg.router, prefix=model_manager_rg.prefix, tags=model_manager_rg.tags)
+
+        # 5 mcp router
         # if config.enable_mcp:
         #     from .mcp_adapter.mcp_router import MCPRouterGroup
         #     mcp_rg = MCPRouterGroup(prefix=config.route_prefix, parent_app=self)
@@ -253,28 +267,43 @@ class HWorkerAPP(FastAPI):
             function: str = "__call__",
             ):
         self.global_counter += 1
-        
+
         # 确定使用的模型
         if model is None:
             if len(self.worker.models) == 1:
                 model = self.worker.models[0].name
             else:
                 raise HTTPException(status_code=400, detail="Model parameter is required when multiple models available")
-        
+
         # 检查模型是否存在
         if model not in self.model_semaphores:
             raise HTTPException(status_code=404, detail=f"Model '{model}' not found")
-        
+
+        # 【第一次检查】检查模型是否被禁用（获取信号量前）
+        if not self.worker.model_status_manager.is_model_enabled(model):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Model '{model}' is currently disabled by administrator"
+            )
+
         # 获取该模型的信号量
         model_semaphore = self.model_semaphores[model]
         await model_semaphore.acquire()
-        
+
+        # 【第二次检查】再次检查模型状态（防止在等待期间被禁用）
+        if not self.worker.model_status_manager.is_model_enabled(model):
+            self.release_model_semaphore(model_semaphore)
+            raise HTTPException(
+                status_code=403,
+                detail=f"Model '{model}' was disabled while request was queued"
+            )
+
         # print(f"[{self.global_counter}] Acquired semaphore for model '{model}'. Current queue length: {self.get_queue_length(model)}")
-        
+
         try:
             rst = await self.worker.unified_gate_async(
                 model=model,
-                function=function, 
+                function=function,
                 args=function_params.args,
                 kwargs=function_params.kwargs)
         except Exception as e:
@@ -282,7 +311,7 @@ class HWorkerAPP(FastAPI):
             # self.release_model_semaphore(model)
             self.release_model_semaphore(model_semaphore)
             raise e
-        
+
         # background_tasks.add_task(self.release_model_semaphore, model_semaphore)
         self.release_model_semaphore(model_semaphore)
         return rst
