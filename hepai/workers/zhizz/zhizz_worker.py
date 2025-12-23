@@ -73,9 +73,9 @@ class ZhizzWorkerConfig(HWorkerConfig):
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: int = field(default=42606, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
-    # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
+    controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     # controller_address: str = field(default="http://localhost:42500", metadata={"help": "Controller's address"})
-    controller_address: str = field(default="http://202.122.38.201:42601", metadata={"help": "Controller's address"})
+    # controller_address: str = field(default="http://202.122.38.201:42601", metadata={"help": "Controller's address"})
     
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
@@ -88,6 +88,7 @@ class ZhizzWorkerConfig(HWorkerConfig):
     enable_secret_key: bool = field(default=True, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=True, metadata={"help": "Enable LLM router, only for llm worker"})
     model_config_dir: Optional[str] = field(default=str(here), metadata={"help": "Directory to store model_config.yaml, if None, will try to use worker script directory or current working directory"})
+    is_free: bool = field(default=False, metadata={"help": "Whether the model is free to use, if False, model owner should setup model pricing via controller"})
     
     # controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
     
