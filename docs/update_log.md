@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2025.12.31 v1.3.3 修复config_loader.py中导入模块的bug，适配python3.13+; 修复requirements.txt中mcp依赖缺失的问题。
 + 2025.12.20 v1.3.2 新增worker配置项is_free，用于指示模型是否免费使用，默认为True。如果设置为False，需要管理员在控制台配置模型的定价策略。
 + 2025.12.18 v1.3.1 worker支持dashboard配置啟用和禁用。
 + 2025.12.17 v1.3.0 Worker支持metadata字段，用于支持中枢-边缘智能体协同。

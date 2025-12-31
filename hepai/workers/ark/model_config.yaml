@@ -25,12 +25,12 @@ models_list:
     engine: "deepseek-v3-250324"
 
   # 2.月之暗面
-  - model_name: moonshot/kimi-k2-250711
-    engine: "kimi-k2-250711"
+  # - model_name: moonshot/kimi-k2-250711
+  #   engine: "kimi-k2-250711"
 
   ## 2.1 配置latest版本的模型
-  - model_name: moonshot/kimi-k2
-    engine: "kimi-k2-250711"
+  # - model_name: moonshot/kimi-k2
+  #   engine: "kimi-k2-250711"
 
   
   # 3.Doubao
