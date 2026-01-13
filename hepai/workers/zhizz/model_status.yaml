@@ -1,1923 +1,2047 @@
-last_modified: 1766505112.4717777
+last_modified: 1768293449.3317301
 models:
   01-ai/yi-34b-chat:
     enabled: false
-    last_updated: 1766505112.4719129
+    last_updated: 1768293449.331921
     provider: 01-ai
   01-ai/yi-6b-chat:
     enabled: false
-    last_updated: 1766505112.471913
+    last_updated: 1768293449.3319216
     provider: 01-ai
   01-ai/yi-large:
     enabled: false
-    last_updated: 1766505112.4719136
+    last_updated: 1768293449.3319218
     provider: 01-ai
   01-ai/yi-large-rag:
     enabled: false
-    last_updated: 1766505112.4719138
+    last_updated: 1768293449.3319225
     provider: 01-ai
   01-ai/yi-large-turbo:
     enabled: false
-    last_updated: 1766505112.471914
+    last_updated: 1768293449.331923
     provider: 01-ai
   01-ai/yi-lightning:
     enabled: false
-    last_updated: 1766505112.4719143
+    last_updated: 1768293449.331923
     provider: 01-ai
   01-ai/yi-medium:
     enabled: false
-    last_updated: 1766505112.4719145
+    last_updated: 1768293449.3319235
     provider: 01-ai
   01-ai/yi-medium-200k:
     enabled: false
-    last_updated: 1766505112.4719148
+    last_updated: 1768293449.3319237
     provider: 01-ai
   01-ai/yi-spark:
     enabled: false
-    last_updated: 1766505112.471915
+    last_updated: 1768293449.331924
     provider: 01-ai
   01-ai/yi-vision:
     enabled: false
-    last_updated: 1766505112.4719152
+    last_updated: 1768293449.3319244
     provider: 01-ai
   360/360zhinao2-o1:
     enabled: false
-    last_updated: 1766505112.4717817
+    last_updated: 1768293449.331736
     provider: '360'
   aliyun/qwen-72b-chat:
     enabled: false
-    last_updated: 1766505112.471893
+    last_updated: 1768293449.3318887
     provider: aliyun
   aliyun/qwen-coder-plus:
     enabled: false
-    last_updated: 1766505112.4718933
+    last_updated: 1768293449.331889
     provider: aliyun
   aliyun/qwen-coder-plus-2024-11-06:
     enabled: false
-    last_updated: 1766505112.4718935
+    last_updated: 1768293449.3318894
     provider: aliyun
   aliyun/qwen-coder-plus-latest:
     enabled: false
-    last_updated: 1766505112.4718938
+    last_updated: 1768293449.3318899
     provider: aliyun
   aliyun/qwen-coder-turbo:
     enabled: false
-    last_updated: 1766505112.471894
+    last_updated: 1768293449.33189
     provider: aliyun
   aliyun/qwen-coder-turbo-2024-09-19:
     enabled: false
-    last_updated: 1766505112.4718943
+    last_updated: 1768293449.3318903
     provider: aliyun
   aliyun/qwen-coder-turbo-latest:
     enabled: false
-    last_updated: 1766505112.4718945
+    last_updated: 1768293449.3318906
     provider: aliyun
   aliyun/qwen-deep-research:
     enabled: false
-    last_updated: 1766505112.4718947
+    last_updated: 1768293449.3318918
     provider: aliyun
   aliyun/qwen-doc-turbo:
     enabled: false
-    last_updated: 1766505112.4718947
+    last_updated: 1768293449.331892
     provider: aliyun
   aliyun/qwen-flash:
     enabled: false
-    last_updated: 1766505112.471895
+    last_updated: 1768293449.3318923
     provider: aliyun
   aliyun/qwen-flash-2025-07-28:
     enabled: false
-    last_updated: 1766505112.4718952
+    last_updated: 1768293449.3318927
+    provider: aliyun
+  aliyun/qwen-image:
+    enabled: true
+    last_updated: 1768293449.331893
+    provider: aliyun
+  aliyun/qwen-image-edit:
+    enabled: true
+    last_updated: 1768293449.3318932
+    provider: aliyun
+  aliyun/qwen-image-edit-plus:
+    enabled: true
+    last_updated: 1768293449.3318937
+    provider: aliyun
+  aliyun/qwen-image-edit-plus-2025-10-30:
+    enabled: true
+    last_updated: 1768293449.331894
+    provider: aliyun
+  aliyun/qwen-image-edit-plus-2025-12-15:
+    enabled: true
+    last_updated: 1768293449.3318942
+    provider: aliyun
+  aliyun/qwen-image-max:
+    enabled: true
+    last_updated: 1768293449.3318946
+    provider: aliyun
+  aliyun/qwen-image-max-2025-12-30:
+    enabled: true
+    last_updated: 1768293449.3318949
+    provider: aliyun
+  aliyun/qwen-image-plus:
+    enabled: true
+    last_updated: 1768293449.331895
+    provider: aliyun
+  aliyun/qwen-image-plus-2026-01-09:
+    enabled: true
+    last_updated: 1768293449.3318956
     provider: aliyun
   aliyun/qwen-long:
     enabled: false
-    last_updated: 1766505112.4718955
+    last_updated: 1768293449.3318958
     provider: aliyun
   aliyun/qwen-long-2025-01-25:
     enabled: false
-    last_updated: 1766505112.4718957
+    last_updated: 1768293449.331896
     provider: aliyun
   aliyun/qwen-long-latest:
     enabled: false
-    last_updated: 1766505112.4718962
+    last_updated: 1768293449.3318965
     provider: aliyun
   aliyun/qwen-max:
     enabled: false
-    last_updated: 1766505112.4718962
+    last_updated: 1768293449.331897
     provider: aliyun
   aliyun/qwen-max-1201:
     enabled: false
-    last_updated: 1766505112.4718964
+    last_updated: 1768293449.3318973
     provider: aliyun
   aliyun/qwen-max-2025-01-25:
     enabled: false
-    last_updated: 1766505112.4718966
+    last_updated: 1768293449.3318975
     provider: aliyun
   aliyun/qwen-max-latest:
     enabled: false
-    last_updated: 1766505112.471897
+    last_updated: 1768293449.3318982
     provider: aliyun
   aliyun/qwen-max-longcontext:
     enabled: false
-    last_updated: 1766505112.4718971
+    last_updated: 1768293449.3318987
     provider: aliyun
   aliyun/qwen-mt-flash:
     enabled: false
-    last_updated: 1766505112.4718974
+    last_updated: 1768293449.331899
+    provider: aliyun
+  aliyun/qwen-mt-image:
+    enabled: true
+    last_updated: 1768293449.3318992
     provider: aliyun
   aliyun/qwen-mt-plus:
     enabled: false
-    last_updated: 1766505112.4718976
+    last_updated: 1768293449.3318994
     provider: aliyun
   aliyun/qwen-mt-turbo:
     enabled: false
-    last_updated: 1766505112.4718978
+    last_updated: 1768293449.3319
     provider: aliyun
   aliyun/qwen-omni-turbo:
     enabled: false
-    last_updated: 1766505112.471898
+    last_updated: 1768293449.3319001
     provider: aliyun
   aliyun/qwen-omni-turbo-2025-01-19:
     enabled: false
-    last_updated: 1766505112.4718983
+    last_updated: 1768293449.3319006
     provider: aliyun
   aliyun/qwen-omni-turbo-2025-03-26:
     enabled: false
-    last_updated: 1766505112.4718986
+    last_updated: 1768293449.3319008
     provider: aliyun
   aliyun/qwen-omni-turbo-latest:
     enabled: false
-    last_updated: 1766505112.4718988
+    last_updated: 1768293449.331901
     provider: aliyun
   aliyun/qwen-plus:
     enabled: false
-    last_updated: 1766505112.471899
+    last_updated: 1768293449.3319016
     provider: aliyun
   aliyun/qwen-plus-2025-04-28:
     enabled: false
-    last_updated: 1766505112.471899
+    last_updated: 1768293449.3319018
     provider: aliyun
   aliyun/qwen-plus-2025-07-14:
     enabled: false
-    last_updated: 1766505112.4718995
+    last_updated: 1768293449.331902
     provider: aliyun
   aliyun/qwen-plus-2025-07-28:
     enabled: false
-    last_updated: 1766505112.4718997
+    last_updated: 1768293449.3319023
     provider: aliyun
   aliyun/qwen-plus-latest:
     enabled: false
-    last_updated: 1766505112.4719
+    last_updated: 1768293449.3319027
     provider: aliyun
   aliyun/qwen-turbo:
     enabled: false
-    last_updated: 1766505112.4719002
+    last_updated: 1768293449.331903
     provider: aliyun
   aliyun/qwen-turbo-2025-04-28:
     enabled: false
-    last_updated: 1766505112.4719005
+    last_updated: 1768293449.3319032
     provider: aliyun
   aliyun/qwen-turbo-2025-07-15:
     enabled: false
-    last_updated: 1766505112.4719005
+    last_updated: 1768293449.3319037
     provider: aliyun
   aliyun/qwen-turbo-latest:
     enabled: false
-    last_updated: 1766505112.4719007
+    last_updated: 1768293449.3319037
     provider: aliyun
   aliyun/qwen-vl-chat-v1:
     enabled: false
-    last_updated: 1766505112.471901
+    last_updated: 1768293449.3319042
     provider: aliyun
   aliyun/qwen-vl-max:
     enabled: false
-    last_updated: 1766505112.4719012
+    last_updated: 1768293449.3319046
     provider: aliyun
   aliyun/qwen-vl-max-latest:
     enabled: false
-    last_updated: 1766505112.4719014
+    last_updated: 1768293449.3319051
     provider: aliyun
   aliyun/qwen-vl-v1:
     enabled: false
-    last_updated: 1766505112.4719014
+    last_updated: 1768293449.3319054
     provider: aliyun
   aliyun/qwen1.5-110b-chat:
     enabled: false
-    last_updated: 1766505112.471902
+    last_updated: 1768293449.3319056
     provider: aliyun
   aliyun/qwen1.5-72b-chat:
     enabled: false
-    last_updated: 1766505112.471902
+    last_updated: 1768293449.3319058
     provider: aliyun
   aliyun/qwen2-0.5b-instruct:
     enabled: false
-    last_updated: 1766505112.4719021
+    last_updated: 1768293449.3319066
     provider: aliyun
   aliyun/qwen2-1.5b-instruct:
     enabled: false
-    last_updated: 1766505112.4719024
+    last_updated: 1768293449.3319068
     provider: aliyun
   aliyun/qwen2-57b-instruct:
     enabled: false
-    last_updated: 1766505112.4719026
+    last_updated: 1768293449.331907
     provider: aliyun
   aliyun/qwen2-72b-instruct:
     enabled: false
-    last_updated: 1766505112.471903
+    last_updated: 1768293449.3319073
     provider: aliyun
   aliyun/qwen2-7b-instruct:
     enabled: false
-    last_updated: 1766505112.4719033
+    last_updated: 1768293449.3319075
     provider: aliyun
   aliyun/qwen2.5-0.5b-instruct:
     enabled: false
-    last_updated: 1766505112.4719033
+    last_updated: 1768293449.3319077
     provider: aliyun
   aliyun/qwen2.5-1.5b-instruct:
     enabled: false
-    last_updated: 1766505112.4719036
+    last_updated: 1768293449.331908
     provider: aliyun
   aliyun/qwen2.5-14b-instruct:
     enabled: false
-    last_updated: 1766505112.4719038
+    last_updated: 1768293449.3319085
     provider: aliyun
   aliyun/qwen2.5-32b-instruct:
     enabled: false
-    last_updated: 1766505112.471904
+    last_updated: 1768293449.3319087
     provider: aliyun
   aliyun/qwen2.5-3b-instruct:
     enabled: false
-    last_updated: 1766505112.4719043
+    last_updated: 1768293449.331909
     provider: aliyun
   aliyun/qwen2.5-72b-instruct:
     enabled: false
-    last_updated: 1766505112.4719043
+    last_updated: 1768293449.3319094
     provider: aliyun
   aliyun/qwen2.5-7b-instruct:
     enabled: false
-    last_updated: 1766505112.4719045
+    last_updated: 1768293449.3319097
     provider: aliyun
   aliyun/qwen2.5-vl-32b-instruct:
     enabled: false
-    last_updated: 1766505112.4719048
+    last_updated: 1768293449.33191
     provider: aliyun
   aliyun/qwen2.5-vl-3b-instruct:
     enabled: false
-    last_updated: 1766505112.471905
+    last_updated: 1768293449.3319101
     provider: aliyun
   aliyun/qwen2.5-vl-72b-instruct:
     enabled: false
-    last_updated: 1766505112.4719052
+    last_updated: 1768293449.3319104
     provider: aliyun
   aliyun/qwen2.5-vl-7b-instruct:
     enabled: false
-    last_updated: 1766505112.4719055
+    last_updated: 1768293449.3319106
     provider: aliyun
   aliyun/qwen3-0.6b:
     enabled: false
-    last_updated: 1766505112.4719057
+    last_updated: 1768293449.3319108
     provider: aliyun
   aliyun/qwen3-1.7b:
     enabled: false
-    last_updated: 1766505112.471906
+    last_updated: 1768293449.331911
     provider: aliyun
   aliyun/qwen3-14b:
     enabled: false
-    last_updated: 1766505112.4719062
+    last_updated: 1768293449.3319113
     provider: aliyun
   aliyun/qwen3-235b-a22b:
     enabled: false
-    last_updated: 1766505112.4719067
+    last_updated: 1768293449.3319116
     provider: aliyun
   aliyun/qwen3-30b-a3b:
     enabled: false
-    last_updated: 1766505112.471907
+    last_updated: 1768293449.331912
     provider: aliyun
   aliyun/qwen3-32b:
     enabled: false
-    last_updated: 1766505112.471907
+    last_updated: 1768293449.3319125
     provider: aliyun
   aliyun/qwen3-4b:
     enabled: false
-    last_updated: 1766505112.4719074
+    last_updated: 1768293449.331913
     provider: aliyun
   aliyun/qwen3-8b:
     enabled: false
-    last_updated: 1766505112.4719074
+    last_updated: 1768293449.3319132
     provider: aliyun
   aliyun/qwen3-coder-plus:
-    enabled: false
-    last_updated: 1766505112.4719079
+    enabled: true
+    last_updated: 1768293449.3319137
     provider: aliyun
   aliyun/qwen3-coder-plus-2025-07-22:
-    enabled: false
-    last_updated: 1766505112.471908
+    enabled: true
+    last_updated: 1768293449.3319142
     provider: aliyun
   aliyun/qwen3-max:
     enabled: true
-    last_updated: 1766505112.4719083
+    last_updated: 1768293449.3319144
     provider: aliyun
   aliyun/qwen3-max-2025-09-23:
     enabled: false
-    last_updated: 1766505112.4719083
+    last_updated: 1768293449.3319147
     provider: aliyun
   aliyun/qwen3-max-preview:
     enabled: false
-    last_updated: 1766505112.4719086
+    last_updated: 1768293449.3319154
     provider: aliyun
   aliyun/qwen3-vl-235b-a22b-instruct:
     enabled: false
-    last_updated: 1766505112.4719088
+    last_updated: 1768293449.3319156
     provider: aliyun
   aliyun/qwen3-vl-235b-a22b-thinking:
     enabled: false
-    last_updated: 1766505112.4719093
+    last_updated: 1768293449.331916
     provider: aliyun
   aliyun/qwen3-vl-30b-a3b-instruct:
     enabled: false
-    last_updated: 1766505112.4719093
+    last_updated: 1768293449.3319163
     provider: aliyun
   aliyun/qwen3-vl-30b-a3b-thinking:
     enabled: false
-    last_updated: 1766505112.4719095
+    last_updated: 1768293449.3319166
     provider: aliyun
   aliyun/qwq-plus:
     enabled: false
-    last_updated: 1766505112.4719102
+    last_updated: 1768293449.3319168
     provider: aliyun
   aliyun/qwq-plus-2025-03-05:
     enabled: false
-    last_updated: 1766505112.4719102
+    last_updated: 1768293449.331917
     provider: aliyun
   aliyun/qwq-plus-latest:
     enabled: false
-    last_updated: 1766505112.4719105
+    last_updated: 1768293449.3319175
     provider: aliyun
   anthropic/claude-3-5-haiku-20241022:
     enabled: false
-    last_updated: 1766505112.4717894
+    last_updated: 1768293449.3317466
     provider: anthropic
   anthropic/claude-3-5-sonnet-20240620:
     enabled: false
-    last_updated: 1766505112.4717896
+    last_updated: 1768293449.331747
     provider: anthropic
   anthropic/claude-3-5-sonnet-20241022:
     enabled: false
-    last_updated: 1766505112.4717898
+    last_updated: 1768293449.3317473
     provider: anthropic
   anthropic/claude-3-7-sonnet-20250219:
     enabled: false
-    last_updated: 1766505112.47179
+    last_updated: 1768293449.3317475
     provider: anthropic
   anthropic/claude-3-7-sonnet-20250219-thinking:
     enabled: false
-    last_updated: 1766505112.4717903
+    last_updated: 1768293449.3317482
     provider: anthropic
   anthropic/claude-3-7-sonnet-latest:
     enabled: false
-    last_updated: 1766505112.4717906
+    last_updated: 1768293449.3317487
     provider: anthropic
   anthropic/claude-3-7-sonnet-thinking:
     enabled: false
-    last_updated: 1766505112.4717913
+    last_updated: 1768293449.3317492
     provider: anthropic
   anthropic/claude-3-haiku-20240307:
     enabled: false
-    last_updated: 1766505112.4717915
+    last_updated: 1768293449.3317494
     provider: anthropic
   anthropic/claude-3-opus-20240229:
     enabled: false
-    last_updated: 1766505112.471792
+    last_updated: 1768293449.3317497
     provider: anthropic
   anthropic/claude-3-sonnet-20240229:
     enabled: false
-    last_updated: 1766505112.4717922
+    last_updated: 1768293449.3317502
     provider: anthropic
   anthropic/claude-haiku-4-5:
     enabled: true
-    last_updated: 1766505112.4717925
+    last_updated: 1768293449.3317504
     provider: anthropic
   anthropic/claude-haiku-4-5-20251001:
     enabled: true
-    last_updated: 1766505112.4717927
+    last_updated: 1768293449.331751
     provider: anthropic
   anthropic/claude-haiku-4-5-20251001-thinking:
     enabled: true
-    last_updated: 1766505112.471793
+    last_updated: 1768293449.3317513
     provider: anthropic
   anthropic/claude-opus-4-1:
     enabled: true
-    last_updated: 1766505112.4717937
+    last_updated: 1768293449.3317516
     provider: anthropic
   anthropic/claude-opus-4-1-20250805:
     enabled: false
-    last_updated: 1766505112.471794
+    last_updated: 1768293449.3317525
     provider: anthropic
   anthropic/claude-opus-4-1-20250805-thinking:
     enabled: false
-    last_updated: 1766505112.4717946
+    last_updated: 1768293449.3317533
     provider: anthropic
   anthropic/claude-opus-4-20250514:
     enabled: false
-    last_updated: 1766505112.4717948
+    last_updated: 1768293449.3317535
     provider: anthropic
   anthropic/claude-opus-4-20250514-thinking:
     enabled: false
-    last_updated: 1766505112.471795
+    last_updated: 1768293449.3317537
     provider: anthropic
   anthropic/claude-opus-4-5:
     enabled: true
-    last_updated: 1766505112.4717956
+    last_updated: 1768293449.3317542
     provider: anthropic
   anthropic/claude-opus-4-5-20251101:
     enabled: true
-    last_updated: 1766505112.4717958
+    last_updated: 1768293449.3317547
     provider: anthropic
   anthropic/claude-opus-4-5-20251101-thinking:
     enabled: true
-    last_updated: 1766505112.471796
+    last_updated: 1768293449.331755
     provider: anthropic
   anthropic/claude-sonnet-4-20250514:
     enabled: false
-    last_updated: 1766505112.4717965
+    last_updated: 1768293449.3317552
     provider: anthropic
   anthropic/claude-sonnet-4-20250514-thinking:
     enabled: false
-    last_updated: 1766505112.4717965
+    last_updated: 1768293449.3317556
     provider: anthropic
   anthropic/claude-sonnet-4-5:
     enabled: true
-    last_updated: 1766505112.4717968
+    last_updated: 1768293449.331756
     provider: anthropic
   anthropic/claude-sonnet-4-5-20250929:
     enabled: true
-    last_updated: 1766505112.4717972
+    last_updated: 1768293449.3317566
     provider: anthropic
   anthropic/claude-sonnet-4-5-20250929-thinking:
     enabled: true
-    last_updated: 1766505112.4717975
+    last_updated: 1768293449.3317568
     provider: anthropic
   baichuan/baichuan-7b-v1:
     enabled: false
-    last_updated: 1766505112.471784
+    last_updated: 1768293449.33174
     provider: baichuan
   baichuan/baichuan2-13b-chat-v1:
     enabled: false
-    last_updated: 1766505112.4717844
+    last_updated: 1768293449.3317401
     provider: baichuan
   baichuan/baichuan2-53b:
     enabled: false
-    last_updated: 1766505112.471785
+    last_updated: 1768293449.3317409
     provider: baichuan
   baichuan/baichuan2-7b-chat-v1:
     enabled: false
-    last_updated: 1766505112.4717853
+    last_updated: 1768293449.331741
     provider: baichuan
   baichuan/baichuan2-turbo:
     enabled: false
-    last_updated: 1766505112.4717855
+    last_updated: 1768293449.3317413
     provider: baichuan
   baichuan/baichuan2-turbo-192k:
     enabled: false
-    last_updated: 1766505112.471786
+    last_updated: 1768293449.331742
     provider: baichuan
   baichuan/baichuan3-turbo:
     enabled: false
-    last_updated: 1766505112.471786
+    last_updated: 1768293449.3317423
     provider: baichuan
   baichuan/baichuan3-turbo-128k:
     enabled: false
-    last_updated: 1766505112.4717865
+    last_updated: 1768293449.3317425
     provider: baichuan
   baichuan/baichuan4:
     enabled: false
-    last_updated: 1766505112.4717867
+    last_updated: 1768293449.3317428
     provider: baichuan
   baichuan/baichuan4-air:
     enabled: false
-    last_updated: 1766505112.471787
+    last_updated: 1768293449.331743
     provider: baichuan
   baichuan/baichuan4-turbo:
     enabled: false
-    last_updated: 1766505112.4717875
+    last_updated: 1768293449.3317437
     provider: baichuan
   baidu/ernie-3.5-128k:
     enabled: false
-    last_updated: 1766505112.4718142
+    last_updated: 1768293449.3317814
     provider: baidu
   baidu/ernie-3.5-128k-preview:
     enabled: false
-    last_updated: 1766505112.4718144
+    last_updated: 1768293449.3317816
     provider: baidu
   baidu/ernie-3.5-8k:
     enabled: false
-    last_updated: 1766505112.4718146
+    last_updated: 1768293449.331782
     provider: baidu
   baidu/ernie-3.5-8k-0613:
     enabled: false
-    last_updated: 1766505112.4718149
+    last_updated: 1768293449.3317823
     provider: baidu
   baidu/ernie-3.5-8k-0701:
     enabled: false
-    last_updated: 1766505112.471815
+    last_updated: 1768293449.3317826
     provider: baidu
   baidu/ernie-3.5-8k-preview:
     enabled: false
-    last_updated: 1766505112.4718156
+    last_updated: 1768293449.3317828
     provider: baidu
   baidu/ernie-4.0-8k:
     enabled: false
-    last_updated: 1766505112.4718158
+    last_updated: 1768293449.3317835
     provider: baidu
   baidu/ernie-4.0-8k-0613:
     enabled: false
-    last_updated: 1766505112.4718163
+    last_updated: 1768293449.3317838
     provider: baidu
   baidu/ernie-4.0-8k-latest:
     enabled: false
-    last_updated: 1766505112.4718165
+    last_updated: 1768293449.3317842
     provider: baidu
   baidu/ernie-4.0-8k-preview:
     enabled: false
-    last_updated: 1766505112.4718168
+    last_updated: 1768293449.3317845
     provider: baidu
   baidu/ernie-4.0-turbo-128k:
     enabled: false
-    last_updated: 1766505112.4718173
+    last_updated: 1768293449.331785
     provider: baidu
   baidu/ernie-4.0-turbo-8k:
     enabled: false
-    last_updated: 1766505112.4718175
+    last_updated: 1768293449.331785
     provider: baidu
   baidu/ernie-4.0-turbo-8k-0628:
     enabled: false
-    last_updated: 1766505112.4718182
+    last_updated: 1768293449.3317854
     provider: baidu
   baidu/ernie-4.0-turbo-8k-0927:
     enabled: false
-    last_updated: 1766505112.4718184
+    last_updated: 1768293449.3317857
     provider: baidu
   baidu/ernie-4.0-turbo-8k-latest:
     enabled: false
-    last_updated: 1766505112.4718187
+    last_updated: 1768293449.331786
     provider: baidu
   baidu/ernie-4.0-turbo-8k-preview:
     enabled: false
-    last_updated: 1766505112.471819
+    last_updated: 1768293449.3317862
     provider: baidu
   baidu/ernie-4.5-8k-preview:
     enabled: false
-    last_updated: 1766505112.4718192
+    last_updated: 1768293449.3317869
     provider: baidu
   baidu/ernie-4.5-turbo-128k:
     enabled: false
-    last_updated: 1766505112.4718196
+    last_updated: 1768293449.3317869
     provider: baidu
   baidu/ernie-4.5-turbo-32k:
     enabled: false
-    last_updated: 1766505112.4718199
+    last_updated: 1768293449.3317873
     provider: baidu
   baidu/ernie-4.5-turbo-vl-32k:
     enabled: false
-    last_updated: 1766505112.47182
+    last_updated: 1768293449.3317876
     provider: baidu
   baidu/ernie-4.5-turbo-vl-32k-preview:
     enabled: false
-    last_updated: 1766505112.4718204
+    last_updated: 1768293449.3317878
     provider: baidu
   baidu/ernie-bot:
     enabled: false
-    last_updated: 1766505112.4718206
+    last_updated: 1768293449.3317883
     provider: baidu
   baidu/ernie-bot-4:
     enabled: false
-    last_updated: 1766505112.4718208
+    last_updated: 1768293449.3317885
     provider: baidu
   baidu/ernie-bot-turbo:
     enabled: false
-    last_updated: 1766505112.471821
+    last_updated: 1768293449.331789
     provider: baidu
   baidu/ernie-lite-8k:
     enabled: false
-    last_updated: 1766505112.4718213
+    last_updated: 1768293449.3317893
     provider: baidu
   baidu/ernie-speed-128k:
     enabled: false
-    last_updated: 1766505112.4718215
+    last_updated: 1768293449.3317897
     provider: baidu
   baidu/ernie-speed-8k:
     enabled: false
-    last_updated: 1766505112.4718218
+    last_updated: 1768293449.33179
     provider: baidu
   baidu/ernie-tiny-8k:
     enabled: false
-    last_updated: 1766505112.471822
+    last_updated: 1768293449.3317904
     provider: baidu
   baidu/ernie-x1-32k:
     enabled: false
-    last_updated: 1766505112.4718223
+    last_updated: 1768293449.3317907
     provider: baidu
   baidu/ernie-x1-32k-preview:
     enabled: false
-    last_updated: 1766505112.4718227
+    last_updated: 1768293449.331791
     provider: baidu
   baidu/ernie-x1-turbo-32k:
     enabled: false
-    last_updated: 1766505112.4718232
+    last_updated: 1768293449.3317912
     provider: baidu
   baidu/x1:
     enabled: false
-    last_updated: 1766505112.4719126
+    last_updated: 1768293449.3319209
     provider: baidu
   bytedance/bot-doubao-pro-32k-browsing-240828:
     enabled: false
-    last_updated: 1766505112.471788
+    last_updated: 1768293449.3317442
     provider: bytedance
   bytedance/bot-doubao-pro-32k-functioncall-241028:
     enabled: false
-    last_updated: 1766505112.4717884
+    last_updated: 1768293449.3317447
     provider: bytedance
   bytedance/doubao-1-5-thinking-pro:
     enabled: false
-    last_updated: 1766505112.471802
+    last_updated: 1768293449.331763
     provider: bytedance
   bytedance/doubao-1-5-thinking-pro-m-250415:
     enabled: false
-    last_updated: 1766505112.4718025
+    last_updated: 1768293449.3317633
     provider: bytedance
   bytedance/doubao-1-5-thinking-pro-m-250428:
     enabled: false
-    last_updated: 1766505112.4718027
+    last_updated: 1768293449.3317637
     provider: bytedance
   bytedance/doubao-1-5-thinking-vision-pro-250428:
     enabled: false
-    last_updated: 1766505112.471803
+    last_updated: 1768293449.331764
+    provider: bytedance
+  bytedance/doubao-1-5-ui-tars-250428:
+    enabled: true
+    last_updated: 1768293449.3317645
     provider: bytedance
   bytedance/doubao-1-5-vision-pro-250328:
     enabled: false
-    last_updated: 1766505112.4718037
+    last_updated: 1768293449.331765
     provider: bytedance
   bytedance/doubao-1.5-lite-32k:
     enabled: false
-    last_updated: 1766505112.471804
+    last_updated: 1768293449.3317654
     provider: bytedance
   bytedance/doubao-1.5-pro-256k:
     enabled: false
-    last_updated: 1766505112.4718041
+    last_updated: 1768293449.3317657
     provider: bytedance
   bytedance/doubao-1.5-pro-256k-250115:
     enabled: false
-    last_updated: 1766505112.4718044
+    last_updated: 1768293449.3317661
     provider: bytedance
   bytedance/doubao-1.5-pro-32k:
     enabled: false
-    last_updated: 1766505112.4718046
+    last_updated: 1768293449.3317666
     provider: bytedance
   bytedance/doubao-1.5-pro-32k-250115:
     enabled: false
-    last_updated: 1766505112.4718049
+    last_updated: 1768293449.331767
     provider: bytedance
   bytedance/doubao-1.5-thinking-pro:
     enabled: false
-    last_updated: 1766505112.4718053
+    last_updated: 1768293449.3317673
     provider: bytedance
   bytedance/doubao-1.5-thinking-pro-250415:
     enabled: false
-    last_updated: 1766505112.4718058
+    last_updated: 1768293449.3317678
     provider: bytedance
   bytedance/doubao-1.5-thinking-pro-m-250415:
     enabled: false
-    last_updated: 1766505112.471806
+    last_updated: 1768293449.331768
     provider: bytedance
   bytedance/doubao-1.5-thinking-pro-m-250428:
     enabled: false
-    last_updated: 1766505112.4718063
+    last_updated: 1768293449.3317685
     provider: bytedance
   bytedance/doubao-1.5-thinking-vision-pro:
     enabled: false
-    last_updated: 1766505112.4718065
+    last_updated: 1768293449.3317688
     provider: bytedance
   bytedance/doubao-1.5-thinking-vision-pro-250428:
     enabled: false
-    last_updated: 1766505112.4718068
+    last_updated: 1768293449.33177
     provider: bytedance
   bytedance/doubao-1.5-vision-lite:
     enabled: false
-    last_updated: 1766505112.471807
+    last_updated: 1768293449.3317704
     provider: bytedance
   bytedance/doubao-1.5-vision-lite-250315:
     enabled: false
-    last_updated: 1766505112.471808
+    last_updated: 1768293449.3317707
     provider: bytedance
   bytedance/doubao-1.5-vision-pro:
     enabled: false
-    last_updated: 1766505112.4718082
+    last_updated: 1768293449.3317711
     provider: bytedance
   bytedance/doubao-1.5-vision-pro-250328:
     enabled: false
-    last_updated: 1766505112.4718084
+    last_updated: 1768293449.3317714
     provider: bytedance
   bytedance/doubao-1.5-vision-pro-32k:
     enabled: false
-    last_updated: 1766505112.4718087
+    last_updated: 1768293449.3317716
     provider: bytedance
   bytedance/doubao-1.5-vision-pro-32k-250115:
     enabled: false
-    last_updated: 1766505112.471809
+    last_updated: 1768293449.3317719
     provider: bytedance
   bytedance/doubao-lite-128k:
     enabled: false
-    last_updated: 1766505112.4718094
+    last_updated: 1768293449.3317723
     provider: bytedance
   bytedance/doubao-lite-32k:
     enabled: false
-    last_updated: 1766505112.4718096
+    last_updated: 1768293449.3317726
     provider: bytedance
   bytedance/doubao-lite-4k:
     enabled: false
-    last_updated: 1766505112.4718099
+    last_updated: 1768293449.331773
     provider: bytedance
   bytedance/doubao-pro-128k:
     enabled: false
-    last_updated: 1766505112.47181
+    last_updated: 1768293449.3317735
     provider: bytedance
   bytedance/doubao-pro-32k:
     enabled: false
-    last_updated: 1766505112.4718103
+    last_updated: 1768293449.331774
     provider: bytedance
   bytedance/doubao-pro-4k:
     enabled: false
-    last_updated: 1766505112.4718106
+    last_updated: 1768293449.3317745
     provider: bytedance
   bytedance/doubao-seed-1-6-250615:
     enabled: false
-    last_updated: 1766505112.4718108
+    last_updated: 1768293449.3317747
+    provider: bytedance
+  bytedance/doubao-seed-1-6-251015:
+    enabled: true
+    last_updated: 1768293449.331775
     provider: bytedance
   bytedance/doubao-seed-1-6-flash-250615:
     enabled: false
-    last_updated: 1766505112.471811
+    last_updated: 1768293449.3317754
     provider: bytedance
   bytedance/doubao-seed-1-6-flash-250715:
     enabled: false
-    last_updated: 1766505112.4718113
+    last_updated: 1768293449.3317757
     provider: bytedance
   bytedance/doubao-seed-1-6-flash-250828:
     enabled: false
-    last_updated: 1766505112.4718115
+    last_updated: 1768293449.3317761
+    provider: bytedance
+  bytedance/doubao-seed-1-6-lite-251015:
+    enabled: true
+    last_updated: 1768293449.3317769
     provider: bytedance
   bytedance/doubao-seed-1-6-thinking-250615:
     enabled: false
-    last_updated: 1766505112.4718118
+    last_updated: 1768293449.331777
     provider: bytedance
   bytedance/doubao-seed-1-6-thinking-250715:
     enabled: false
-    last_updated: 1766505112.471812
+    last_updated: 1768293449.3317773
     provider: bytedance
   bytedance/doubao-seed-1-6-vision-250815:
     enabled: false
-    last_updated: 1766505112.4718122
+    last_updated: 1768293449.3317778
+    provider: bytedance
+  bytedance/doubao-seed-1-8-251228:
+    enabled: true
+    last_updated: 1768293449.331778
     provider: bytedance
   bytedance/doubao-seed-1.6:
     enabled: false
-    last_updated: 1766505112.4718127
+    last_updated: 1768293449.3317785
     provider: bytedance
   bytedance/doubao-seed-1.6-flash:
     enabled: false
-    last_updated: 1766505112.471813
+    last_updated: 1768293449.3317788
     provider: bytedance
   bytedance/doubao-seed-1.6-flash-250615:
     enabled: false
-    last_updated: 1766505112.4718132
+    last_updated: 1768293449.3317792
     provider: bytedance
   bytedance/doubao-seed-1.6-thinking:
     enabled: false
-    last_updated: 1766505112.4718134
+    last_updated: 1768293449.3317795
     provider: bytedance
   bytedance/doubao-seed-1.6-thinking-250615:
     enabled: false
-    last_updated: 1766505112.4718137
+    last_updated: 1768293449.33178
     provider: bytedance
   bytedance/doubao-seed-1.6-vision:
     enabled: false
-    last_updated: 1766505112.471814
+    last_updated: 1768293449.3317804
+    provider: bytedance
+  bytedance/doubao-seed-code-preview-251028:
+    enabled: true
+    last_updated: 1768293449.3317807
     provider: bytedance
   deepseek-ai/deepseek-chat:
     enabled: false
-    last_updated: 1766505112.4717994
+    last_updated: 1768293449.3317592
     provider: deepseek-ai
   deepseek-ai/deepseek-coder:
     enabled: false
-    last_updated: 1766505112.4717999
+    last_updated: 1768293449.3317595
     provider: deepseek-ai
   deepseek-ai/deepseek-r1:
     enabled: true
-    last_updated: 1766505112.4718
+    last_updated: 1768293449.3317597
     provider: deepseek-ai
   deepseek-ai/deepseek-r1-0528:
     enabled: false
-    last_updated: 1766505112.4718003
+    last_updated: 1768293449.3317602
+    provider: deepseek-ai
+  deepseek-ai/deepseek-r1-250528:
+    enabled: true
+    last_updated: 1768293449.3317604
     provider: deepseek-ai
   deepseek-ai/deepseek-reasoner:
     enabled: false
-    last_updated: 1766505112.4718006
+    last_updated: 1768293449.331761
     provider: deepseek-ai
   deepseek-ai/deepseek-v3:
     enabled: true
-    last_updated: 1766505112.4718008
+    last_updated: 1768293449.3317611
     provider: deepseek-ai
   deepseek-ai/deepseek-v3-0324:
     enabled: false
-    last_updated: 1766505112.471801
+    last_updated: 1768293449.3317614
     provider: deepseek-ai
   deepseek-ai/deepseek-v3.1:
     enabled: true
-    last_updated: 1766505112.4718013
+    last_updated: 1768293449.3317618
     provider: deepseek-ai
   deepseek-ai/deepseek-v3.1-terminus:
     enabled: false
-    last_updated: 1766505112.4718015
+    last_updated: 1768293449.331762
     provider: deepseek-ai
   deepseek-ai/deepseek-v3.2:
     enabled: true
-    last_updated: 1766505112.4718018
+    last_updated: 1768293449.3317628
     provider: deepseek-ai
   google/gemini-2.0-flash:
     enabled: false
-    last_updated: 1766505112.4718235
+    last_updated: 1768293449.3317914
     provider: google
   google/gemini-2.0-flash-exp:
     enabled: false
-    last_updated: 1766505112.4718237
+    last_updated: 1768293449.3317919
     provider: google
   google/gemini-2.0-flash-lite:
     enabled: false
-    last_updated: 1766505112.471824
+    last_updated: 1768293449.331792
     provider: google
   google/gemini-2.0-flash-lite-preview-02-05:
     enabled: false
-    last_updated: 1766505112.4718242
+    last_updated: 1768293449.3317926
     provider: google
   google/gemini-2.0-flash-thinking-exp:
     enabled: false
-    last_updated: 1766505112.4718246
+    last_updated: 1768293449.3317928
     provider: google
   google/gemini-2.0-flash-thinking-exp-1219:
     enabled: false
-    last_updated: 1766505112.471825
+    last_updated: 1768293449.3317933
     provider: google
   google/gemini-2.0-pro-exp-02-05:
     enabled: false
-    last_updated: 1766505112.4718251
+    last_updated: 1768293449.3317935
     provider: google
   google/gemini-2.5-flash:
     enabled: false
-    last_updated: 1766505112.4718254
+    last_updated: 1768293449.331794
     provider: google
   google/gemini-2.5-flash-image:
     enabled: false
-    last_updated: 1766505112.4718256
+    last_updated: 1768293449.3317945
     provider: google
   google/gemini-2.5-flash-image-preview:
     enabled: false
-    last_updated: 1766505112.471826
+    last_updated: 1768293449.331795
     provider: google
   google/gemini-2.5-flash-lite:
     enabled: false
-    last_updated: 1766505112.4718263
+    last_updated: 1768293449.3317952
     provider: google
   google/gemini-2.5-flash-lite-preview-09-2025:
     enabled: false
-    last_updated: 1766505112.4718268
+    last_updated: 1768293449.3317955
     provider: google
   google/gemini-2.5-flash-lite-preview-09-2025-thinking:
     enabled: false
-    last_updated: 1766505112.471827
+    last_updated: 1768293449.3317957
     provider: google
   google/gemini-2.5-flash-lite-thinking:
     enabled: false
-    last_updated: 1766505112.4718273
+    last_updated: 1768293449.3317966
     provider: google
   google/gemini-2.5-flash-preview-04-17:
     enabled: false
-    last_updated: 1766505112.4718277
+    last_updated: 1768293449.331797
     provider: google
   google/gemini-2.5-flash-preview-04-17-thinking:
     enabled: false
-    last_updated: 1766505112.471828
+    last_updated: 1768293449.3317976
     provider: google
   google/gemini-2.5-flash-preview-05-20:
     enabled: false
-    last_updated: 1766505112.4718282
+    last_updated: 1768293449.3317978
     provider: google
   google/gemini-2.5-flash-preview-05-20-thinking:
     enabled: false
-    last_updated: 1766505112.4718285
+    last_updated: 1768293449.331798
     provider: google
   google/gemini-2.5-flash-preview-09-2025:
     enabled: false
-    last_updated: 1766505112.4718287
+    last_updated: 1768293449.3317983
     provider: google
   google/gemini-2.5-flash-preview-09-2025-thinking:
     enabled: false
-    last_updated: 1766505112.471829
+    last_updated: 1768293449.3317988
     provider: google
   google/gemini-2.5-flash-preview-tts:
     enabled: false
-    last_updated: 1766505112.4718294
+    last_updated: 1768293449.331799
     provider: google
   google/gemini-2.5-flash-thinking:
     enabled: false
-    last_updated: 1766505112.4718297
+    last_updated: 1768293449.3317993
     provider: google
   google/gemini-2.5-pro:
     enabled: false
-    last_updated: 1766505112.4718297
+    last_updated: 1768293449.3317997
     provider: google
   google/gemini-2.5-pro-preview-05-06:
     enabled: false
-    last_updated: 1766505112.4718301
+    last_updated: 1768293449.3318
     provider: google
   google/gemini-2.5-pro-preview-05-06-thinking:
     enabled: false
-    last_updated: 1766505112.4718304
+    last_updated: 1768293449.3318014
     provider: google
   google/gemini-2.5-pro-preview-06-05:
     enabled: false
-    last_updated: 1766505112.4718306
+    last_updated: 1768293449.331802
     provider: google
   google/gemini-2.5-pro-preview-06-05-thinking:
     enabled: false
-    last_updated: 1766505112.4718308
+    last_updated: 1768293449.3318021
     provider: google
   google/gemini-2.5-pro-preview-tts:
     enabled: false
-    last_updated: 1766505112.4718316
+    last_updated: 1768293449.3318026
     provider: google
   google/gemini-2.5-pro-thinking:
     enabled: false
-    last_updated: 1766505112.4718318
+    last_updated: 1768293449.331803
     provider: google
   google/gemini-3-flash-preview:
     enabled: true
-    last_updated: 1766505112.471832
+    last_updated: 1768293449.3318033
     provider: google
   google/gemini-3-flash-preview-thinking:
     enabled: true
-    last_updated: 1766505112.4718332
+    last_updated: 1768293449.3318036
     provider: google
   google/gemini-3-pro-image-preview:
     enabled: true
-    last_updated: 1766505112.4718337
+    last_updated: 1768293449.3318038
     provider: google
   google/gemini-3-pro-preview:
     enabled: true
-    last_updated: 1766505112.471834
+    last_updated: 1768293449.3318043
     provider: google
   google/gemini-3-pro-preview-thinking:
     enabled: true
-    last_updated: 1766505112.4718342
+    last_updated: 1768293449.3318048
     provider: google
   iflytech/4.0ultra:
     enabled: false
-    last_updated: 1766505112.4717824
+    last_updated: 1768293449.3317368
     provider: iflytech
   iflytech/generalv3:
     enabled: false
-    last_updated: 1766505112.4718344
+    last_updated: 1768293449.331805
     provider: iflytech
   iflytech/generalv3.5:
     enabled: false
-    last_updated: 1766505112.4718347
+    last_updated: 1768293449.3318055
     provider: iflytech
   iflytech/lite:
     enabled: false
-    last_updated: 1766505112.4718833
+    last_updated: 1768293449.3318725
     provider: iflytech
   iflytech/max-32k:
     enabled: false
-    last_updated: 1766505112.4718845
+    last_updated: 1768293449.3318768
     provider: iflytech
   iflytech/pro-128k:
     enabled: false
-    last_updated: 1766505112.4718928
+    last_updated: 1768293449.3318884
     provider: iflytech
-  meta/llama-4-maverick-17b-128e-instruct:
-    enabled: false
-    last_updated: 1766505112.4718835
+  meta/llama-3-70b-instruct:
+    enabled: true
+    last_updated: 1768293449.3318727
     provider: meta
-  meta/llama-4-scout-17b-16e-instruct:
-    enabled: false
-    last_updated: 1766505112.4718838
+  meta/llama-3-8b-instruct:
+    enabled: true
+    last_updated: 1768293449.331873
     provider: meta
-  meta/llama3-70b-instruct:
-    enabled: false
-    last_updated: 1766505112.471884
+  meta/llama-3.1-405b:
+    enabled: true
+    last_updated: 1768293449.3318734
     provider: meta
-  meta/llama3-8b-instruct:
-    enabled: false
-    last_updated: 1766505112.4718843
+  meta/llama-3.1-405b-instruct:
+    enabled: true
+    last_updated: 1768293449.331874
+    provider: meta
+  meta/llama-3.1-70b-instruct:
+    enabled: true
+    last_updated: 1768293449.3318746
+    provider: meta
+  meta/llama-3.1-8b-instruct:
+    enabled: true
+    last_updated: 1768293449.3318748
+    provider: meta
+  meta/llama-3.2-11b-vision-instruct:
+    enabled: true
+    last_updated: 1768293449.331875
+    provider: meta
+  meta/llama-3.2-1b-instruct:
+    enabled: true
+    last_updated: 1768293449.3318753
+    provider: meta
+  meta/llama-3.2-90b-vision-instruct:
+    enabled: true
+    last_updated: 1768293449.3318756
+    provider: meta
+  meta/llama-3.3-70b-instruct:
+    enabled: true
+    last_updated: 1768293449.331876
+    provider: meta
+  meta/llama-4-maverick:
+    enabled: true
+    last_updated: 1768293449.3318763
+    provider: meta
+  meta/llama-4-scout:
+    enabled: true
+    last_updated: 1768293449.3318765
     provider: meta
   minimax/abab5.5-chat:
     enabled: false
-    last_updated: 1766505112.4717827
+    last_updated: 1768293449.3317373
     provider: minimax
   minimax/abab5.5s-chat:
     enabled: false
-    last_updated: 1766505112.471783
+    last_updated: 1768293449.3317378
     provider: minimax
   minimax/abab6-chat:
     enabled: false
-    last_updated: 1766505112.4717832
+    last_updated: 1768293449.331738
     provider: minimax
   minimax/abab6.5-chat:
     enabled: false
-    last_updated: 1766505112.4717834
+    last_updated: 1768293449.3317385
     provider: minimax
   minimax/abab6.5s-chat:
     enabled: false
-    last_updated: 1766505112.4717839
+    last_updated: 1768293449.3317392
     provider: minimax
   minimax/minimax-m1:
     enabled: false
-    last_updated: 1766505112.4718847
+    last_updated: 1768293449.3318775
+    provider: minimax
+  minimax/minimax-m2:
+    enabled: true
+    last_updated: 1768293449.3318775
+    provider: minimax
+  minimax/minimax-m2-stable:
+    enabled: true
+    last_updated: 1768293449.331878
+    provider: minimax
+  minimax/minimax-m2.1:
+    enabled: true
+    last_updated: 1768293449.3318782
+    provider: minimax
+  minimax/minimax-m2.1-lightning:
+    enabled: true
+    last_updated: 1768293449.3318784
     provider: minimax
   minimax/minimax-text-01:
     enabled: false
-    last_updated: 1766505112.471885
+    last_updated: 1768293449.331879
     provider: minimax
   moonshot/kimi-k2:
     enabled: false
-    last_updated: 1766505112.47188
+    last_updated: 1768293449.3318696
     provider: moonshot
   moonshot/kimi-k2-0711-preview:
     enabled: false
-    last_updated: 1766505112.4718814
+    last_updated: 1768293449.3318698
     provider: moonshot
   moonshot/kimi-k2-0905-preview:
     enabled: false
-    last_updated: 1766505112.4718816
+    last_updated: 1768293449.3318706
     provider: moonshot
   moonshot/kimi-k2-thinking:
     enabled: false
-    last_updated: 1766505112.4718819
+    last_updated: 1768293449.3318708
     provider: moonshot
   moonshot/kimi-k2-thinking-turbo:
     enabled: false
-    last_updated: 1766505112.4718823
+    last_updated: 1768293449.3318713
     provider: moonshot
   moonshot/kimi-k2-turbo-preview:
     enabled: false
-    last_updated: 1766505112.4718826
+    last_updated: 1768293449.3318715
     provider: moonshot
   moonshot/kimi-latest:
     enabled: false
-    last_updated: 1766505112.4718828
+    last_updated: 1768293449.3318717
     provider: moonshot
   moonshot/kimi-thinking-preview:
     enabled: false
-    last_updated: 1766505112.4718828
+    last_updated: 1768293449.3318722
     provider: moonshot
   moonshot/moonshot-v1-128k:
     enabled: false
-    last_updated: 1766505112.4718852
+    last_updated: 1768293449.3318791
     provider: moonshot
   moonshot/moonshot-v1-128k-vision-preview:
     enabled: false
-    last_updated: 1766505112.4718857
+    last_updated: 1768293449.3318794
     provider: moonshot
   moonshot/moonshot-v1-32k:
     enabled: false
-    last_updated: 1766505112.471886
+    last_updated: 1768293449.3318799
     provider: moonshot
   moonshot/moonshot-v1-32k-vision-preview:
     enabled: false
-    last_updated: 1766505112.4718862
+    last_updated: 1768293449.33188
     provider: moonshot
   moonshot/moonshot-v1-8k:
     enabled: false
-    last_updated: 1766505112.4718864
+    last_updated: 1768293449.3318803
     provider: moonshot
   moonshot/moonshot-v1-8k-vision-preview:
     enabled: false
-    last_updated: 1766505112.4718878
+    last_updated: 1768293449.331881
     provider: moonshot
   openai/360gpt-pro:
     enabled: false
-    last_updated: 1766505112.471779
+    last_updated: 1768293449.3317327
     provider: openai
   openai/360gpt-pro-trans:
     enabled: false
-    last_updated: 1766505112.4717796
+    last_updated: 1768293449.3317342
     provider: openai
   openai/360gpt-turbo:
     enabled: false
-    last_updated: 1766505112.47178
+    last_updated: 1768293449.331735
     provider: openai
   openai/360gpt2-o1:
     enabled: false
-    last_updated: 1766505112.4717805
+    last_updated: 1768293449.3317351
     provider: openai
   openai/360gpt2-pro:
     enabled: false
-    last_updated: 1766505112.4717808
+    last_updated: 1768293449.3317354
     provider: openai
   openai/chatgpt-4o-latest:
     enabled: false
-    last_updated: 1766505112.4717891
+    last_updated: 1768293449.331746
     provider: openai
   openai/codex-mini-latest:
     enabled: false
-    last_updated: 1766505112.471798
+    last_updated: 1768293449.331757
     provider: openai
   openai/computer-use-preview:
     enabled: false
-    last_updated: 1766505112.4717982
+    last_updated: 1768293449.3317575
     provider: openai
   openai/computer-use-preview-2025-03-11:
     enabled: false
-    last_updated: 1766505112.4717984
+    last_updated: 1768293449.331758
     provider: openai
   openai/dall-e-2:
     enabled: false
-    last_updated: 1766505112.471799
+    last_updated: 1768293449.3317583
     provider: openai
   openai/dall-e-3:
     enabled: false
-    last_updated: 1766505112.4717991
+    last_updated: 1768293449.3317585
     provider: openai
   openai/gpt-3.5-turbo:
     enabled: false
-    last_updated: 1766505112.4718423
+    last_updated: 1768293449.331817
     provider: openai
   openai/gpt-3.5-turbo-0125:
     enabled: false
-    last_updated: 1766505112.4718428
+    last_updated: 1768293449.3318172
     provider: openai
   openai/gpt-3.5-turbo-0301:
     enabled: false
-    last_updated: 1766505112.471843
+    last_updated: 1768293449.3318176
     provider: openai
   openai/gpt-3.5-turbo-0613:
     enabled: false
-    last_updated: 1766505112.4718432
+    last_updated: 1768293449.3318179
     provider: openai
   openai/gpt-3.5-turbo-1106:
     enabled: false
-    last_updated: 1766505112.4718435
+    last_updated: 1768293449.3318183
     provider: openai
   openai/gpt-3.5-turbo-16k:
     enabled: false
-    last_updated: 1766505112.471844
+    last_updated: 1768293449.3318186
     provider: openai
   openai/gpt-3.5-turbo-16k-0613:
     enabled: false
-    last_updated: 1766505112.471844
+    last_updated: 1768293449.3318193
     provider: openai
   openai/gpt-3.5-turbo-instruct:
     enabled: false
-    last_updated: 1766505112.4718442
+    last_updated: 1768293449.3318195
     provider: openai
   openai/gpt-3.5-turbo-instruct-0914:
     enabled: false
-    last_updated: 1766505112.4718447
+    last_updated: 1768293449.33182
     provider: openai
   openai/gpt-4:
     enabled: false
-    last_updated: 1766505112.471845
+    last_updated: 1768293449.3318205
     provider: openai
   openai/gpt-4-0125-preview:
     enabled: false
-    last_updated: 1766505112.4718451
+    last_updated: 1768293449.3318207
     provider: openai
   openai/gpt-4-0314:
     enabled: false
-    last_updated: 1766505112.4718454
+    last_updated: 1768293449.331821
     provider: openai
   openai/gpt-4-0613:
     enabled: false
-    last_updated: 1766505112.4718454
+    last_updated: 1768293449.3318212
     provider: openai
   openai/gpt-4-1106-preview:
     enabled: false
-    last_updated: 1766505112.4718456
+    last_updated: 1768293449.331822
     provider: openai
   openai/gpt-4-1106-vision-preview:
     enabled: false
-    last_updated: 1766505112.471846
+    last_updated: 1768293449.3318224
     provider: openai
   openai/gpt-4-32k:
     enabled: false
-    last_updated: 1766505112.471846
+    last_updated: 1768293449.3318226
     provider: openai
   openai/gpt-4-32k-0314:
     enabled: false
-    last_updated: 1766505112.4718463
+    last_updated: 1768293449.3318229
     provider: openai
   openai/gpt-4-32k-0613:
     enabled: false
-    last_updated: 1766505112.4718466
+    last_updated: 1768293449.3318233
     provider: openai
   openai/gpt-4-turbo:
     enabled: false
-    last_updated: 1766505112.4718468
+    last_updated: 1768293449.3318238
     provider: openai
   openai/gpt-4-turbo-2024-04-09:
     enabled: false
-    last_updated: 1766505112.471847
+    last_updated: 1768293449.331824
     provider: openai
   openai/gpt-4-turbo-preview:
     enabled: false
-    last_updated: 1766505112.4718475
+    last_updated: 1768293449.3318245
     provider: openai
   openai/gpt-4-vision-preview:
     enabled: false
-    last_updated: 1766505112.4718478
+    last_updated: 1768293449.3318248
     provider: openai
   openai/gpt-4.1:
     enabled: true
-    last_updated: 1766505112.4718482
+    last_updated: 1768293449.3318253
     provider: openai
   openai/gpt-4.1-2025-04-14:
     enabled: false
-    last_updated: 1766505112.4718485
+    last_updated: 1768293449.3318255
     provider: openai
   openai/gpt-4.1-mini:
     enabled: true
-    last_updated: 1766505112.4718487
+    last_updated: 1768293449.331826
     provider: openai
   openai/gpt-4.1-mini-2025-04-14:
     enabled: false
-    last_updated: 1766505112.471849
+    last_updated: 1768293449.3318264
     provider: openai
   openai/gpt-4.1-nano:
     enabled: true
-    last_updated: 1766505112.4718492
+    last_updated: 1768293449.3318267
     provider: openai
   openai/gpt-4.1-nano-2025-04-14:
     enabled: false
-    last_updated: 1766505112.4718494
+    last_updated: 1768293449.331827
     provider: openai
   openai/gpt-4.5-preview:
     enabled: false
-    last_updated: 1766505112.4718494
+    last_updated: 1768293449.3318274
     provider: openai
   openai/gpt-4.5-preview-2025-02-27:
     enabled: false
-    last_updated: 1766505112.4718497
+    last_updated: 1768293449.3318276
     provider: openai
   openai/gpt-4o:
     enabled: true
-    last_updated: 1766505112.4718502
+    last_updated: 1768293449.331828
     provider: openai
   openai/gpt-4o-2024-05-13:
     enabled: false
-    last_updated: 1766505112.4718504
+    last_updated: 1768293449.3318288
     provider: openai
   openai/gpt-4o-2024-08-06:
     enabled: false
-    last_updated: 1766505112.4718506
+    last_updated: 1768293449.331829
     provider: openai
   openai/gpt-4o-2024-11-20:
     enabled: false
-    last_updated: 1766505112.4718513
+    last_updated: 1768293449.3318295
     provider: openai
   openai/gpt-4o-audio-preview:
     enabled: false
-    last_updated: 1766505112.4718516
+    last_updated: 1768293449.3318298
     provider: openai
   openai/gpt-4o-audio-preview-2024-10-01:
     enabled: false
-    last_updated: 1766505112.4718518
+    last_updated: 1768293449.3318303
     provider: openai
   openai/gpt-4o-audio-preview-2024-12-17:
     enabled: false
-    last_updated: 1766505112.471852
+    last_updated: 1768293449.3318307
     provider: openai
   openai/gpt-4o-audio-preview-2025-06-03:
     enabled: false
-    last_updated: 1766505112.4718523
+    last_updated: 1768293449.331831
     provider: openai
   openai/gpt-4o-mini:
     enabled: true
-    last_updated: 1766505112.4718525
+    last_updated: 1768293449.3318312
     provider: openai
   openai/gpt-4o-mini-2024-07-18:
     enabled: false
-    last_updated: 1766505112.4718528
+    last_updated: 1768293449.3318315
     provider: openai
   openai/gpt-4o-mini-audio-preview:
     enabled: false
-    last_updated: 1766505112.471853
+    last_updated: 1768293449.3318317
     provider: openai
   openai/gpt-4o-mini-audio-preview-2024-12-17:
     enabled: false
-    last_updated: 1766505112.4718535
+    last_updated: 1768293449.3318324
     provider: openai
   openai/gpt-4o-mini-realtime-preview:
     enabled: false
-    last_updated: 1766505112.4718537
+    last_updated: 1768293449.3318326
     provider: openai
   openai/gpt-4o-mini-realtime-preview-2024-12-17:
     enabled: false
-    last_updated: 1766505112.471854
+    last_updated: 1768293449.331833
     provider: openai
   openai/gpt-4o-mini-search-preview:
     enabled: false
-    last_updated: 1766505112.4718544
+    last_updated: 1768293449.3318334
     provider: openai
   openai/gpt-4o-mini-search-preview-2025-03-11:
     enabled: false
-    last_updated: 1766505112.4718547
+    last_updated: 1768293449.3318336
     provider: openai
   openai/gpt-4o-mini-transcribe:
     enabled: false
-    last_updated: 1766505112.471855
+    last_updated: 1768293449.331834
     provider: openai
   openai/gpt-4o-mini-tts:
     enabled: false
-    last_updated: 1766505112.4718552
+    last_updated: 1768293449.3318343
     provider: openai
   openai/gpt-4o-transcribe:
     enabled: false
-    last_updated: 1766505112.4718554
+    last_updated: 1768293449.3318346
     provider: openai
   openai/gpt-5:
     enabled: true
-    last_updated: 1766505112.4718556
+    last_updated: 1768293449.3318355
     provider: openai
   openai/gpt-5-2025-08-07:
     enabled: false
-    last_updated: 1766505112.4718559
+    last_updated: 1768293449.3318357
     provider: openai
   openai/gpt-5-chat-latest:
     enabled: false
-    last_updated: 1766505112.4718564
+    last_updated: 1768293449.3318362
     provider: openai
   openai/gpt-5-codex:
     enabled: true
-    last_updated: 1766505112.4718566
+    last_updated: 1768293449.3318365
     provider: openai
   openai/gpt-5-mini:
     enabled: true
-    last_updated: 1766505112.4718568
+    last_updated: 1768293449.3318367
     provider: openai
   openai/gpt-5-mini-2025-08-07:
     enabled: false
-    last_updated: 1766505112.471857
+    last_updated: 1768293449.331837
     provider: openai
   openai/gpt-5-nano:
     enabled: true
-    last_updated: 1766505112.4718573
+    last_updated: 1768293449.3318374
     provider: openai
   openai/gpt-5-nano-2025-08-07:
     enabled: false
-    last_updated: 1766505112.4718575
+    last_updated: 1768293449.3318377
     provider: openai
   openai/gpt-5-pro:
     enabled: true
-    last_updated: 1766505112.471858
+    last_updated: 1768293449.331838
     provider: openai
   openai/gpt-5-pro-2025-10-06:
     enabled: false
-    last_updated: 1766505112.4718583
+    last_updated: 1768293449.3318384
     provider: openai
   openai/gpt-5.1:
     enabled: false
-    last_updated: 1766505112.4718585
+    last_updated: 1768293449.3318386
     provider: openai
   openai/gpt-5.1-2025-11-13:
     enabled: false
-    last_updated: 1766505112.4718587
+    last_updated: 1768293449.3318393
     provider: openai
   openai/gpt-5.1-chat-latest:
     enabled: false
-    last_updated: 1766505112.471859
+    last_updated: 1768293449.3318398
     provider: openai
   openai/gpt-5.1-codex:
     enabled: false
-    last_updated: 1766505112.4718595
+    last_updated: 1768293449.33184
+    provider: openai
+  openai/gpt-5.1-codex-max:
+    enabled: true
+    last_updated: 1768293449.3318405
     provider: openai
   openai/gpt-5.1-codex-mini:
     enabled: false
-    last_updated: 1766505112.4718597
+    last_updated: 1768293449.3318408
     provider: openai
   openai/gpt-5.2:
     enabled: true
-    last_updated: 1766505112.47186
+    last_updated: 1768293449.331841
     provider: openai
   openai/gpt-5.2-2025-12-11:
     enabled: false
-    last_updated: 1766505112.4718602
+    last_updated: 1768293449.3318415
     provider: openai
   openai/gpt-5.2-chat-latest:
     enabled: false
-    last_updated: 1766505112.4718602
+    last_updated: 1768293449.3318417
     provider: openai
   openai/gpt-5.2-pro:
     enabled: true
-    last_updated: 1766505112.4718604
+    last_updated: 1768293449.3318424
     provider: openai
   openai/gpt-5.2-pro-2025-12-11:
     enabled: false
-    last_updated: 1766505112.4718606
+    last_updated: 1768293449.3318427
     provider: openai
   openai/gpt-audio:
     enabled: false
-    last_updated: 1766505112.471861
+    last_updated: 1768293449.331843
     provider: openai
   openai/gpt-audio-2025-08-28:
     enabled: false
-    last_updated: 1766505112.4718614
+    last_updated: 1768293449.3318434
     provider: openai
   openai/gpt-oss-120b:
     enabled: true
-    last_updated: 1766505112.4718618
+    last_updated: 1768293449.3318436
     provider: openai
   openai/gpt-oss-20b:
     enabled: false
-    last_updated: 1766505112.471862
+    last_updated: 1768293449.3318439
     provider: openai
   openai/gpt-realtime:
     enabled: false
-    last_updated: 1766505112.4718623
+    last_updated: 1768293449.331844
     provider: openai
   openai/gpt-realtime-2025-08-28:
     enabled: false
-    last_updated: 1766505112.4718626
+    last_updated: 1768293449.3318446
     provider: openai
   openai/o1:
     enabled: true
-    last_updated: 1766505112.471888
+    last_updated: 1768293449.3318813
     provider: openai
   openai/o1-2024-12-17:
     enabled: false
-    last_updated: 1766505112.4718883
+    last_updated: 1768293449.3318818
     provider: openai
   openai/o1-mini:
     enabled: true
-    last_updated: 1766505112.4718885
+    last_updated: 1768293449.331882
     provider: openai
   openai/o1-mini-2024-09-12:
     enabled: false
-    last_updated: 1766505112.4718888
+    last_updated: 1768293449.3318822
     provider: openai
   openai/o1-preview:
     enabled: false
-    last_updated: 1766505112.4718888
+    last_updated: 1768293449.3318825
     provider: openai
   openai/o1-preview-2024-09-12:
     enabled: false
-    last_updated: 1766505112.4718893
+    last_updated: 1768293449.3318827
     provider: openai
   openai/o1-pro:
     enabled: true
-    last_updated: 1766505112.4718895
+    last_updated: 1768293449.3318832
     provider: openai
   openai/o1-pro-2025-03-19:
     enabled: false
-    last_updated: 1766505112.4718897
+    last_updated: 1768293449.3318837
     provider: openai
   openai/o3:
     enabled: true
-    last_updated: 1766505112.47189
+    last_updated: 1768293449.3318841
     provider: openai
   openai/o3-2025-04-16:
     enabled: false
-    last_updated: 1766505112.4718902
+    last_updated: 1768293449.3318844
     provider: openai
   openai/o3-deep-research:
     enabled: false
-    last_updated: 1766505112.4718904
+    last_updated: 1768293449.3318849
     provider: openai
   openai/o3-deep-research-2025-06-26:
     enabled: false
-    last_updated: 1766505112.4718907
+    last_updated: 1768293449.331885
     provider: openai
   openai/o3-mini:
     enabled: true
-    last_updated: 1766505112.471891
+    last_updated: 1768293449.3318856
     provider: openai
   openai/o3-mini-2025-01-31:
     enabled: false
-    last_updated: 1766505112.4718912
+    last_updated: 1768293449.3318858
     provider: openai
   openai/o3-pro:
     enabled: true
-    last_updated: 1766505112.4718914
+    last_updated: 1768293449.3318863
     provider: openai
   openai/o3-pro-2025-06-10:
     enabled: false
-    last_updated: 1766505112.4718916
+    last_updated: 1768293449.3318865
     provider: openai
   openai/o4-mini:
     enabled: true
-    last_updated: 1766505112.4718919
+    last_updated: 1768293449.3318868
     provider: openai
   openai/o4-mini-2025-04-16:
     enabled: false
-    last_updated: 1766505112.471892
+    last_updated: 1768293449.3318872
     provider: openai
   openai/o4-mini-deep-research:
     enabled: false
-    last_updated: 1766505112.4718926
+    last_updated: 1768293449.3318877
     provider: openai
   openai/o4-mini-deep-research-2025-06-26:
     enabled: false
-    last_updated: 1766505112.4718928
+    last_updated: 1768293449.331888
     provider: openai
   openai/text-embedding-3-large:
     enabled: false
-    last_updated: 1766505112.4719107
+    last_updated: 1768293449.3319178
     provider: openai
   openai/text-embedding-3-small:
     enabled: false
-    last_updated: 1766505112.471911
+    last_updated: 1768293449.331918
     provider: openai
   openai/text-embedding-ada-002:
     enabled: false
-    last_updated: 1766505112.4719112
+    last_updated: 1768293449.3319185
     provider: openai
   openai/tts-1:
     enabled: false
-    last_updated: 1766505112.4719114
+    last_updated: 1768293449.331919
     provider: openai
   openai/tts-1-1106:
     enabled: false
-    last_updated: 1766505112.4719117
+    last_updated: 1768293449.3319192
     provider: openai
   openai/tts-1-hd:
     enabled: false
-    last_updated: 1766505112.471912
+    last_updated: 1768293449.3319194
     provider: openai
   openai/tts-1-hd-1106:
     enabled: false
-    last_updated: 1766505112.471912
+    last_updated: 1768293449.3319197
     provider: openai
   openai/whisper-1:
     enabled: false
-    last_updated: 1766505112.4719121
+    last_updated: 1768293449.3319204
     provider: openai
   tencent/hunyuan-2.0-instruct-20251111:
     enabled: false
-    last_updated: 1766505112.4718728
+    last_updated: 1768293449.3318582
     provider: tencent
   tencent/hunyuan-2.0-thinking-20251109:
     enabled: false
-    last_updated: 1766505112.471873
+    last_updated: 1768293449.3318584
     provider: tencent
   tencent/hunyuan-a13b:
     enabled: false
-    last_updated: 1766505112.4718733
+    last_updated: 1768293449.331859
     provider: tencent
   tencent/hunyuan-code:
     enabled: false
-    last_updated: 1766505112.4718735
+    last_updated: 1768293449.3318594
     provider: tencent
   tencent/hunyuan-embedding:
     enabled: false
-    last_updated: 1766505112.4718738
+    last_updated: 1768293449.3318598
     provider: tencent
   tencent/hunyuan-functioncall:
     enabled: false
-    last_updated: 1766505112.4718742
+    last_updated: 1768293449.3318603
     provider: tencent
   tencent/hunyuan-large:
     enabled: false
-    last_updated: 1766505112.4718742
+    last_updated: 1768293449.3318605
     provider: tencent
   tencent/hunyuan-lite:
     enabled: false
-    last_updated: 1766505112.4718747
+    last_updated: 1768293449.331861
     provider: tencent
   tencent/hunyuan-pro:
     enabled: false
-    last_updated: 1766505112.4718752
+    last_updated: 1768293449.3318615
     provider: tencent
   tencent/hunyuan-role:
     enabled: false
-    last_updated: 1766505112.4718754
+    last_updated: 1768293449.3318617
     provider: tencent
   tencent/hunyuan-standard:
     enabled: false
-    last_updated: 1766505112.4718757
+    last_updated: 1768293449.3318622
     provider: tencent
   tencent/hunyuan-standard-256k:
     enabled: false
-    last_updated: 1766505112.471876
+    last_updated: 1768293449.3318624
     provider: tencent
   tencent/hunyuan-t1-20250321:
     enabled: false
-    last_updated: 1766505112.4718761
+    last_updated: 1768293449.3318627
     provider: tencent
   tencent/hunyuan-t1-20250403:
     enabled: false
-    last_updated: 1766505112.4718764
+    last_updated: 1768293449.3318634
     provider: tencent
   tencent/hunyuan-t1-latest:
     enabled: false
-    last_updated: 1766505112.4718766
+    last_updated: 1768293449.3318636
     provider: tencent
   tencent/hunyuan-t1-vision:
     enabled: false
-    last_updated: 1766505112.4718769
+    last_updated: 1768293449.331864
     provider: tencent
   tencent/hunyuan-translation:
     enabled: false
-    last_updated: 1766505112.471877
+    last_updated: 1768293449.3318646
     provider: tencent
   tencent/hunyuan-translation-lite:
     enabled: false
-    last_updated: 1766505112.4718773
+    last_updated: 1768293449.3318648
     provider: tencent
   tencent/hunyuan-turbo:
     enabled: false
-    last_updated: 1766505112.4718776
+    last_updated: 1768293449.3318667
     provider: tencent
   tencent/hunyuan-turbos-20250313:
     enabled: false
-    last_updated: 1766505112.471878
+    last_updated: 1768293449.3318672
     provider: tencent
   tencent/hunyuan-turbos-20250416:
     enabled: false
-    last_updated: 1766505112.471878
+    last_updated: 1768293449.3318677
     provider: tencent
   tencent/hunyuan-turbos-20250515:
     enabled: false
-    last_updated: 1766505112.4718783
+    last_updated: 1768293449.3318682
     provider: tencent
   tencent/hunyuan-turbos-latest:
     enabled: false
-    last_updated: 1766505112.4718788
+    last_updated: 1768293449.3318684
     provider: tencent
   tencent/hunyuan-turbos-longtext-128k-20250325:
     enabled: false
-    last_updated: 1766505112.4718792
+    last_updated: 1768293449.3318686
     provider: tencent
   tencent/hunyuan-turbos-vision:
     enabled: false
-    last_updated: 1766505112.4718795
+    last_updated: 1768293449.3318691
     provider: tencent
   tencent/hunyuan-vision:
     enabled: false
-    last_updated: 1766505112.4718797
+    last_updated: 1768293449.3318691
     provider: tencent
   xAI/grok-2:
     enabled: false
-    last_updated: 1766505112.471863
+    last_updated: 1768293449.3318448
     provider: xAI
   xAI/grok-2-1212:
     enabled: false
-    last_updated: 1766505112.4718633
+    last_updated: 1768293449.3318455
     provider: xAI
   xAI/grok-2-latest:
     enabled: false
-    last_updated: 1766505112.4718635
+    last_updated: 1768293449.331846
     provider: xAI
   xAI/grok-2-vision:
     enabled: false
-    last_updated: 1766505112.4718637
+    last_updated: 1768293449.3318462
     provider: xAI
   xAI/grok-2-vision-1212:
     enabled: false
-    last_updated: 1766505112.471864
+    last_updated: 1768293449.3318465
     provider: xAI
   xAI/grok-2-vision-latest:
     enabled: false
-    last_updated: 1766505112.4718642
+    last_updated: 1768293449.331847
     provider: xAI
   xAI/grok-3:
     enabled: false
-    last_updated: 1766505112.4718645
+    last_updated: 1768293449.3318472
     provider: xAI
   xAI/grok-3-beta:
     enabled: false
-    last_updated: 1766505112.471865
+    last_updated: 1768293449.3318474
     provider: xAI
   xAI/grok-3-fast:
     enabled: false
-    last_updated: 1766505112.4718652
+    last_updated: 1768293449.331848
     provider: xAI
   xAI/grok-3-fast-beta:
     enabled: false
-    last_updated: 1766505112.4718654
+    last_updated: 1768293449.3318481
     provider: xAI
   xAI/grok-3-fast-latest:
     enabled: false
-    last_updated: 1766505112.471866
+    last_updated: 1768293449.3318484
     provider: xAI
   xAI/grok-3-latest:
     enabled: false
-    last_updated: 1766505112.471866
+    last_updated: 1768293449.3318489
     provider: xAI
   xAI/grok-3-mini:
     enabled: false
-    last_updated: 1766505112.4718661
+    last_updated: 1768293449.331849
     provider: xAI
   xAI/grok-3-mini-beta:
     enabled: false
-    last_updated: 1766505112.4718664
+    last_updated: 1768293449.3318496
     provider: xAI
   xAI/grok-3-mini-fast:
     enabled: false
-    last_updated: 1766505112.4718666
+    last_updated: 1768293449.33185
     provider: xAI
   xAI/grok-3-mini-fast-beta:
     enabled: false
-    last_updated: 1766505112.4718668
+    last_updated: 1768293449.3318503
     provider: xAI
   xAI/grok-3-mini-fast-latest:
     enabled: false
-    last_updated: 1766505112.471867
+    last_updated: 1768293449.3318505
     provider: xAI
   xAI/grok-3-mini-latest:
     enabled: false
-    last_updated: 1766505112.4718673
+    last_updated: 1768293449.331851
     provider: xAI
   xAI/grok-4:
     enabled: true
-    last_updated: 1766505112.4718676
+    last_updated: 1768293449.3318512
     provider: xAI
   xAI/grok-4-0709:
     enabled: false
-    last_updated: 1766505112.4718678
+    last_updated: 1768293449.3318517
     provider: xAI
   xAI/grok-4-1-fast:
     enabled: true
-    last_updated: 1766505112.4718683
+    last_updated: 1768293449.331852
     provider: xAI
   xAI/grok-4-1-fast-non-reasoning:
     enabled: false
-    last_updated: 1766505112.4718685
+    last_updated: 1768293449.3318522
     provider: xAI
   xAI/grok-4-1-fast-non-reasoning-latest:
     enabled: false
-    last_updated: 1766505112.4718688
+    last_updated: 1768293449.331853
     provider: xAI
   xAI/grok-4-1-fast-reasoning:
     enabled: false
-    last_updated: 1766505112.471869
+    last_updated: 1768293449.3318532
     provider: xAI
   xAI/grok-4-1-fast-reasoning-latest:
     enabled: false
-    last_updated: 1766505112.4718695
+    last_updated: 1768293449.3318536
     provider: xAI
   xAI/grok-4-fast:
     enabled: true
-    last_updated: 1766505112.4718697
+    last_updated: 1768293449.3318539
     provider: xAI
   xAI/grok-4-fast-non-reasoning:
     enabled: false
-    last_updated: 1766505112.4718697
+    last_updated: 1768293449.331854
     provider: xAI
   xAI/grok-4-fast-non-reasoning-latest:
     enabled: false
-    last_updated: 1766505112.4718702
+    last_updated: 1768293449.3318546
     provider: xAI
   xAI/grok-4-fast-reasoning:
     enabled: false
-    last_updated: 1766505112.4718704
+    last_updated: 1768293449.3318548
     provider: xAI
   xAI/grok-4-fast-reasoning-latest:
     enabled: false
-    last_updated: 1766505112.4718707
+    last_updated: 1768293449.3318553
     provider: xAI
   xAI/grok-4-latest:
     enabled: false
-    last_updated: 1766505112.471871
+    last_updated: 1768293449.3318555
     provider: xAI
   xAI/grok-beta:
     enabled: false
-    last_updated: 1766505112.4718711
+    last_updated: 1768293449.3318558
     provider: xAI
   xAI/grok-code-fast:
     enabled: false
-    last_updated: 1766505112.4718714
+    last_updated: 1768293449.3318565
     provider: xAI
   xAI/grok-code-fast-1:
     enabled: true
-    last_updated: 1766505112.4718719
+    last_updated: 1768293449.3318567
     provider: xAI
   xAI/grok-code-fast-1-0825:
     enabled: false
-    last_updated: 1766505112.471872
+    last_updated: 1768293449.3318572
     provider: xAI
   xAI/grok-vision-beta:
     enabled: false
-    last_updated: 1766505112.4718723
+    last_updated: 1768293449.3318574
     provider: xAI
   zhipu/chatglm-6b-v2:
     enabled: false
-    last_updated: 1766505112.4717886
+    last_updated: 1768293449.331745
     provider: zhipu
   zhipu/chatglm3-6b:
     enabled: false
-    last_updated: 1766505112.471789
+    last_updated: 1768293449.3317456
     provider: zhipu
   zhipu/glm-3-turbo:
     enabled: false
-    last_updated: 1766505112.471835
+    last_updated: 1768293449.331806
     provider: zhipu
   zhipu/glm-4:
     enabled: false
-    last_updated: 1766505112.4718354
+    last_updated: 1768293449.3318062
     provider: zhipu
   zhipu/glm-4-0520:
     enabled: false
-    last_updated: 1766505112.4718356
+    last_updated: 1768293449.3318067
     provider: zhipu
   zhipu/glm-4-air:
     enabled: false
-    last_updated: 1766505112.4718359
+    last_updated: 1768293449.3318071
     provider: zhipu
   zhipu/glm-4-air-250414:
     enabled: false
-    last_updated: 1766505112.471836
+    last_updated: 1768293449.3318074
     provider: zhipu
   zhipu/glm-4-airx:
     enabled: false
-    last_updated: 1766505112.4718363
+    last_updated: 1768293449.331808
     provider: zhipu
   zhipu/glm-4-flash:
     enabled: false
-    last_updated: 1766505112.4718366
+    last_updated: 1768293449.3318083
     provider: zhipu
   zhipu/glm-4-flashx:
     enabled: false
-    last_updated: 1766505112.471837
+    last_updated: 1768293449.3318088
     provider: zhipu
   zhipu/glm-4-flashx-250414:
     enabled: false
-    last_updated: 1766505112.4718373
+    last_updated: 1768293449.331809
     provider: zhipu
   zhipu/glm-4-long:
     enabled: false
-    last_updated: 1766505112.4718375
+    last_updated: 1768293449.3318098
     provider: zhipu
   zhipu/glm-4-plus:
     enabled: false
-    last_updated: 1766505112.4718378
+    last_updated: 1768293449.33181
     provider: zhipu
   zhipu/glm-4.5:
     enabled: false
-    last_updated: 1766505112.4718382
+    last_updated: 1768293449.3318107
     provider: zhipu
   zhipu/glm-4.5-air:
     enabled: false
-    last_updated: 1766505112.4718385
+    last_updated: 1768293449.3318114
     provider: zhipu
   zhipu/glm-4.5-airx:
     enabled: false
-    last_updated: 1766505112.4718387
+    last_updated: 1768293449.331812
     provider: zhipu
   zhipu/glm-4.5-flash:
     enabled: false
-    last_updated: 1766505112.471839
+    last_updated: 1768293449.3318121
     provider: zhipu
   zhipu/glm-4.5-x:
     enabled: false
-    last_updated: 1766505112.4718392
+    last_updated: 1768293449.3318126
     provider: zhipu
   zhipu/glm-4.5v:
     enabled: false
-    last_updated: 1766505112.4718394
+    last_updated: 1768293449.3318129
     provider: zhipu
   zhipu/glm-4.6:
     enabled: false
-    last_updated: 1766505112.4718397
+    last_updated: 1768293449.331813
     provider: zhipu
   zhipu/glm-4.6v:
     enabled: false
-    last_updated: 1766505112.47184
+    last_updated: 1768293449.3318136
     provider: zhipu
   zhipu/glm-4.6v-flash:
     enabled: false
-    last_updated: 1766505112.4718401
+    last_updated: 1768293449.3318138
+    provider: zhipu
+  zhipu/glm-4.6v-flashx:
+    enabled: true
+    last_updated: 1768293449.331814
+    provider: zhipu
+  zhipu/glm-4.7:
+    enabled: true
+    last_updated: 1768293449.3318143
     provider: zhipu
   zhipu/glm-4v:
     enabled: false
-    last_updated: 1766505112.4718406
+    last_updated: 1768293449.3318148
     provider: zhipu
   zhipu/glm-4v-flash:
     enabled: false
-    last_updated: 1766505112.4718409
+    last_updated: 1768293449.331815
     provider: zhipu
   zhipu/glm-4v-plus:
     enabled: false
-    last_updated: 1766505112.471841
+    last_updated: 1768293449.3318155
     provider: zhipu
   zhipu/glm-4v-plus-0111:
     enabled: false
-    last_updated: 1766505112.4718413
+    last_updated: 1768293449.3318157
     provider: zhipu
   zhipu/glm-z1-air:
     enabled: false
-    last_updated: 1766505112.4718416
+    last_updated: 1768293449.331816
     provider: zhipu
   zhipu/glm-z1-airx:
     enabled: false
-    last_updated: 1766505112.4718418
+    last_updated: 1768293449.3318162
     provider: zhipu
   zhipu/glm-z1-flash:
     enabled: false
-    last_updated: 1766505112.471842
+    last_updated: 1768293449.3318164
     provider: zhipu
 version: '1.0'

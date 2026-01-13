@@ -616,14 +616,11 @@ class CommonWorker:
             is_async = asyncio.iscoroutinefunction(func)
             try:
                 if is_async:
-                    # res =  func(**kwargs)
-                    try:
-                        res = await func(*args, **kwargs)
-                    except Exception as e:
-                        raise RuntimeError(f"Async function raised an error, please check the function. {e}")
-                        # 有时候因为中间层额外引入了stream参数，而一些函数不允许接收stream参数。
-                        stream = kwargs.pop("stream", False)  # 为了在客户端传输stream时，不会被kwargs接收，所以pop出来
-                        res = await func(*args, **kwargs)
+                    res = await func(*args, **kwargs)
+                    # try:
+                    #     res = await func(*args, **kwargs)
+                    # except Exception as e:
+                    #     raise RuntimeError(f"Async function raised an error, please check the function. {e}")
                     # 判断是否是异步流式响应
                     if isinstance(res, AsyncGenerator):
                         #返回异步流式响应
@@ -665,6 +662,7 @@ class CommonWorker:
                 error_msg2 = f"{e_class}: {str(e)}"
                 print(f"[CommonWorker]一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
                 raise HTTPException(status_code=400, detail=f'{error_msg2}\n{error_msg2}')
+                # raise e
         else:
             raise HTTPException(status_code=404, detail=f"Function `{function}` does not exist or is not callable in the worker `{self.worker_id}`")
 

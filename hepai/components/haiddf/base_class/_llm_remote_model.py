@@ -330,7 +330,9 @@ class LLMRemoteModel(HRModel):
         # kwargs['stream'] = False  # Anthropic的接口不支持stream参数，这里强制设为False
         stream = kwargs.get("stream", False)
         
-        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt", "claude"]):
+        # if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt", "claude"]):
+        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
+        
             # 如果是moonshot或openai开头的模型，走openai接口
             from . import general
             oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
@@ -373,9 +375,18 @@ class LLMRemoteModel(HRModel):
         modelx = kwargs.pop("model")
         messages = kwargs.pop("messages")
         max_tokens = kwargs.pop("max_tokens")
+        # if max_tokens == 500:
+        #     pass
+        thinking = kwargs.get("thinking", {})
+        # Deal with maxtokens if thinking is enabled
+        if thinking.get("type") == "enabled":
+            budget_tokens = thinking.get("budget_tokens", 0)
+            max_tokens = max(max_tokens, budget_tokens+1)
+    
         stream = kwargs.pop("stream", False)
-        kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
+        # kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
+        """
         # 20251209左右，系统提示词里包含"cahce_control": {'type': 'ephemeral'}，智增增会报错
         system = kwargs.pop("system", None)
         if system:
@@ -395,9 +406,15 @@ class LLMRemoteModel(HRModel):
         # kwargs.pop("metadata", None)  # 去掉metadata参数，避免报错
         # kwargs.pop("thinking", None)  # 去掉thinking参数，避免报错
         # kwargs.pop("temperature", None)  # 去掉temperature参数，避免报错
+        """
         
-           
         if stream:
+            pass
+            # thinking = kwargs.get("thinking", {})
+
+            # print(f"max_tokens: {max_tokens}, thinking: {thinking}")
+            # if max_tokens == 500:
+            #     pass
             gen = self.anthropic_stream(
                 model=self.cfg.engine,
                 messages=messages,
@@ -408,6 +425,7 @@ class LLMRemoteModel(HRModel):
                 timeout=timeout,
                 **kwargs
                 )
+            
             return gen
         else:
             
@@ -456,6 +474,43 @@ class LLMRemoteModel(HRModel):
                 data = chunk.model_dump()
                 yield f"event: {chunk.type}\ndata: {json.dumps(data)}\n\n"
      
+    @HRModel.remote_callable
+    async def anthropic_count_tokens(self, *args, **kwargs) -> Dict:
+        """Anthropic Count Tokens API接口"""
+        if self.cfg.need_external_api_key:
+            api_key = kwargs.pop("api_key", None)
+            if not api_key:
+                raise KeyError("You should provide API-KEY when calling this worker")
+            extra_headers = {"x-api-key": api_key}
+        else:
+            extra_headers = kwargs.pop("extra_headers", {})
+        
+        extra_body: Dict = kwargs.pop("extra_body", {})
+        extra_query: Dict = kwargs.pop("extra_query", {})
+        timeout = kwargs.pop("timeout", None)
+        
+        if "model" not in kwargs:
+            raise ValueError("model parameter is required")
+        if "messages" not in kwargs:
+            raise ValueError("messages parameter is required")
+            
+        modelx = kwargs.pop("model")
+        messages = kwargs.pop("messages")
+        
+        message_tokens_count = await self.async_client_with_anthropic_url.anthropic.messages.count_tokens(
+                messages=messages,
+                model=self.cfg.engine,
+                
+                extra_headers=extra_headers,
+                extra_body=extra_body,
+                extra_query=extra_query,
+                timeout=timeout,
+                **kwargs
+            )
+        return message_tokens_count
+
+
+
      
 @dataclass
 class LLMModelConfig(HModelConfig):

@@ -71,16 +71,16 @@ class ZhizzModelConfig(LLMModelConfig):
 @dataclass
 class ZhizzWorkerConfig(HWorkerConfig):
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=42606, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
+    port: int = field(default=42605, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
-    # controller_address: str = field(default="http://localhost:42500", metadata={"help": "Controller's address"})
+    controller_address: str = field(default="http://localhost:42500", metadata={"help": "Controller's address"})
     # controller_address: str = field(default="http://202.122.38.201:42601", metadata={"help": "Controller's address"})
     controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
 
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
-    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
+    no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
     permissions: str = field(default='users: admin; groups: payg; owner: admin', metadata={"help": "Model's permissions, separated by ;, e.g., 'groups: default; users: a, b; owner: c'"})
     description: str = field(default='This is a zhizz worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
