@@ -1,0 +1,63 @@
+last_modified: 1766506612.6680923
+models:
+  bytedance/doubao-embedding:
+    enabled: true
+    last_updated: 1766506612.668104
+    provider: bytedance
+  bytedance/doubao-embedding-large:
+    enabled: true
+    last_updated: 1766506612.6681037
+    provider: bytedance
+  bytedance/doubao-embedding-vision:
+    enabled: true
+    last_updated: 1766506612.668104
+    provider: bytedance
+  bytedance/doubao-seed-1.6:
+    enabled: true
+    last_updated: 1766506612.6681046
+    provider: bytedance
+  bytedance/doubao-seed-1.6-flash:
+    enabled: true
+    last_updated: 1766506612.6681051
+    provider: bytedance
+  bytedance/doubao-seed-1.6-thinking:
+    enabled: true
+    last_updated: 1766506612.668105
+    provider: bytedance
+  bytedance/doubao-seed-1.6-vision:
+    enabled: true
+    last_updated: 1766506612.6681051
+    provider: bytedance
+  bytedance/doubao-seedream-4.0:
+    enabled: true
+    last_updated: 1766506612.6681042
+    provider: bytedance
+  deepseek-ai/deepseek-r1:
+    enabled: true
+    last_updated: 1766506612.668103
+    provider: deepseek-ai
+  deepseek-ai/deepseek-r1-250120:
+    enabled: true
+    last_updated: 1766506612.668102
+    provider: deepseek-ai
+  deepseek-ai/deepseek-r1-250528:
+    enabled: true
+    last_updated: 1766506612.6681015
+    provider: deepseek-ai
+  deepseek-ai/deepseek-v3:
+    enabled: true
+    last_updated: 1766506612.6681035
+    provider: deepseek-ai
+  deepseek-ai/deepseek-v3-1:
+    enabled: true
+    last_updated: 1766506612.6681027
+    provider: deepseek-ai
+  deepseek-ai/deepseek-v3-1-250821:
+    enabled: true
+    last_updated: 1766506612.6681
+    provider: deepseek-ai
+  deepseek-ai/deepseek-v3-250324:
+    enabled: true
+    last_updated: 1766506612.6681025
+    provider: deepseek-ai
+version: '1.0'
