@@ -30,7 +30,7 @@ async def test_model(model_config, models: List[LLMRemoteModel]):
     #     print(f'  {model}')
     
     engine = models[0].engine
-    engine = models[8].engine
+    # engine = models[8].engine
     
     llm = LLMRemoteModel(config=ZhizzModelConfig(engine=engine))
     
@@ -79,7 +79,9 @@ def load_models_from_config(model_config: LLMModelConfig) -> List[LLMRemoteModel
 
 @dataclass
 class ZhizzModelConfig(LLMModelConfig):
-    config_file: Optional[str] = field(default=f"{here}/model_config.yaml", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
+    # config_file: Optional[str] = field(default=f"{here}/model_config.yaml", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
+    config_file: Optional[str] = field(default=None, metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
+    
     base_url: str = field(default="https://ark.cn-beijing.volces.com/api/v3", metadata={"help": "Base url of the zhizengzeng API"})
     _api_key: str = field(default="os.environ/ARK_API_KEY", metadata={"help": "API key of the model"})
     test: bool = field(default=True, metadata={"help": "Test model"})
@@ -112,7 +114,10 @@ if __name__ == "__main__":
     from fastapi import FastAPI
     model_config, worker_config = hai.parse_args((ZhizzModelConfig, ZhizzWorkerConfig))
     
-    models: List[LLMRemoteModel] = load_models_from_config(model_config)
+    from hepai.workers.zhizz.utils import load_models
+
+    # models: List[LLMRemoteModel] = load_models_from_config(model_config)
+    models: List[LLMRemoteModel] = load_models(model_config)  # Load models from the configuration file.
     
     if model_config.test:
         asyncio.run(test_model(model_config, models))

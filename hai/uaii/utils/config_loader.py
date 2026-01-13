@@ -10,6 +10,8 @@ import damei as dm
 import hai
 import json
 import argparse
+import importlib
+import importlib.util
 
 pydir = Path(os.path.abspath(__file__)).parent
 logger = dm.get_logger(__name__)
@@ -236,7 +238,14 @@ class PyConfigLoader(collections.UserDict):
             sys.path.remove(f'{cp.parent}')
             os.chdir(current_wd)  # 切换回工作目录
 
-        cfg = eval(cp.stem)  # 模块名
+        # cfg = eval(cp.stem)  # 模块名
+        # fix bug in 20251231, adapted to python 3.13+
+        spec = importlib.util.spec_from_file_location(cp.stem, str(cp))
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[cp.stem] = mod
+        spec.loader.exec_module(mod)
+
+        cfg = mod
 
         # 读取文件获取顶格写并且不以#开头的属性
         with open(cfg_file, 'r', encoding='utf-8') as f:

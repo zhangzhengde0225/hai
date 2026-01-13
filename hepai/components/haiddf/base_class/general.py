@@ -271,6 +271,7 @@ async def convert_openai_to_anthropic_format_stream_chunk(generator):
 
         choice = choices[0]  # 只处理第一个choice
         delta = choice.get('delta', {})
+        delta = {} if delta == [] else delta  # 有的时候delta是空列表
         finish_reason = choice.get('finish_reason')
 
         # 第一个chunk：发送 message_start

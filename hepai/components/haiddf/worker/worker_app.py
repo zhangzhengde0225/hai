@@ -277,7 +277,7 @@ class HWorkerAPP(FastAPI):
 
         # 检查模型是否存在
         if model not in self.model_semaphores:
-            raise HTTPException(status_code=404, detail=f"Model '{model}' not found")
+            raise HTTPException(status_code=503, detail=f"Model '{model}' not found")
 
         # 【第一次检查】检查模型是否被禁用（获取信号量前）
         if not self.worker.model_status_manager.is_model_enabled(model):
