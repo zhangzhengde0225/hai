@@ -1,0 +1,15 @@
+last_modified: 1766506263.0250149
+models:
+  scienceone/s1-base-lite:
+    enabled: true
+    last_updated: 1766506263.0250177
+    provider: scienceone
+  scienceone/s1-base-pro:
+    enabled: true
+    last_updated: 1766506263.0250206
+    provider: scienceone
+  scienceone/s1-base-ultra:
+    enabled: true
+    last_updated: 1766506263.0250216
+    provider: scienceone
+version: '1.0'
