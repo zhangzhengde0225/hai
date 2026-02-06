@@ -384,6 +384,7 @@ class LLMRemoteModel(HRModel):
             max_tokens = max(max_tokens, budget_tokens+1)
     
         stream = kwargs.pop("stream", False)
+        # stream = False  # 临时关闭stream功能，避免报错
         # kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         
         """
@@ -407,7 +408,8 @@ class LLMRemoteModel(HRModel):
         # kwargs.pop("thinking", None)  # 去掉thinking参数，避免报错
         # kwargs.pop("temperature", None)  # 去掉temperature参数，避免报错
         """
-        
+        # max_tokens = 2048  # 临时固定max_tokens，避免智增增报错，后续需要改进这个逻辑
+        # system = kwargs.pop("system", None)
         if stream:
             pass
             # thinking = kwargs.get("thinking", {})

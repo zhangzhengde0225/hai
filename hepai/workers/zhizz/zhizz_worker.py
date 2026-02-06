@@ -74,9 +74,9 @@ class ZhizzWorkerConfig(HWorkerConfig):
     port: int = field(default=42605, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     # controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
-    # controller_address: str = field(default="http://localhost:42500", metadata={"help": "Controller's address"})
+    controller_address: str = field(default="http://localhost:42500", metadata={"help": "Controller's address"})
     # controller_address: str = field(default="http://202.122.38.201:42601", metadata={"help": "Controller's address"})
-    controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
+    # controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
 
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
 
