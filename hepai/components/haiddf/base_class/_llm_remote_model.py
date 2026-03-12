@@ -377,11 +377,30 @@ class LLMRemoteModel(HRModel):
         max_tokens = kwargs.pop("max_tokens")
         # if max_tokens == 500:
         #     pass
-        thinking = kwargs.get("thinking", {})
-        # Deal with maxtokens if thinking is enabled
-        if thinking.get("type") == "enabled":
-            budget_tokens = thinking.get("budget_tokens", 0)
-            max_tokens = max(max_tokens, budget_tokens+1)
+        
+        # 处理思考模式的参数
+        thinking = kwargs.pop("thinking", {})
+        reasoning = kwargs.pop("reasoning", {})  # reasoning是OpenAI的参数，但某些应用会发送这个参数，需要转换为thinking参数
+        # thinking和reasoning不可能同时存在
+        assert not (thinking and reasoning), "thinking and reasoning parameters cannot exist at the same time"
+        if thinking:
+            # Deal with maxtokens if thinking is enabled
+            if thinking.get("type") == "enabled":
+                budget_tokens = thinking.get("budget_tokens", 0)
+                max_tokens = max(max_tokens, budget_tokens+1)
+        elif reasoning:
+            enabled = reasoning.get("enabled", False)
+            if enabled:
+                budget_tokens = max_tokens - 1  # 预留1个token给模型输出，否则可能出现max_tokens不足导致的错误
+                thinking = {"type": "enabled", "budget_tokens": budget_tokens}
+            else:
+                effort = reasoning.get("effort", "low")
+                if str(effort) in ["None", "minimal", "low"]:
+                    thinking = {"type": "disabled"}
+                elif str(effort) in ["medium", "high", "xhigh"]:
+                    thinking = {"type": "adaptive"}
+                else:
+                    raise ValueError(f"Invalid reasoning effort level: {effort}")
     
         stream = kwargs.pop("stream", False)
         # stream = False  # 临时关闭stream功能，避免报错
@@ -425,6 +444,7 @@ class LLMRemoteModel(HRModel):
                 extra_body=extra_body,
                 extra_query=extra_query,
                 timeout=timeout,
+                thinking=thinking,
                 **kwargs
                 )
             
@@ -440,6 +460,7 @@ class LLMRemoteModel(HRModel):
                     extra_body=extra_body,
                     extra_query=extra_query,
                     timeout=timeout,
+                    thinking=thinking,
                     **kwargs
                 )
             # rst = rst.model_dump()

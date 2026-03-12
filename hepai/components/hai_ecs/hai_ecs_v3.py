@@ -363,7 +363,7 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
   curl -X GET "http://aiweb02.ihep.ac.cn:8005/api/v2/cr/connect_job?job_id=${1}&job_type=${2}&cluster_id=slurm" \
   -H "Content-Type: application/json" \
   -H "Ink-Username: zhangyiyu" \
-  -H "Ink-Token: sk-PlsERgMMIdRhnytkLjNyzeybGlfOnyGZBlbKZlxMsmLrQPb"
+  -H "Ink-Token: sk-xx"
         """
         headers = self.build_headers()
         resp = requests.get(
@@ -406,7 +406,7 @@ curl -X GET "http://aiweb02.ihep.ac.cn:8001/api/v1/connect-job?jobId=${1}&job_ty
         curl -X GET "http://aiweb02.ihep.ac.cn:8005/api/v2/cr/query_jobs?limit=10&page=1&job_type=all&cluster_id=slurm" \
   -H "Content-Type: application/json" \
   -H "Ink-Username: zhangyiyu" \
-  -H "Ink-Token: sk-PlsERgMMIdRhnytkLjNyzeybGlfOnyGZBlbKZlxMsmLrQPb"
+  -H "Ink-Token: sk-xxx"
         """
         
         headers = self.build_headers()
