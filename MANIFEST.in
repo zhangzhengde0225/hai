@@ -3,5 +3,5 @@ include LICENSE.txt
 
 include hai/configs/urls/datasets.json
 include hai/configs/urls/hub_models.json
-include hepai/components/haiddf/worker/html/worker_index.html
 include hepai/workers/aliyun/model_config.yaml
+recursive-include hepai/components/haiddf/worker/html *.html
