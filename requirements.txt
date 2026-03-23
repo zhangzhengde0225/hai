@@ -15,3 +15,8 @@ mcp>=1.15.0
 numpy
 
 
+# pytest 相关
+pytest
+asyncio
+pytest-asyncio
+
