@@ -553,7 +553,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                # logger.debug(f"Error: {e}.\nTraceback: {tb_str}")
+                print(f"Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
@@ -644,7 +644,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                # logger.debug(f"Error: {e}.\nTraceback: {tb_str}")
+                print(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"

@@ -214,7 +214,104 @@ class LLMRemoteModel(HRModel):
                 **kwargs,
             )
             return response
-        
+
+    @HRModel.remote_callable
+    async def responses(self, *args, **kwargs):
+        """处理 /v1/responses 接口的请求"""
+        if self.cfg.need_external_api_key:
+            api_key = kwargs.pop("api_key", None)
+            if not api_key:
+                raise KeyError("You should provied API-KEY when calling this worker")
+            extra_headers = {"Authorization": f"Bearer {api_key}"}
+        else:
+            api_key = kwargs.pop("api_key", None) or self.cfg.api_key
+            extra_headers = {"Authorization": f"Bearer {api_key}"}
+            extra_headers.update(kwargs.pop("extra_headers", {}))
+
+        kwargs.pop("extra_body", None)
+        kwargs.pop("extra_query", None)
+        # zhizz不支持这个新参数stream_options， 剔除掉
+        kwargs.pop("stream_options", None)
+        timeout = kwargs.pop("timeout", 60.0)
+
+        # 例如 model 设置为 gpt-4.1 而不是 openai/gpt-4.1
+        kwargs["model"] = self.cfg.engine
+        stream = kwargs.get("stream", False)
+        payload = {k: v for k, v in kwargs.items()}
+
+        base_url = self.cfg.base_url.rstrip("/")
+        if not base_url.endswith("/v1") and not base_url.endswith("/v2") and not base_url.endswith("/v3"):
+            url = f"{base_url}/v1/responses"
+        else:
+            url = f"{base_url}/responses"
+
+        # 1. 客户端请求流式输出 (Stream = True)
+        if stream:
+            import json
+
+            async def stream_generator():
+                async with httpx.AsyncClient() as c:
+                    async with c.stream("POST", url, headers=extra_headers, json=payload, timeout=timeout) as resp:
+                        if resp.status_code != 200:
+                            await resp.aread()
+                            raise self._make_exception(kwargs, payload, url, resp)
+
+                        is_first_chunk = True
+                        is_error_stream = False
+                        error_bytes = bytearray()  # 用于在流被判定为报错时，暂存所有的字节
+
+                        async for chunk in resp.aiter_bytes():
+                            if is_first_chunk:
+                                is_first_chunk = False
+                                # 如果以 '{' 开头，判定为上游强行返回了 JSON 报错
+                                if chunk.lstrip().startswith(b'{'):
+                                    is_error_stream = True
+
+                            # 根据标志位决定是收集报错，还是正常下发流
+                            if is_error_stream:
+                                error_bytes.extend(chunk)
+                            else:
+                                yield chunk
+
+                        # 当流读取完毕后，如果刚才判定它是报错流，就在这里统一解析并抛出
+                        if is_error_stream:
+                            full_text = error_bytes.decode('utf-8', errors='ignore')
+                            try:
+                                data = json.loads(full_text)
+                                if "error" in data:
+                                    raise self._make_exception(kwargs, payload, url, resp, error_text=full_text)
+                                else:
+                                    # 罕见情况：以 '{' 开头但不是标准错误格式
+                                    raise self._make_exception(kwargs, payload, url, resp, error_text=full_text)
+                            except ValueError:
+                                # JSON 解析失败，说明返回的结构极其畸形，直接将原文抛出
+                                raise self._make_exception(kwargs, payload, url, resp, error_text=full_text)
+
+            return stream_generator()
+
+        # 2. 客户端请求非流式输出 (Stream = False)
+        else:
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(url, headers=extra_headers, json=payload, timeout=timeout)
+
+                if resp.status_code != 200:
+                    raise self._make_exception(kwargs, payload, url, resp)
+
+                return resp.json()
+
+    @staticmethod
+    def _make_exception(kwargs, payload, url, resp, error_text: str = None) -> Exception:
+        # 如果从 chunk 中提取到了报错信息，就优先使用；否则正常使用 resp.text
+        actual_text = error_text if error_text is not None else resp.text
+        error_msg = f"Upstream Responses Error {resp.status_code}: {actual_text}"
+        exc = Exception(error_msg)
+
+        # 动态添加上下文信息
+        exc.add_note(f"请求目标 URL: {url}")
+        exc.add_note(f"传递的模型: {kwargs.get('model')}")
+        exc.add_note(f"请求 Payload (前300字符): {str(payload)[:300]}")
+        return exc
+
     @HRModel.remote_callable
     async def embeddings(self, *args, **kwargs):
         if self.cfg.need_external_api_key:
