@@ -468,7 +468,8 @@ class CommonWorker:
                 self.logger.warning(f"Register worker to controller failed, pass...")
                 return False
         if heartbeat_flag:
-            self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
+            if self.config.debug:
+                self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
         else:
             self.logger.info(f"Worker `{worker_info.id}` register to `{self.base_url}` successfully.")
         return True
