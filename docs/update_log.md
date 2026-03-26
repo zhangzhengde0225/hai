@@ -1,6 +1,7 @@
 # 更新日志
 
-+ 2025.01.13 v1.3.5 更新_llm_remote_model.py，支持了anthropic的claude 4.5各模型，支持claude code访问。
++ 2026.03.26 v1.3.6 修复了_llm_remote_model.py中claude的context_management接口的bug。
++ 2026.01.13 v1.3.5 更新_llm_remote_model.py，支持了anthropic的claude 4.5各模型，支持claude code访问。
 + 2025.12.31 v1.3.3 修复config_loader.py中导入模块的bug，适配python3.13+; 修复requirements.txt中mcp依赖缺失的问题。
 + 2025.12.20 v1.3.2 新增worker配置项is_free，用于指示模型是否免费使用，默认为True。如果设置为False，需要管理员在控制台配置模型的定价策略。
 + 2025.12.18 v1.3.1 worker支持dashboard配置啟用和禁用。
