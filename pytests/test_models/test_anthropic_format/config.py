@@ -47,27 +47,41 @@ class PresetDDFServer(PresetServerConfig):
     api_key: str = field(default_factory=lambda: os.environ.get("HEPAI_API_KEY", ""))
     base_url: str = "https://aiapi.ihep.ac.cn/apiv2/anthropic/"
 
-
+@dataclass
+class PresetOpenAIServer(PresetServerConfig):
+    api_key: str = field(default_factory=lambda: os.environ.get("OPENAI_API_KEY", ""))
+    base_url: str = "https://api.openai.com/v1/"
 
 @dataclass
 class TestConfig:
     
     # client: PresetServerConfig = field(default_factory=PresetZhizzServer)
-    client: PresetServerConfig = field(default_factory=PresetMinimaxServer)
+    # client: PresetServerConfig = field(default_factory=PresetMinimaxServer)
     # client: PresetServerConfig = field(default_factory=PresetWorkerServer)
     # client: PresetServerConfig = field(default_factory=PresetLocalDDFServer)
+    client: PresetServerConfig = field(default_factory=PresetOpenAIServer)
     
     # client: PresetServerConfig = field(default_factory=PresetDDFServer)
     
     # model: str = "minimax/minimax-m2.5"
-    model: str = "minimax/minimax-m2.7-highspeed"
+    # model: str = "minimax/minimax-m2.7-highspeed"
     # model: str = "anthropic/claude-sonnet-4-6"
-    model: str = "MiniMax-M2.7"
+    # model: str = "MiniMax-M2.7"
+    model: str = "openai/gpt-5"
+    model: str = "gpt-5"
+
+    api_mode: str = "openai"  # or "anthropic"
+    
 
 
     def __post_init__(self):
         if isinstance(self.client, PresetZhizzServer) or isinstance(self.client, PresetMinimaxServer):
             self.model = self.model.split("/")[-1]  # For Zhizz and Minimax servers, model name should not include the "anthropic/" prefix
+
+        if self.api_mode == "openai":
+            url_without_anthropic = self.client.base_url.replace("/anthropic/", "/")
+            self.client.base_url = url_without_anthropic  # Remove "/anthropic/" from
+
 
 # 默认配置实例，供各测试文件直接导入使用
 default_config = TestConfig()
