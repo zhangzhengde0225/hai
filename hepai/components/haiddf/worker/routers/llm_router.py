@@ -50,6 +50,10 @@ class LLMRouterGroup:
         rt.post("/rerank", dependencies=[api_key_auth])(self.rerank)
         rt.post("/v1/rerank", dependencies=[api_key_auth])(self.rerank)
 
+        # openai
+        rt.post("/responses", dependencies=[api_key_auth])(self.responses)
+        rt.post("/v1/responses", dependencies=[api_key_auth])(self.responses)
+
 
     async def chat_completions(self, request: Request):
         request_body: Dict = await read_request_body(request=request)
@@ -179,5 +183,25 @@ class LLMRouterGroup:
                 "base_models": "deepseek/deepseek-v3",
             }
         return request_body
+
+    async def responses(self, request: Request, user_auth=api_key_auth):
+        request_body: Dict = await read_request_body(request=request)
+        if "model" not in request_body:
+            raise HTTPException(status_code=400, detail="[LLMRouterGroup] This `model` must be specified")
+
+        model = request_body["model"]
+        self.count += 1
+
+        func_params = FunctionParamsItem(
+            args=[],
+            kwargs=request_body
+        )
+
+        rst = await self.parent_app.worker_unified_gate(
+            function_params=func_params,
+            model=model,
+            function="responses",
+        )
+        return rst
     
     

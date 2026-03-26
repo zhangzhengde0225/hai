@@ -468,7 +468,8 @@ class CommonWorker:
                 self.logger.warning(f"Register worker to controller failed, pass...")
                 return False
         if heartbeat_flag:
-            self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
+            if self.config.debug:
+                self.logger.info(f"Heartbeat sent successfully: `{worker_info.id}`")
         else:
             self.logger.info(f"Worker `{worker_info.id}` register to `{self.base_url}` successfully.")
         return True
@@ -553,7 +554,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                # logger.debug(f"Error: {e}.\nTraceback: {tb_str}")
+                print(f"Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
@@ -644,7 +645,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                # logger.debug(f"Error: {e}.\nTraceback: {tb_str}")
+                print(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
