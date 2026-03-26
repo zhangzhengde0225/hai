@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2026.03.26 v1.3.6.2 修复requirements.txt中anthropic固定版本的问题。
 + 2026.03.26 v1.3.6 修复了_llm_remote_model.py中claude的context_management接口的bug。
 + 2026.01.13 v1.3.5 更新_llm_remote_model.py，支持了anthropic的claude 4.5各模型，支持claude code访问。
 + 2025.12.31 v1.3.3 修复config_loader.py中导入模块的bug，适配python3.13+; 修复requirements.txt中mcp依赖缺失的问题。
