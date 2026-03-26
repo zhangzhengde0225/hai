@@ -502,6 +502,7 @@ class LLMRemoteModel(HRModel):
         stream = kwargs.pop("stream", False)
         # stream = False  # 临时关闭stream功能，避免报错
         kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
+        kwargs.pop("store", None)  # 去掉store参数，避免报错
         
         """
         # 20251209左右，系统提示词里包含"cahce_control": {'type': 'ephemeral'}，智增增会报错
