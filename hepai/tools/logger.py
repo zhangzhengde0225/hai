@@ -27,7 +27,7 @@ class Logger:
     LOGGING_LEVEL = logging.getLevelName(LOGGING_LEVEL_NAME)
 
     format_str = f"\033[1;35m[%(asctime)s]\033[0m \033[1;32m[%(name)s]\033[0m " \
-                 f"\033[1;33m[%(request_id)s]\033[0m " \
+                 f"\033[90m[%(request_id)s]\033[0m " \
                  f"\033[1;36m[%(levelname)s]:\033[0m %(message)s"
 
     logg_dir = f'{Path.home()}/.{__appname__}_logs'
