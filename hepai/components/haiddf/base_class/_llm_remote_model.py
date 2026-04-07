@@ -1,4 +1,5 @@
 import os
+from functools import cached_property
 from typing import Generator, Union, Dict, List, Optional, Literal, Iterator, Any, AsyncGenerator
 from dataclasses import dataclass, field
 import json
@@ -7,6 +8,8 @@ import json
 
 # from hepai import HepAI, AsyncHepAI
 import httpx
+
+from .utils import inject_context_on_error
 from ..hepai_client import HepAIClient as HepAI
 from ..hepai_client import AsyncHepAIClient as AsyncHepAI
 
@@ -63,7 +66,12 @@ class LLMRemoteModel(HRModel):
                 proxy=self.cfg.proxy
             )
         return self._async_client_with_anthropic_url
-    
+
+    @cached_property
+    def logger(self):
+        from hepai.tools.logger import Logger
+        return Logger.get_logger("LLMRemoteModel")
+
     def __repr__(self):
         return f"<LLMRemoteModel name={self.cfg.name} engine={self.cfg.engine} version={self.cfg.version}>"
     
@@ -218,6 +226,7 @@ class LLMRemoteModel(HRModel):
     @HRModel.remote_callable
     async def responses(self, *args, **kwargs):
         """处理 /v1/responses 接口的请求"""
+        self.logger.info(f"responses {self.cfg.name}")
         if self.cfg.need_external_api_key:
             api_key = kwargs.pop("api_key", None)
             if not api_key:
@@ -383,8 +392,8 @@ class LLMRemoteModel(HRModel):
             # 检查错误
             response.raise_for_status()
             
-            print(f"Status Code: {response.status_code}")
-            print(f"Response: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
+            self.logger.info(f"Status Code: {response.status_code}")
+            self.logger.info(f"Response: {json.dumps(response.json(), indent=2, ensure_ascii=False)}")
 
         return response.json()
     
@@ -420,16 +429,17 @@ class LLMRemoteModel(HRModel):
     
     
     @HRModel.remote_callable
+    @inject_context_on_error
     async def anthropic_messages(self, *args, **kwargs) -> Union[Dict, AsyncGenerator]:
         """Anthropic Messages API接口"""
         modelx = kwargs.get("model")
         # if modelx == "claude-sonnet-4-20250514"
         # kwargs['stream'] = False  # Anthropic的接口不支持stream参数，这里强制设为False
         stream = kwargs.get("stream", False)
-        
+
         # if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt", "claude"]):
         if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
-        
+
             # 如果是moonshot或openai开头的模型，走openai接口
             from . import general
             oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
@@ -442,7 +452,7 @@ class LLMRemoteModel(HRModel):
                 rst = await self.chat_completions(**oai_params)
                 rst2 = await general.convert_object_openai_to_anthropic(rst)
                 return rst2
-        
+
         if self.cfg.need_external_api_key:
             api_key = kwargs.pop("api_key", None)
             if not api_key:
@@ -450,31 +460,31 @@ class LLMRemoteModel(HRModel):
             extra_headers = {"x-api-key": api_key}
         else:
             extra_headers = kwargs.pop("extra_headers", {})
-        
+
         anthropic_version = kwargs.pop("anthropic_version", None)
         anthropic_beta = kwargs.pop("anthropic_beta", None)
         if anthropic_version:
             extra_headers["anthropic-version"] = anthropic_version
         if anthropic_beta:
             extra_headers["anthropic-beta"] = anthropic_beta
-            
+
         extra_body: Dict = kwargs.pop("extra_body", {})
         extra_query: Dict = kwargs.pop("extra_query", {})
         timeout = kwargs.pop("timeout", None)
-        
+
         if "model" not in kwargs:
             raise ValueError("model parameter is required")
         if "messages" not in kwargs:
             raise ValueError("messages parameter is required")
         if "max_tokens" not in kwargs:
             raise ValueError("max_tokens parameter is required")
-            
+
         modelx = kwargs.pop("model")
         messages = kwargs.pop("messages")
         max_tokens = kwargs.pop("max_tokens")
         # if max_tokens == 500:
         #     pass
-        
+
         # 处理思考模式的参数
         thinking = kwargs.pop("thinking", {})
         reasoning = kwargs.pop("reasoning", {})  # reasoning是OpenAI的参数，但某些应用会发送这个参数，需要转换为thinking参数
@@ -498,12 +508,12 @@ class LLMRemoteModel(HRModel):
                     thinking = {"type": "adaptive"}
                 else:
                     raise ValueError(f"Invalid reasoning effort level: {effort}")
-    
+
         stream = kwargs.pop("stream", False)
         # stream = False  # 临时关闭stream功能，避免报错
         kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         kwargs.pop("store", None)  # 去掉store参数，避免报错
-        
+
         """
         # 20251209左右，系统提示词里包含"cahce_control": {'type': 'ephemeral'}，智增增会报错
         system = kwargs.pop("system", None)
@@ -531,7 +541,7 @@ class LLMRemoteModel(HRModel):
             pass
             # thinking = kwargs.get("thinking", {})
 
-            # print(f"max_tokens: {max_tokens}, thinking: {thinking}")
+            # self.logger.info(f"max_tokens: {max_tokens}, thinking: {thinking}")
             # if max_tokens == 500:
             #     pass
             gen = self.anthropic_stream(
@@ -545,10 +555,10 @@ class LLMRemoteModel(HRModel):
                 thinking=thinking,
                 **kwargs
                 )
-            
+
             return gen
         else:
-            
+
             rst = await self.async_client_with_anthropic_url.anthropic.messages.create(
                     model=self.cfg.engine,
                     messages=messages,
@@ -590,7 +600,7 @@ class LLMRemoteModel(HRModel):
             ) as async_message_stream:
             # i = 0
             async for chunk in async_message_stream:
-                # print(f"{i} {chunk}")
+                # self.logger.info(f"{i} {chunk}")
                 # i += 1
                 data = chunk.model_dump()
                 yield f"event: {chunk.type}\ndata: {json.dumps(data)}\n\n"

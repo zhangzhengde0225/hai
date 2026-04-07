@@ -77,6 +77,28 @@ class HWorkerAPP(FastAPI):
         fastapi_kwargs.update(mcp_kwargs)
         
         super().__init__(**fastapi_kwargs)
+
+        @self.middleware("http")
+        async def worker_request_id_middleware(request: Request, call_next):
+            from hepai.tools.request_context import request_id_context
+            import uuid
+            # 1. 尝试从 Manager 传过来的 Header 中获取 ID
+            # 如果是绕过 Manager 直接发给 Worker 的请求，兜底生成一个 (加前缀 wk- 以示区分)
+            req_id = request.headers.get("X-Request-ID", f"req-wk-{uuid.uuid4().hex[:16]}")
+
+            # 2. 存入当前协程上下文
+            token = request_id_context.set(req_id)
+
+            try:
+                # 3. 继续处理后续路由 (如 worker_unified_gate)
+                response = await call_next(request)
+
+                # 4. 把 ID 也塞进 Worker 返回的 Header 里，方便溯源
+                response.headers["X-Request-ID"] = req_id
+                return response
+            finally:
+                # 5. 请求结束，清理上下文
+                request_id_context.reset(token)
         
         
         self.logger = self.get_logger(logger)
@@ -190,7 +212,7 @@ class HWorkerAPP(FastAPI):
     def get_logger(cls, logger: Logger = None):
         if logger is None:
             try:
-                from ...utils._logger import Logger
+                from hepai.tools.logger import Logger
                 logger = Logger.get_logger("worker_app.py")
             except:
                 import logging

@@ -178,7 +178,14 @@ class CommonWorker:
         # flag
         self._is_deleted_in_controller = False  # a flag to indicate whether the worker is deleted in controller
         # 日志
-        self.logger = logger or logging.getLogger(__name__)
+        self.logger = logger
+        if self.logger:
+            try:
+                from hepai.tools.logger import Logger
+                self.logger = Logger.get_logger("CommonWorker")
+            except Exception as e:
+                self.logger = logging.getLogger("CommonWorker")
+
         # 注册模型
         if not self.config.no_register:
             success: bool = self.register_to_controller()
@@ -459,7 +466,7 @@ class CommonWorker:
                 raise ValueError(f"Register worker failed. Error: {r.text}\n  Request url: {url}\n  Worker_info: {worker_info}")
         except Exception as e:
             if heartbeat_flag:
-                print(f"Sent heartbeat failed, ignore... url: {url}, worker_id: {self.worker_id}")
+                self.logger.error(f"Sent heartbeat failed, ignore... url: {url}, worker_id: {self.worker_id}")
                 pass
             else:
                 if self.config.debug:
@@ -496,7 +503,7 @@ class CommonWorker:
             headers=self.headers)
         assert r.status_code == 200, f"Stop worker failed. {r.text}\n worker_info: {worker_info}"
         # logger.info(f'Done. {r.text}') 
-        print(f"Stop worker successful. res: {r.text}")
+        self.logger.info(f"Stop worker successful. res: {r.text}")
 
     ### --- 此处是处理Controller的请求的相关函数 --- ###
     def unified_gate(
@@ -554,7 +561,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                print(f"Error: {e}.\nTraceback: {tb_str}")
+                self.logger.error(f"Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
@@ -570,7 +577,7 @@ class CommonWorker:
                     raise HTTPException(status_code=504, detail=error_msg)
                 ## TODO: 其他报错类型转换为合适的报错状态码
                 error_msg2 = f"{e_class}: {str(e)}"
-                print(f"一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
+                self.logger.error(f"一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
                 raise HTTPException(status_code=400, detail=f'{error_msg2}\n{error_msg2}')
         else:
             raise HTTPException(status_code=404, detail=f"Function `{function}` does not exist or is not callable in the worker `{self.worker_id}`")
@@ -645,7 +652,7 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                print(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
+                self.logger.error(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
@@ -661,7 +668,7 @@ class CommonWorker:
                     raise HTTPException(status_code=504, detail=error_msg)
                 ## TODO: 其他报错类型转换为合适的报错状态码
                 error_msg2 = f"{e_class}: {str(e)}"
-                print(f"[CommonWorker]一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
+                self.logger.error(f"[CommonWorker]一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")
                 raise HTTPException(status_code=400, detail=f'{error_msg2}\n{error_msg2}')
                 # raise e
         else:

@@ -13,7 +13,7 @@ python-dotenv>=1.1.1
 damei>=1.1.135
 mcp>=1.15.0
 numpy
-
+contextvars
 
 # pytest 相关
 pytest
