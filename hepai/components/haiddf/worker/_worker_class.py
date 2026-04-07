@@ -596,7 +596,7 @@ class CommonWorker:
         """
         # assert "function" in kwargs, "function is required"
         # function = kwargs.pop("function")
-
+        self.logger.info(f"unified_gate_async | model: {model}")
         if model is None:
             if len(self.models) == 1:
                 # 不指定模型，且worker只搭载一个模型时，直接使用这个模型

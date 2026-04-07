@@ -132,7 +132,7 @@ class TestControllerPoolExhaustion():
 
     def test_reproduce_pool_exhaustion(self):
         """并发发送 150 个请求，打爆连接池"""
-        total_requests = 150
+        total_requests = 1000
         concurrency = 50  # 50 个线程并发
 
         print(f"开始发送 {total_requests} 个并发请求...")
