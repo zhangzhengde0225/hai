@@ -1,0 +1,7 @@
+last_modified: 1775269828.5229783
+models:
+  anthropic/claude-sonnet-4.6:
+    enabled: true
+    last_updated: 1775269828.5229797
+    provider: anthropic
+version: '1.0'

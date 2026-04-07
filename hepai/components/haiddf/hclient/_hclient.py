@@ -203,10 +203,15 @@ class HClient(SyncAPIClient):
                 raise ImportError(
                     "Please install the `anthropic` package to use the Anthropic resources, you can install it by `pip install anthropic`"
                 )
+            
+            base_url = self.config.base_url
+            if base_url == "https://aiapi.ihep.ac.cn/apiv2":
+                base_url += "/anthropic"
+            
             self._anthropic: anthropic.Anthropic | None = None
             self._anthropic_params = {
                 "api_key": self.api_key,
-                "base_url": self.config.base_url,  # type: ignore[call-arg]
+                "base_url": base_url,  # type: ignore[call-arg]
                 "timeout": self.config.timeout,  # type: ignore[call-arg]
                 "max_retries": self.config.max_retries,  # type: ignore[call-arg]
                 "http_client": self.config.http_client,  # type: ignore[call-arg]

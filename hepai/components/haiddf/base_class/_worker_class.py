@@ -32,6 +32,7 @@ class HModelConfig:
     version: str = field(default="2.0", metadata={"help": "Model's version"})
     enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
     mcp_transport: Literal["sse", "streamable-http"] = field(default="streamable-http", metadata={"help": "MCP transport type, could be 'sse' or 'streamable-http'"})
+    api_model: Literal["hepai-if"] = field(default="hepai-if", metadata={"help": "API model to determine how the worker will call the model, e.g. using HepAI API via Infinite Function Protocol"})
 
 # from ..worker.singletons import mcp_manager
 
