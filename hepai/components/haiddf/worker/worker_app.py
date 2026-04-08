@@ -330,8 +330,11 @@ class HWorkerAPP(FastAPI):
         except Exception as e:
             # await self.release_model_semaphore(model)
             # self.release_model_semaphore(model)
+            real_cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+            if real_cause:
+                self.logger.error(f"real_cause: {repr(real_cause)}")
             self.release_model_semaphore(model_semaphore)
-            raise e
+            raise
 
         # background_tasks.add_task(self.release_model_semaphore, model_semaphore)
         self.release_model_semaphore(model_semaphore)
