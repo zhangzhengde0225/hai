@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2026.04.09 v1.3.7.0 HWorkerAPP增加了链路请求id（X-Request-ID）和全局异常拦截。日志会打印链路id，方便排查调用链路。
 + 2026.03.26 v1.3.6.2 修复requirements.txt中anthropic固定版本的问题。
 + 2026.03.26 v1.3.6 修复了_llm_remote_model.py中claude的context_management接口的bug。
 + 2026.01.13 v1.3.5 更新_llm_remote_model.py，支持了anthropic的claude 4.5各模型，支持claude code访问。
