@@ -234,7 +234,10 @@ class LLMRemoteModelV2(HRModel):
         payload.update(extra_body)
 
         url = self._build_oai_url("/chat/completions")
-        headers = {"Content-Type": "application/json", **extra_headers}
+        headers = {
+            "Content-Type": "application/json", 
+            "Authorization": f"Bearer {self.cfg.api_key}" if self.cfg.api_key else None,
+            **extra_headers}
 
         if should_stream:
             return self._stream_bytes(self.http_client, url, headers, payload, timeout)
@@ -518,7 +521,7 @@ class LLMRemoteModelV2(HRModel):
         }
         """
         with open(config_path, "r", encoding="utf-8") as f:
-            cfg = json.load(f)
+            cfg: Dict = json.load(f)
 
 
         meta = cfg.get("meta", {})
