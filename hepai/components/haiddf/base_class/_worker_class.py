@@ -3,6 +3,8 @@
 """
 import os
 import time
+import socket
+from urllib.parse import urlparse
 from dataclasses import dataclass, field, asdict
 from collections.abc import Callable
 from typing import (
@@ -475,13 +477,27 @@ class WorkerNetworkInfo:
     host_name: str = field(default="localhost", metadata={"help": "Worker's host name"})
     worker_address: Union[None, str] = field(default="", metadata={"help": "Worker's address, will be auto generated if not setted"})
 
-    def check_and_autoset_worker_address(self):
+    def check_and_autoset_worker_address(self, check_connectivity: bool = False) -> str:
         """自动检查并设置worker_address"""
         if self.worker_address in ["", None]:
             if self.route_prefix in ["", None]:
                 self.worker_address = f"http://{self.host}:{self.port}"
             else:
                 self.worker_address = f"http://{self.host}:{self.port}/{self.route_prefix}"
+
+        ### 这里逻辑不对的，这里检查是在注册worker时触发连通性检查，那时候worker端的端口还没打开。###
+        # if check_connectivity:
+        #     parsed = urlparse(self.worker_address)
+        #     real_host = parsed.hostname
+        #     real_port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        #     try:
+        #         with socket.create_connection((real_host, real_port), timeout=3.0):
+        #             pass
+        #     except OSError as e:
+        #         raise ConnectionError(
+        #             f"Worker at {real_host}:{real_port} is not reachable: {e}"
+        #         )
+
         return self.worker_address
 
     def to_dict(self):
@@ -503,6 +519,12 @@ class WorkerInfo:
     last_heartbeat: Union[int, None] = None
     version: str = "2.0"
     metadata: Dict = field(default_factory=dict, metadata={"help": "Worker's metadata"})
+    
+    is_shared: bool = field(default=False, metadata={"help": "Worker's shared flag, indicates whether the worker is shared to other users"})
+    owner: Union[str, None] = field(default=None, metadata={"help": "Worker's owner"})
+    shared_groups: List[str] = field(default_factory=list, metadata={"help": "Worker's shared groups, only valid when is_shared is True"})
+    shared_users: List[str] = field(default_factory=list, metadata={"help": "Worker's shared users, only valid when is_shared is True"})
+
 
     def __post_init__(self):
         """在实例化本类时，自动检查network_info等是否Dict, 并转换为相应的对象"""
@@ -515,6 +537,15 @@ class WorkerInfo:
                     self.resource_info[i] = ModelResourceInfo(**mr)
         if isinstance(self.status_info, dict):
             self.status_info = WorkerStatusInfo(**self.status_info)
+        # 根据permissions自动设置is_shared字段
+        permissions = self.metadata.get("permissions", {})
+        if permissions.get("groups") or permissions.get("users"):
+            self.is_shared = True
+            self.shared_groups = permissions.get("groups", [])
+            self.shared_users = permissions.get("users", [])
+        else:
+            self.is_shared = False
+        self.owner = permissions.get("owner", None)
 
     def to_dict(self):
         return asdict(self)
