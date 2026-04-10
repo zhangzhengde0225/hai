@@ -70,18 +70,89 @@ def auto_port(port=None, start=42901, **kwargs):
         return port
     
 
+def _get_all_interface_ips():
+    """获取所有网卡的 (接口名, IP) 列表，排除 loopback"""
+    import socket, struct, fcntl, array
+
+    result = []
+    # 使用 SIOCGIFCONF 枚举所有网卡
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # 分配足够大的缓冲区
+        buf = array.array('B', b'\0' * 4096)
+        # struct ifreq 在 Linux 上是 40 字节
+        ifconf = struct.pack('iL', 4096, buf.buffer_info()[0])
+        result_bytes = fcntl.ioctl(s.fileno(), 0x8912, ifconf)  # SIOCGIFCONF
+        size = struct.unpack('iL', result_bytes)[0]
+        data = buf.tobytes()[:size]
+
+        offset = 0
+        while offset < size:
+            ifname = data[offset:offset+16].split(b'\0', 1)[0].decode()
+            ip_bytes = data[offset+20:offset+24]
+            ip = socket.inet_ntoa(ip_bytes)
+            offset += 40  # sizeof(struct ifreq) on Linux
+
+            if ip.startswith('127.'):
+                continue
+            result.append((ifname, ip))
+    finally:
+        s.close()
+    return result
+
+
+def _detect_best_ip():
+    """
+    智能选择本机 IP:
+    1. 环境变量 WORKER_IP 优先（手动覆盖）
+    2. 在 K8s 环境中有多个网卡时，优先选非 eth0 的接口
+       （eth0 通常是 K8s CNI 分配的 pod 网络，net1 等是 Multus/macvlan 分配的）
+    3. 只有一个网卡时直接使用
+    4. 兜底：UDP socket 默认路由
+    """
+    import os, socket
+
+    # 1. 环境变量手动覆盖
+    env_ip = os.environ.get("WORKER_IP")
+    if env_ip:
+        return env_ip
+
+    # 2. 枚举网卡，智能选择
+    try:
+        interfaces = _get_all_interface_ips()
+    except Exception:
+        interfaces = []
+
+    if len(interfaces) == 1:
+        return interfaces[0][1]
+
+    if len(interfaces) > 1:
+        # K8s 环境检测：存在 serviceaccount 目录
+        is_k8s = os.path.exists("/var/run/secrets/kubernetes.io/serviceaccount")
+        if is_k8s:
+            # 优先选非 eth0 的接口（macvlan / SR-IOV 等由 Multus 注入的额外网卡）
+            non_eth0 = [(name, ip) for name, ip in interfaces if name != "eth0"]
+            if non_eth0:
+                chosen_name, chosen_ip = non_eth0[0]
+                import logging
+                # logging.getLogger("worker_utils").info(
+                #     f"K8s detected with multiple interfaces, chose {chosen_name}({chosen_ip}) over eth0"
+                # )
+                return chosen_ip
+
+    # 3. 兜底：UDP socket 默认路由
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect(("10.255.255.255", 1))
+        return s.getsockname()[0]
+
+
 def auto_worker_address(worker_address, host, port):
-    import socket
     if worker_address != 'auto':
         return worker_address
     if host in ['localhost', '127.0.0.1']:
         return f'http://{host}:{port}'
     elif host == '0.0.0.0':
-        ## TODO，此处需要改进，获取本机ip
-        # 获取本机的外部 IP 地址是使用一个与外部世界的连接
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-            s.connect(("10.255.255.255", 1))
-            ip = s.getsockname()[0]
+        ip = _detect_best_ip()
         return f'http://{ip}:{port}'
     else:
         raise ValueError(f'host {host} is not supported')

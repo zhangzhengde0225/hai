@@ -36,7 +36,6 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
     controller_address: str = field(default="http://localhost:42601", metadata={"help": "Controller's address"})
     controller_prefix: str = field(default="/apiv2", metadata={"help": "Controller's route prefix"})
-    controller_key: str = field(default="", metadata={"help": "API key for reigster to controller, ensure the security, you must provide it if the `controller` requires authentication"})
     
     # config for model
     speed: int = field(default=1, metadata={"help": "Model's speed"})
@@ -56,8 +55,8 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
     model_config_dir: Optional[str] = field(default=None, metadata={"help": "Directory to store model_config.yaml, if None, will try to use worker script directory or current working directory"})
     # enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
-
-
+    owner_key: str = field(default="os.environ/HEPAI_API_KEY", metadata={"help": "Owner's API key for authenticating with controller, read from HEPAI_API_KEY env var by default"})
+    
     def __post_init__(self):
         if isinstance(self.port, str):
             if self.port.lower() == 'none':
@@ -88,8 +87,26 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
                 self.permissions = perms
             except Exception as e:
                 raise ValueError(f"Failed to parse permissions string: {self.permissions}. Error: {e}")
-        
-        
+
+        # 解析 "os.environ/VAR_NAME" 格式的字段，从环境变量中读取实际值
+        self.owner_key = self._resolve_env_var(self.owner_key, "owner_key")
+
+    @staticmethod
+    def _resolve_env_var(value: str, field_name: str) -> str:
+        """解析 'os.environ/VAR_NAME' 格式的字符串，从环境变量中读取实际值"""
+        if not isinstance(value, str) or not value.startswith("os.environ/"):
+            return value
+        env_var_name = value[len("os.environ/"):]
+        env_value = os.environ.get(env_var_name)
+        if env_value is None:
+            warnings.warn(
+                f"[HWorkerConfig] Field '{field_name}' references environment variable "
+                f"'{env_var_name}', but it is not set. Value will be empty."
+            )
+            return ""
+        return env_value
+
+
     
     def ensure_worker_config(self):
         """"""
@@ -154,7 +171,7 @@ class CommonWorker:
             lenth=15, prefix="wk-", extra_indicators=indicators
         )
         self.stream_interval = self.config_dict.get("stream_interval", 0)
-        self.controller_key = self.config_dict.get("controller_key", "")
+        self.owner_key = self.config_dict.get("owner_key", "")
         # self.model = model or HRemoteModel()  # deprecated, v2.1支持多模型
         
         # 建立快速查找的模型映射
@@ -279,9 +296,9 @@ class CommonWorker:
             for a in permissions.split(';'):
                 user_or_group, names = map(str.strip, a.split(':', 1))
                 assert user_or_group in ['owner', 'users', 'groups'], f"Invalid key: {user_or_group}"
-                perms[user_or_group] = (
-                    [name.strip() for name in names.split(',')] if ',' in names else [names.strip()]
-                )
+                values = [name.strip() for name in names.split(',')] if ',' in names else [names.strip()]
+                values = [v for v in values if v]  # 去掉空字符串
+                perms[user_or_group] = (values)
             # 确保owner是单个字符串
             if 'owner' in perms:
                 if isinstance(perms['owner'], list):
@@ -454,7 +471,7 @@ class CommonWorker:
     @property
     def headers(self) -> dict:
         headers = {
-            'Authorization': f'Bearer {self.controller_key}' if self.controller_key else '',
+            'Authorization': f'Bearer {self.owner_key}' if self.owner_key else '',
             'Content-Type': 'application/json'
         }
         return headers
@@ -462,25 +479,42 @@ class CommonWorker:
     def register_to_controller(self, heartbeat_flag: bool = False):
         """注册和心跳"""
         # logger.info(f'Register model "{self.model_name}" to controller.')
-        
+
         # url = self.base_url + '/register_worker'
         url = self.base_url + '/worker/register_worker'
         worker_info: WorkerInfo = self.get_worker_info()
         data = worker_info.to_dict()
-        
+
         try:
             r = requests.post(url, json=data, headers=self.headers)
             if r.status_code != 200:
-                raise ValueError(f"Register worker failed. Error: {r.text}\n  Request url: {url}\n  Worker_info: {worker_info}")
-        except Exception as e:
+                raise ValueError(f"Register worker failed. Status: {r.status_code}, Response: {r.text}\n  Request url: {url}\n  Worker_info: {worker_info}")
+        except requests.ConnectionError as e:
+            error_reason = f"Cannot connect to controller at {url}. Is the controller running? Error: {e}"
             if heartbeat_flag:
-                self.logger.error(f"Sent heartbeat failed, ignore... url: {url}, worker_id: {self.worker_id}")
-                pass
+                self.logger.error(f"Heartbeat failed (connection error), url: {url}, worker_id: {self.worker_id}")
             else:
+                self.logger.error(f"Register worker to controller failed: {error_reason}")
                 if self.config.debug:
-                    # raise f'Register worker to controller failed. Error: {e}'
+                    raise ValueError(error_reason)
+                return False
+        except requests.Timeout as e:
+            error_reason = f"Connection to controller timed out at {url}. Error: {e}"
+            if heartbeat_flag:
+                self.logger.error(f"Heartbeat failed (timeout), url: {url}, worker_id: {self.worker_id}")
+            else:
+                self.logger.error(f"Register worker to controller failed: {error_reason}")
+                if self.config.debug:
+                    raise ValueError(error_reason)
+                return False
+        except Exception as e:
+            error_reason = f"{e.__class__.__name__}: {e}"
+            if heartbeat_flag:
+                self.logger.error(f"Heartbeat failed, url: {url}, worker_id: {self.worker_id}. Reason: {error_reason}")
+            else:
+                self.logger.error(f"Register worker to controller failed. Reason: {error_reason}")
+                if self.config.debug:
                     raise ValueError(f'Register worker to controller failed. Error: {e}')
-                self.logger.warning(f"Register worker to controller failed, pass...")
                 return False
         if heartbeat_flag:
             if self.config.debug:
