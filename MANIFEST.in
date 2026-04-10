@@ -1,5 +1,6 @@
 include README.md
 include LICENSE.txt
+include assets/hepai.png
 
 include hai/configs/urls/datasets.json
 include hai/configs/urls/hub_models.json

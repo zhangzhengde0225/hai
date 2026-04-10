@@ -129,19 +129,19 @@ class HWorkerAPP(FastAPI):
             app=self, models=models, worker_config=worker_config,
             logger=self.logger)
 
-        # 生成管理员密码（在 worker 创建之后，因为需要 worker_id）
-        if worker_config.enable_secret_key:
-            admin_seed = utils.get_simple_machine_seed(extra_indicators=[self.worker.worker_id])
-            self.admin_password = utils.gen_one_key(prefix='admin-', lenth=20, seed=admin_seed)
-            self.logger.info(f"Admin password for model management: `{self.admin_password}`")
-            authorizer.admin_password = self.admin_password
-        else:
-            self.admin_password = None
+        # 模型管理认证统一复用 worker_secret_key，无需单独的 admin_password
 
 
         self._docs_content_cache = None  # 缓存docs内容
         self._html_mk_content_cache = None  # 缓存markdown内容
         self._cache_lock = asyncio.Lock()  # 缓存锁防止竞态条件
+
+        # 挂载 React 构建产物的静态资源（如果已构建）
+        from pathlib import Path
+        from fastapi.staticfiles import StaticFiles
+        _dist = Path(__file__).parent / "frontend" / "dist"
+        if (_dist / "assets").exists():
+            self.mount("/assets", StaticFiles(directory=str(_dist / "assets")), name="frontend_assets")
 
     def _init_model_resources(self, models: Union[HRemoteModel, List[HRemoteModel]]):
         """初始化模型资源：信号量和查找缓存"""
@@ -257,7 +257,13 @@ class HWorkerAPP(FastAPI):
             model_semaphore.release()
             
     async def index(self):
-        # 返回监控面板HTML页面
+        # 优先返回 React 构建产物，回退到旧 HTML
+        from pathlib import Path
+        react_index = Path(__file__).parent / "frontend" / "dist" / "index.html"
+        if react_index.exists():
+            return FileResponse(str(react_index))
+
+        # 回退：原有纯 HTML 监控页
         try:
             html_file_path = os.path.join(os.path.dirname(__file__), "html", "worker_index.html")
             with open(html_file_path, 'r', encoding='utf-8') as f:
@@ -265,12 +271,9 @@ class HWorkerAPP(FastAPI):
             return HTMLResponse(content=content)
         except Exception as e:
             self.logger.error(f"Failed to load HTML file: {e}")
-            # 如果HTML文件加载失败，返回简单的错误页面
             error_content = f"""
             <html>
-                <head>
-                    <title>HepAI Worker - Error</title>
-                </head>
+                <head><title>HepAI Worker - Error</title></head>
                 <body>
                     <h1>Worker Index Page Error</h1>
                     <p>无法加载监控页面: {str(e)}</p>

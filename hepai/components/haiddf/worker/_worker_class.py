@@ -18,11 +18,14 @@ from ._related_class import (
     HRemoteModel
 )
 
+work_dir = os.getcwd()
+
 # from .utils import get_uuid
 from . import utils
 
 @dataclass
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
+    config_file: Optional[str] = field(default=f"{work_dir}/worker_config.json", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
     # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: Union[int, str, None] = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
@@ -86,6 +89,10 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
             except Exception as e:
                 raise ValueError(f"Failed to parse permissions string: {self.permissions}. Error: {e}")
         
+        
+    
+    def ensure_worker_config(self):
+        """"""
         
     def update_from_dict(self, d: Dict):
         """更新配置"""
@@ -412,12 +419,13 @@ class CommonWorker:
         status_info = self.get_status_info()
         
         metadata = {
-            "description": self.config.description, 
+            "description": self.config.description,
             "author": self.config.author,
             "limit_model_concurrency": self.config.limit_model_concurrency,
             "permissions": self.worker_permissions,
             "uptime": time.time() - (status_info.start_time if status_info.start_time else time.time()),
             "is_free": self.config.is_free,
+            "worker_name": self.config_dict.get("worker_name", None),
         }
         worker_meta = self.config._metadata
         metadata.update(worker_meta)
