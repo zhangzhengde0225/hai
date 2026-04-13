@@ -25,7 +25,7 @@ from . import utils
 
 @dataclass
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
-    config_file: Optional[str] = field(default=f"{work_dir}/worker_config.json", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
+    # config_file: Optional[str] = field(default=f"{work_dir}/worker_config.json", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
     # config for worker server
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: Union[int, str, None] = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
