@@ -50,7 +50,7 @@ class WorkerConfigManager:
     def __init__(self, worker_id: str, config_dir: str = None):
         self.worker_id = worker_id
         self.config_dir = Path(config_dir) if config_dir else DEFAULT_CONFIG_DIR
-        self.config_path = self.config_dir / f"{worker_id}.json"
+        self.config_path = self.config_dir / f"{worker_id}_worker.json"
         self._lock = threading.Lock()
         self._config: Dict = {}
         self._ensure_config()
@@ -61,6 +61,16 @@ class WorkerConfigManager:
     def _ensure_config(self) -> None:
         """确保配置目录和文件存在；首次运行时从本地模板自动初始化。"""
         self.config_dir.mkdir(parents=True, exist_ok=True)
+
+        # 迁移旧命名（{worker_id}.json → {worker_id}_worker.json）
+        old_path = self.config_dir / f"{self.worker_id}.json"
+        if old_path.exists() and not self.config_path.exists():
+            old_path.rename(self.config_path)
+            print(
+                f"[WorkerConfigManager] 迁移配置文件: {old_path.name} → {self.config_path.name}",
+                flush=True,
+            )
+
         if self.config_path.exists():
             return
 
@@ -75,6 +85,7 @@ class WorkerConfigManager:
             # 本地无模板，创建空骨架
             skeleton = {
                 "meta": {"version": "2.1"},
+                "worker": {},
                 "models": {"providers": {}},
             }
             with open(self.config_path, "w", encoding="utf-8") as f:
@@ -286,6 +297,38 @@ class WorkerConfigManager:
     def set_provider_api_key(self, provider_name: str, api_key: str) -> None:
         """快捷更新 provider 的 apiKey。"""
         self.update_provider(provider_name, {"apiKey": api_key})
+
+    def get_secret_key(self) -> Optional[str]:
+        """读取持久化的 worker secret key，不存在时返回 None。"""
+        return self._config.get("meta", {}).get("secret_key")
+
+    def set_secret_key(self, key: str) -> None:
+        """将 worker secret key 写入 meta.secret_key 并持久化。"""
+        with self._lock:
+            self._config.setdefault("meta", {})["secret_key"] = key
+            self._save()
+
+    def get_admin_key(self) -> Optional[str]:
+        """读取持久化的 admin key，不存在时返回 None。"""
+        return self._config.get("meta", {}).get("admin_key")
+
+    def set_admin_key(self, key: str) -> None:
+        """将 admin key 写入 meta.admin_key 并持久化。"""
+        with self._lock:
+            self._config.setdefault("meta", {})["admin_key"] = key
+            self._save()
+
+    def get_worker_config(self) -> Optional[Dict]:
+        """读取持久化的 worker 配置，为空 dict 或不存在时返回 None。"""
+        w = self._config.get("worker")
+        return w if w else None
+
+    def set_worker_config(self, config: Dict) -> None:
+        """将 worker 配置写入 worker 字段并持久化（浅合并）。"""
+        with self._lock:
+            existing = self._config.setdefault("worker", {})
+            existing.update(config)
+            self._save()
 
     def __repr__(self) -> str:
         n_providers = len(self._providers)

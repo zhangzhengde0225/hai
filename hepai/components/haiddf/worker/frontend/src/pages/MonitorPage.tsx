@@ -45,7 +45,7 @@ export default function MonitorPage() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>实时监控</Typography.Title>
+        <Typography.Title level={4} style={{ margin: 0 }}>Worker配置</Typography.Title>
         <Space>
           {dataUpdatedAt > 0 && (
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -80,7 +80,7 @@ export default function MonitorPage() {
         </div>
       ) : (
         <>
-          {workerInfo && <WorkerInfoCard data={workerInfo} />}
+          {workerInfo && <WorkerInfoCard data={workerInfo} onRefresh={handleRefresh} />}
           {monitorStatus && <MetricsRow data={monitorStatus} />}
           {monitorStatus && <ModelTable monitor={monitorStatus} />}
         </>

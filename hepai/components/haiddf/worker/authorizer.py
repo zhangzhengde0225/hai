@@ -28,6 +28,7 @@ class Authorizer:
 
     def __init__(self):
         self._secret_key = None
+        self._admin_key = None
 
     @property
     def secret_key(self):
@@ -36,6 +37,14 @@ class Authorizer:
     @secret_key.setter
     def secret_key(self, value):
         self._secret_key = value
+
+    @property
+    def admin_key(self):
+        return self._admin_key
+
+    @admin_key.setter
+    def admin_key(self, value):
+        self._admin_key = value
 
     async def api_key_auth(self, api_key: str = Depends(extract_api_key)):
         if self._secret_key is None:
@@ -47,12 +56,12 @@ class Authorizer:
             raise HTTPException(status_code=403, detail=f"Invalid API key: {masked_key}")
         return True
 
-    async def admin_auth(self, admin_key: str = Depends(extract_api_key)):
-        """管理员认证，复用 worker_secret_key。未启用 secret_key 时允许所有访问。"""
-        if self._secret_key is None:
-            return True  # 未启用认证，允许访问
-        if not admin_key:
-            raise HTTPException(status_code=401, detail="Secret key is missing")
-        if admin_key != self._secret_key:
-            raise HTTPException(status_code=403, detail="Invalid secret key")
+    async def admin_auth(self, key: str = Depends(extract_api_key)):
+        """管理员认证，使用独立的 admin_key。未设置时允许所有访问。"""
+        if self._admin_key is None:
+            return True
+        if not key:
+            raise HTTPException(status_code=401, detail="Admin key is missing")
+        if key != self._admin_key:
+            raise HTTPException(status_code=403, detail="Invalid admin key")
         return True

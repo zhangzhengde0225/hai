@@ -178,27 +178,8 @@ class CommonWorker:
         # 建立快速查找的模型映射
         self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
 
-        # 初始化模型状态管理器
-        # 确定配置文件路径：优先使用配置的目录，否则尝试从调用栈中找到 worker 脚本目录
-        if self.config.model_config_dir:
-            config_dir = self.config.model_config_dir
-        else:
-            # 尝试从调用栈中找到调用 worker 的脚本目录
-            import inspect
-            config_dir = None
-            for frame_info in inspect.stack():
-                frame_file = frame_info.filename
-                # 查找名为 *_worker.py 的文件
-                if frame_file.endswith('_worker.py') and 'hepai/components/haiddf' not in frame_file:
-                    config_dir = os.path.dirname(os.path.abspath(frame_file))
-                    break
-            # 如果找不到，使用当前工作目录
-            if config_dir is None:
-                config_dir = os.getcwd()
-
-        config_file = os.path.join(config_dir, "model_status.yaml")
-        from .model_status_manager import ModelStatusManager
-        self.model_status_manager = ModelStatusManager(worker=self, config_file=config_file)
+        # 模型启用/禁用状态（内存缓存，由 cfg_mgr 持久化到 JSON）
+        self._enabled_models: Dict[str, bool] = {m.name: True for m in self.models}
 
         # flag
         self._is_deleted_in_controller = False  # a flag to indicate whether the worker is deleted in controller
@@ -353,6 +334,12 @@ class CommonWorker:
             worker_address=worker_address,
         )
     
+    def is_model_enabled(self, model_name: str) -> bool:
+        return self._enabled_models.get(model_name, True)
+
+    def set_model_enabled(self, model_name: str, enabled: bool) -> None:
+        self._enabled_models[model_name] = enabled
+
     def get_model_resource_info(self) -> List[ModelResourceInfo]:
         """
         v2.1 支持多模型
@@ -362,7 +349,7 @@ class CommonWorker:
         model_resources = []
         for model in self.models:
             # 跳过禁用的模型
-            if not self.model_status_manager.is_model_enabled(model.name):
+            if not self.is_model_enabled(model.name):
                 continue
 
             model_name = model.name or model.__class__.__name__
@@ -639,7 +626,7 @@ class CommonWorker:
         """
         # assert "function" in kwargs, "function is required"
         # function = kwargs.pop("function")
-        self.logger.info(f"unified_gate_async | model: {model}")
+        # self.logger.info(f"unified_gate_async | model: {model}")
         if model is None:
             if len(self.models) == 1:
                 # 不指定模型，且worker只搭载一个模型时，直接使用这个模型

@@ -16,6 +16,18 @@ async function post<T>(url: string, body: unknown): Promise<T> {
   return res.json()
 }
 
+async function authPut<T>(url: string, body: unknown, token: string): Promise<T> {
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(body),
+  })
+  if (res.status === 401) throw new Error('UNAUTHORIZED')
+  if (res.status === 403) throw new Error('FORBIDDEN')
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json()
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────
 
 export interface NetworkInfo {
@@ -59,6 +71,7 @@ export interface WorkerInfo {
     limit_model_concurrency: number
     description: string
     author: string
+    is_free?: boolean
     permissions: { groups: string[]; users: string[]; owner: string | null }
     worker_name?: string | null
   }
@@ -89,3 +102,14 @@ export const fetchWorkerInfo = () =>
 
 export const fetchMonitorStatus = () =>
   get<MonitorStatus>(`${PREFIX}/worker/monitor_status`)
+
+export interface WorkerConfigUpdates {
+  description?: string
+  limit_model_concurrency?: number
+  is_free?: boolean
+  debug?: boolean
+  permissions?: string | null
+}
+
+export const updateWorkerConfig = (updates: WorkerConfigUpdates, token: string) =>
+  authPut<{ success: boolean; updated: string[] }>(`${PREFIX}/worker/config`, { updates }, token)
