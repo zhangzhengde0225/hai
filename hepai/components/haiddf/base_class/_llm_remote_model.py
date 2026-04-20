@@ -432,6 +432,7 @@ class LLMRemoteModel(HRModel):
     @inject_context_on_error
     async def anthropic_messages(self, *args, **kwargs) -> Union[Dict, AsyncGenerator]:
         """Anthropic Messages API接口"""
+        self.logger.debug(f"output_config: {kwargs.pop('output_config', None)}")
         modelx = kwargs.get("model")
         # if modelx == "claude-sonnet-4-20250514"
         # kwargs['stream'] = False  # Anthropic的接口不支持stream参数，这里强制设为False
@@ -509,10 +510,18 @@ class LLMRemoteModel(HRModel):
                 else:
                     raise ValueError(f"Invalid reasoning effort level: {effort}")
 
+        # 只有 thinking 真的有值，才让它参与请求
+        if thinking:
+            kwargs["thinking"] = thinking
+
         stream = kwargs.pop("stream", False)
         # stream = False  # 临时关闭stream功能，避免报错
         kwargs.pop("context_management", None)  # 去掉context_management参数，避免报错
         kwargs.pop("store", None)  # 去掉store参数，避免报错
+        # ==========================================
+        # 过滤掉 OpenAI 客户端在流式请求时自动带上的 stream_options
+        # ==========================================
+        kwargs.pop("stream_options", None)
         kwargs.pop("max_completion_tokens", None) # 去掉max_completion_tokens参数，避免报错
 
         """
@@ -553,7 +562,6 @@ class LLMRemoteModel(HRModel):
                 extra_body=extra_body,
                 extra_query=extra_query,
                 timeout=timeout,
-                thinking=thinking,
                 **kwargs
                 )
 
@@ -569,7 +577,6 @@ class LLMRemoteModel(HRModel):
                     extra_body=extra_body,
                     extra_query=extra_query,
                     timeout=timeout,
-                    thinking=thinking,
                     **kwargs
                 )
             # rst = rst.model_dump()
