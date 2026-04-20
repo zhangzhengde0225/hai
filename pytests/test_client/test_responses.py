@@ -151,6 +151,40 @@ class TestControllerResponses():
 
         print(response)
 
+    def test_openai_gpt5_4_pro_controller_responses(self):
+        import os
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+
+        model_name = "openai/gpt-5.4-pro"
+        response = client.responses.create(
+            model=model_name,
+            input="Hello"
+        )
+
+        print(response)
+
+    def test_openai_gpt5_4_pro_2026_03_05_controller_responses(self):
+        import os
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+
+        model_name = "openai/gpt-5.4-pro-2026-03-05"
+        response = client.responses.create(
+            model=model_name,
+            input="Hello"
+        )
+
+        print(response)
+
     def test_openai_controller_stream_responses(self):
         client = OpenAI(
             api_key=self.api_key,
