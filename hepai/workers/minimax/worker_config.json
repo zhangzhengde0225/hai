@@ -28,8 +28,8 @@
         "needExternalApiKey": false,
         "models": [
           {
-            "id": "hepai/MiniMax-M2.7",
-            "name": "hepai/MiniMax-M2.7",
+            "id": "hepai/minimax-m2.7",
+            "name": "hepai/minimax-m2.7",
             "engine": "default",
             "enabled": true
           }
