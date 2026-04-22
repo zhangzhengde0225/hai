@@ -413,7 +413,10 @@ class LLMRemoteModel(HRModel):
 
         # request = ImageGenerationRequest(**kwargs)
         prompt = kwargs.pop("prompt", None)
-        
+        # 强行移除 kwargs 中的 model（如果存在的话），防止解包冲突
+        kwargs.pop("model", None)
+        # 剔除上游 zhizengzeng 不支持的参数
+        kwargs.pop("response_format", None)
 
         response = await self.async_client.images.generate(
             prompt=prompt,
