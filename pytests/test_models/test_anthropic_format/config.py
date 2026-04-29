@@ -57,20 +57,22 @@ class TestConfig:
     
     # client: PresetServerConfig = field(default_factory=PresetZhizzServer)
     # client: PresetServerConfig = field(default_factory=PresetMinimaxServer)
-    # client: PresetServerConfig = field(default_factory=PresetWorkerServer)
+    client: PresetServerConfig = field(default_factory=PresetWorkerServer)
     # client: PresetServerConfig = field(default_factory=PresetLocalDDFServer)
-    client: PresetServerConfig = field(default_factory=PresetOpenAIServer)
+    # client: PresetServerConfig = field(default_factory=PresetOpenAIServer)
     
     # client: PresetServerConfig = field(default_factory=PresetDDFServer)
     
     # model: str = "minimax/minimax-m2.5"
-    # model: str = "minimax/minimax-m2.7-highspeed"
-    # model: str = "anthropic/claude-sonnet-4-6"
+    model: str = "minimax/minimax-m2.7-highspeed"
+    # model: str = "minimax/highspeed"
+    # model: str = "anthropic/claude-opus-4.6"
     # model: str = "MiniMax-M2.7"
-    model: str = "openai/gpt-5"
-    model: str = "gpt-5"
+    # model: str = "openai/gpt-5.4"
+    # model: str = "gpt-5"
 
-    api_mode: str = "openai"  # or "anthropic"
+    # api_mode: str = "openai"  # or "anthropic"
+    # api_mode: str = "anthropic"  # or "anthropic"
     
 
 
@@ -78,9 +80,9 @@ class TestConfig:
         if isinstance(self.client, PresetZhizzServer) or isinstance(self.client, PresetMinimaxServer):
             self.model = self.model.split("/")[-1]  # For Zhizz and Minimax servers, model name should not include the "anthropic/" prefix
 
-        if self.api_mode == "openai":
-            url_without_anthropic = self.client.base_url.replace("/anthropic/", "/")
-            self.client.base_url = url_without_anthropic  # Remove "/anthropic/" from
+        # if self.api_mode == "openai":
+        #     url_without_anthropic = self.client.base_url.replace("/anthropic/", "/")
+        #     self.client.base_url = url_without_anthropic  # Remove "/anthropic/" from
 
 
 # 默认配置实例，供各测试文件直接导入使用

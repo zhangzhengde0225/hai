@@ -81,7 +81,6 @@ export default function ModelTable({ monitor }: Props) {
     <Card
       title={`模型并发状态（${monitor.model_count} 个模型）`}
       size="small"
-      extra={<span style={{ color: '#999', fontSize: 12 }}>每 3 秒自动刷新</span>}
     >
       <Table
         columns={columns}

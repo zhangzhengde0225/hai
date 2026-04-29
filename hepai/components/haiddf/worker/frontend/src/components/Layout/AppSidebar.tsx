@@ -3,8 +3,8 @@ import { BarChartOutlined, AppstoreOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const items = [
-  { key: '/monitor', icon: <BarChartOutlined />, label: '实时监控' },
-  { key: '/management', icon: <AppstoreOutlined />, label: '模型管理' },
+  { key: '/monitor', icon: <BarChartOutlined />, label: 'Worker配置' },
+  { key: '/management', icon: <AppstoreOutlined />, label: '模型配置' },
 ]
 
 export default function AppSidebar() {

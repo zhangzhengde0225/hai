@@ -11,7 +11,6 @@ export default function AppHeader() {
   const { data } = useQuery({
     queryKey: ['workerInfo'],
     queryFn: fetchWorkerInfo,
-    refetchInterval: 10_000,
   })
 
   const token = useAuthStore((s) => s.token)

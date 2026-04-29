@@ -29,7 +29,7 @@ export default function AuthModal({ open, onSuccess, onClose }: Props) {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       if (msg === 'UNAUTHORIZED' || msg === 'FORBIDDEN') {
-        setError('密码错误，请重试')
+        setError('Admin Key 错误，请重试')
       } else {
         setError(`连接失败: ${msg}`)
       }
@@ -43,7 +43,7 @@ export default function AuthModal({ open, onSuccess, onClose }: Props) {
       title={
         <Space>
           <LockOutlined />
-          管理员认证
+          管理员认证 (Admin Key)
         </Space>
       }
       open={open}
@@ -57,11 +57,11 @@ export default function AuthModal({ open, onSuccess, onClose }: Props) {
     >
       <Space direction="vertical" style={{ width: '100%', marginTop: 8 }}>
         <Text type="secondary" style={{ fontSize: 13 }}>
-          请输入 Worker Secret Key（Worker 启动日志中可查看）
+          请输入 Admin Key（Worker 启动日志中可查看）
         </Text>
         <Input.Password
           prefix={<LockOutlined />}
-          placeholder="sk-xxxxxxxx"
+          placeholder="xxxxxxxx"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onPressEnter={handleOk}

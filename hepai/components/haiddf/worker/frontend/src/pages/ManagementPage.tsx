@@ -1,7 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Alert, Spin, Typography, message } from 'antd'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchGroupedModels, batchUpdate, type BatchUpdateItem, type GroupedModels } from '../api/models'
+import {
+  fetchModelConfigs, batchUpdate,
+  type BatchUpdateItem, type ModelConfigsResponse,
+} from '../api/models'
 import { useAuthStore } from '../store/authStore'
 import AuthModal from '../components/Management/AuthModal'
 import BatchToolbar from '../components/Management/BatchToolbar'
@@ -17,19 +20,18 @@ export default function ManagementPage() {
   const queryClient = useQueryClient()
 
   const {
-    data: grouped,
+    data: configs,
     isLoading,
     error,
     refetch,
-  } = useQuery<GroupedModels, Error>({
-    queryKey: ['groupedModels', token],
-    queryFn: () => fetchGroupedModels(token!),
+  } = useQuery<ModelConfigsResponse, Error>({
+    queryKey: ['modelConfigs', token],
+    queryFn: () => fetchModelConfigs(token!),
     enabled: !!token,
     retry: false,
   })
 
-  // 认证失败时自动弹出密码框
-  useEffect(() => {
+useEffect(() => {
     if (error?.message === 'UNAUTHORIZED' || error?.message === 'FORBIDDEN') {
       clearToken()
       setAuthOpen(true)
@@ -46,7 +48,7 @@ export default function ManagementPage() {
         msgApi.success(`已保存 ${result.count} 项更改`)
       }
       setPendingChanges({})
-      queryClient.invalidateQueries({ queryKey: ['groupedModels'] })
+      queryClient.invalidateQueries({ queryKey: ['modelConfigs'] })
     },
     onError: (e: Error) => {
       msgApi.error(`保存失败: ${e.message}`)
@@ -58,20 +60,20 @@ export default function ManagementPage() {
   }, [])
 
   const handleEnableAll = useCallback((provider: string) => {
-    const models = grouped?.data?.[provider]
+    const models = configs?.data?.[provider]
     if (!models) return
     const updates: Record<string, boolean> = {}
-    models.forEach((m) => { updates[m.name] = true })
+    models.forEach((m) => { updates[m.id] = true })
     setPendingChanges((prev) => ({ ...prev, ...updates }))
-  }, [grouped])
+  }, [configs])
 
   const handleDisableAll = useCallback((provider: string) => {
-    const models = grouped?.data?.[provider]
+    const models = configs?.data?.[provider]
     if (!models) return
     const updates: Record<string, boolean> = {}
-    models.forEach((m) => { updates[m.name] = false })
+    models.forEach((m) => { updates[m.id] = false })
     setPendingChanges((prev) => ({ ...prev, ...updates }))
-  }, [grouped])
+  }, [configs])
 
   const handleSave = () => {
     const updates: BatchUpdateItem[] = Object.entries(pendingChanges).map(
@@ -98,7 +100,7 @@ export default function ManagementPage() {
       />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>模型管理</Typography.Title>
+        <Typography.Title level={4} style={{ margin: 0 }}>模型配置</Typography.Title>
       </div>
 
       {error && error.message !== 'UNAUTHORIZED' && error.message !== 'FORBIDDEN' && (
@@ -124,20 +126,22 @@ export default function ManagementPage() {
 
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: 64 }}>
-          <Spin size="large" tip="加载模型列表..." />
+          <Spin size="large" tip="加载模型配置..." />
         </div>
       ) : (
-        grouped?.data &&
-        Object.entries(grouped.data).map(([provider, models]) => (
+        configs?.data &&
+        Object.entries(configs.data).map(([provider, models]) => (
           <ModelGroup
             key={provider}
             provider={provider}
             models={models}
+            token={token!}
             pendingChanges={pendingChanges}
             onToggle={handleToggle}
             onEnableAll={handleEnableAll}
             onDisableAll={handleDisableAll}
             filterEnabled={filterEnabled}
+            onRefresh={handleRefresh}
           />
         ))
       )}

@@ -134,10 +134,10 @@ if __name__ == "__main__":
     print(f"\n{'#' * 60}")
     print(f"  Anthropic Client Test  |  base_url: {default_config.client.base_url}")
     print(f"{'#' * 60}")
-    try:
-        test_stream()
-    except Exception as e:
-        print_result("Status", f"FAILED ✗  {e} ")
+    # try:
+    #     test_stream()
+    # except Exception as e:
+    #     print_result("Status", f"FAILED ✗  {e} ")
     try:
         test_non_stream()
     except Exception as e:
