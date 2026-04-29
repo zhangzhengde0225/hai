@@ -27,7 +27,7 @@ from . import utils
 class HWorkerConfig:  # (2) worker的参数配置和启动代码
     # config_file: Optional[str] = field(default=f"{work_dir}/worker_config.json", metadata={"help": "Path to the model configuration file, if None, load all models from the API"})
     # config for worker server
-    host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
+    host: str = field(default="127.0.0.1", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: Union[int, str, None] = field(default=42600, metadata={"help": "Worker's port, default is None, which means auto start from `auto_start_port`"})
     auto_start_port: int = field(default=42602, metadata={"help": "Worker's start port, only used when port is set to `auto`"})
     route_prefix: str = field(default="/apiv2", metadata={"help": "Route prefix for worker"})
@@ -42,7 +42,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     limit_model_concurrency: int = field(default=100, metadata={"help": "Limit the model's concurrency"})
     stream_interval: float = field(default=0., metadata={"help": "Extra interval for stream response"})
     # permissions: dict = field(default_factory=lambda: {'groups': ['payg']}, metadata={"help": "Model's permissions, e.g., {'groups': ['default'], 'users': ['a', 'b'], 'owner': 'c'}"})
-    permissions: dict = field(default_factory=None, metadata={"help": "Model's permissions, e.g., {'groups': ['default'], 'users': ['a', 'b'], 'owner': 'c'}"})
+    permissions: Optional[dict] = field(default=None, metadata={"help": "Model's permissions, e.g., {'groups': ['default'], 'users': ['a', 'b'], 'owner': 'c'}"})
     description: str = field(default='This is a demo worker of HEP AI framework (HepAI)', metadata={"help": "Model's description"})
     author: str = field(default="hepai", metadata={"help": "Model's author"})
     debug: bool = field(default=False, metadata={"help": "Debug mode"})
@@ -52,7 +52,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     _metadata: dict = field(default_factory=dict, metadata={"help": "Additional metadata for worker/model"})
     
     # config for common features
-    enable_secret_key: bool = field(default=False, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
+    enable_secret_key: bool = field(default=True, metadata={"help": "Enable secret key for worker, ensure the security, if enabled, the `api_key` must be provided when someone wants to access the worker's APIs"})
     enable_llm_router: bool = field(default=False, metadata={"help": "Enable LLM router, only for llm worker"})
     model_config_dir: Optional[str] = field(default=None, metadata={"help": "Directory to store model_config.yaml, if None, will try to use worker script directory or current working directory"})
     # enable_mcp: bool = field(default=False, metadata={"help": "Enable MCP (Model Context Protocol) for LLM worker"})
@@ -178,27 +178,8 @@ class CommonWorker:
         # 建立快速查找的模型映射
         self._model_map: Dict[str, HRemoteModel] = {m.name: m for m in self.models}
 
-        # 初始化模型状态管理器
-        # 确定配置文件路径：优先使用配置的目录，否则尝试从调用栈中找到 worker 脚本目录
-        if self.config.model_config_dir:
-            config_dir = self.config.model_config_dir
-        else:
-            # 尝试从调用栈中找到调用 worker 的脚本目录
-            import inspect
-            config_dir = None
-            for frame_info in inspect.stack():
-                frame_file = frame_info.filename
-                # 查找名为 *_worker.py 的文件
-                if frame_file.endswith('_worker.py') and 'hepai/components/haiddf' not in frame_file:
-                    config_dir = os.path.dirname(os.path.abspath(frame_file))
-                    break
-            # 如果找不到，使用当前工作目录
-            if config_dir is None:
-                config_dir = os.getcwd()
-
-        config_file = os.path.join(config_dir, "model_status.yaml")
-        from .model_status_manager import ModelStatusManager
-        self.model_status_manager = ModelStatusManager(worker=self, config_file=config_file)
+        # 模型启用/禁用状态（内存缓存，由 cfg_mgr 持久化到 JSON）
+        self._enabled_models: Dict[str, bool] = {m.name: True for m in self.models}
 
         # flag
         self._is_deleted_in_controller = False  # a flag to indicate whether the worker is deleted in controller
@@ -353,6 +334,12 @@ class CommonWorker:
             worker_address=worker_address,
         )
     
+    def is_model_enabled(self, model_name: str) -> bool:
+        return self._enabled_models.get(model_name, True)
+
+    def set_model_enabled(self, model_name: str, enabled: bool) -> None:
+        self._enabled_models[model_name] = enabled
+
     def get_model_resource_info(self) -> List[ModelResourceInfo]:
         """
         v2.1 支持多模型
@@ -362,7 +349,7 @@ class CommonWorker:
         model_resources = []
         for model in self.models:
             # 跳过禁用的模型
-            if not self.model_status_manager.is_model_enabled(model.name):
+            if not self.is_model_enabled(model.name):
                 continue
 
             model_name = model.name or model.__class__.__name__
@@ -478,34 +465,52 @@ class CommonWorker:
         return headers
     
     def register_to_controller(self, heartbeat_flag: bool = False):
-        """注册和心跳"""
+        """
+        注册和心跳
+        heartbeat_flag: 用于区分是首次注册还是心跳
+        """
         # logger.info(f'Register model "{self.model_name}" to controller.')
 
         # url = self.base_url + '/register_worker'
         url = self.base_url + '/worker/register_worker'
+
+        if not heartbeat_flag:  # 首次注册时才检查controller的连通性，心跳时不检查以避免性能问题
+            if not utils.check_controller_connectivity(self.base_url):
+                msg = f"Controller unreachable at `{self.base_url}`. Please ensure the controller is running, or run this worker in standalone mode by setting `--no_register True`."
+                self.logger.error(msg)
+                if not self.config.no_register:
+                    raise ConnectionError(msg)
+                return False
+
         worker_info: WorkerInfo = self.get_worker_info()
         data = worker_info.to_dict()
+
+        # 上报 worker 自身的 secret_key 给 controller, 用于 controller 反向代理鉴权
+        # (controller 端的 WorkerInfoItem 显式声明了该字段, 旧版 controller 会忽略)
+        worker_secret_key = getattr(self.app, "worker_secret_key", None)
+        if worker_secret_key:
+            data["secret_key"] = worker_secret_key
 
         try:
             r = requests.post(url, json=data, headers=self.headers)
             if r.status_code != 200:
-                raise ValueError(f"Register worker failed. Status: {r.status_code}, Response: {r.text}\n  Request url: {url}\n  Worker_info: {worker_info}")
+                raise ValueError(f"Register worker failed. \nRequest url: {url}  Status: {r.status_code}, \nResponse: {r.text}")
         except requests.ConnectionError as e:
-            error_reason = f"Cannot connect to controller at {url}. Is the controller running? Error: {e}"
+            error_reason = f"Cannot connect to controller at `{self.base_url}`. Is the controller running? Error: {e}"
             if heartbeat_flag:
                 self.logger.error(f"Heartbeat failed (connection error), url: {url}, worker_id: {self.worker_id}")
             else:
                 self.logger.error(f"Register worker to controller failed: {error_reason}")
-                if self.config.debug:
+                if not self.config.no_register:
                     raise ValueError(error_reason)
                 return False
         except requests.Timeout as e:
-            error_reason = f"Connection to controller timed out at {url}. Error: {e}"
+            error_reason = f"Cannot connect to controller at `{self.base_url}`. Is the controller running? Error: {e}"
             if heartbeat_flag:
                 self.logger.error(f"Heartbeat failed (timeout), url: {url}, worker_id: {self.worker_id}")
             else:
                 self.logger.error(f"Register worker to controller failed: {error_reason}")
-                if self.config.debug:
+                if not self.config.no_register:
                     raise ValueError(error_reason)
                 return False
         except Exception as e:
@@ -514,7 +519,7 @@ class CommonWorker:
                 self.logger.error(f"Heartbeat failed, url: {url}, worker_id: {self.worker_id}. Reason: {error_reason}")
             else:
                 self.logger.error(f"Register worker to controller failed. Reason: {error_reason}")
-                if self.config.debug:
+                if not self.config.no_register:
                     raise ValueError(f'Register worker to controller failed. Error: {e}')
                 return False
         if heartbeat_flag:
@@ -639,7 +644,7 @@ class CommonWorker:
         """
         # assert "function" in kwargs, "function is required"
         # function = kwargs.pop("function")
-        self.logger.info(f"unified_gate_async | model: {model}")
+        # self.logger.info(f"unified_gate_async | model: {model}")
         if model is None:
             if len(self.models) == 1:
                 # 不指定模型，且worker只搭载一个模型时，直接使用这个模型

@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "version": "2.1",
+    "name": "minimax-local-worker"
+  },
+  "worker": {
+    "host": "0.0.0.0",
+    "port": 42606,
+    "auto_start_port": 42606,
+    "controller_address": "http://aiapi.ihep.ac.cn:42601",
+    "route_prefix": "/apiv2",
+    "no_register": false,
+    "permissions": null,
+    "description": "Local Minimax OpenAI-compatible worker",
+    "daemon": false,
+    "limit_model_concurrency": 1000,
+    "enable_secret_key": true,
+    "enable_llm_router": true,
+    "is_free": false,
+    "debug": true
+  },
+  "models": {
+    "providers": {
+      "minimax": {
+        "baseUrl": "http://localhost:30000",
+        "apiKey": "",
+        "api": "openai-completions",
+        "needExternalApiKey": false,
+        "models": [
+          {
+            "id": "hepai/minimax-m2.7",
+            "name": "hepai/minimax-m2.7",
+            "engine": "default",
+            "enabled": true
+          }
+        ]
+      }
+    }
+  }
+}

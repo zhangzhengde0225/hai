@@ -1,0 +1,7 @@
+last_modified: 1776442210.7059598
+models:
+  hepai/minimax-m2.7:
+    enabled: true
+    last_updated: 1776442210.705988
+    provider: minimax
+version: '1.0'

@@ -466,9 +466,9 @@
     <!-- 认证弹窗 -->
     <div id="auth-modal" class="auth-modal">
         <div class="auth-modal-content">
-            <h2>🔐 管理员认证</h2>
-            <p>请输入管理员密码以访问模型管理功能</p>
-            <input type="password" id="admin-password" placeholder="输入管理员密码"
+            <h2>🔐 管理员认证 (Admin Key)</h2>
+            <p>请输入 Admin Key 以访问模型管理功能（Worker 启动日志中可查看）</p>
+            <input type="password" id="admin-password" placeholder="输入 Admin Key"
                    onkeypress="if(event.key==='Enter') authenticate()">
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="authenticate()">确认</button>
@@ -535,7 +535,7 @@
                     document.getElementById('auth-error').textContent = '';
                     loadModels();
                 } else {
-                    document.getElementById('auth-error').textContent = '密码错误，请重试';
+                    document.getElementById('auth-error').textContent = 'Admin Key 错误，请重试';
                 }
             } catch (error) {
                 document.getElementById('auth-error').textContent = '认证失败: ' + error.message;

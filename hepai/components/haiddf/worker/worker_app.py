@@ -114,8 +114,12 @@ class HWorkerAPP(FastAPI):
         # 初始化线程池用于I/O密集型操作
         self._thread_pool = ThreadPoolExecutor(max_workers=100, thread_name_prefix="worker_io")
         if worker_config.enable_secret_key:
-            seed = utils.get_simple_machine_seed()
-            worker_secret_key = utils.gen_one_key(prefix='sk-', lenth=47, seed=seed)
+            preset_key = getattr(worker_config, 'secret_key', None)
+            if preset_key:
+                worker_secret_key = preset_key
+            else:
+                seed = utils.get_simple_machine_seed()
+                worker_secret_key = utils.gen_one_key(prefix='sk-', lenth=47, seed=seed)
             self.logger.info(f"Worker secret key: `{worker_secret_key}`, please pass it in the `Authorization` header when you call this worker.")
             authorizer.secret_key = worker_secret_key
         else:
@@ -301,13 +305,14 @@ class HWorkerAPP(FastAPI):
 
         # 检查模型是否存在
         if model not in self.model_semaphores:
-            raise HTTPException(status_code=503, detail=f"Model '{model}' not found")
+            self.logger.warning(f"[Worker Unified Gate] Model '{model}' not found.")
+            raise HTTPException(status_code=503, detail=f"[Worker Unified Gate] Model '{model}' not found")
 
         # 【第一次检查】检查模型是否被禁用（获取信号量前）
-        if not self.worker.model_status_manager.is_model_enabled(model):
+        if not self.worker.is_model_enabled(model):
             raise HTTPException(
                 status_code=403,
-                detail=f"Model '{model}' is currently disabled by administrator"
+                detail=f"[Worker Unified Gate] Model '{model}' is currently disabled by administrator"
             )
 
         # 获取该模型的信号量
@@ -315,11 +320,11 @@ class HWorkerAPP(FastAPI):
         await model_semaphore.acquire()
 
         # 【第二次检查】再次检查模型状态（防止在等待期间被禁用）
-        if not self.worker.model_status_manager.is_model_enabled(model):
+        if not self.worker.is_model_enabled(model):
             self.release_model_semaphore(model_semaphore)
             raise HTTPException(
                 status_code=403,
-                detail=f"Model '{model}' was disabled while request was queued"
+                detail=f"[Worker Unified Gate] Model '{model}' was disabled while request was queued"
             )
 
         # print(f"[{self.global_counter}] Acquired semaphore for model '{model}'. Current queue length: {self.get_queue_length(model)}")

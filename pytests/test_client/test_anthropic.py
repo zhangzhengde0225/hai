@@ -57,10 +57,10 @@ class TestControllerResponses():
 
     def test_anthropic_controller_chat(self):
         client = Anthropic(
-            base_url=self.base_url,
+            base_url=f"{self.base_url}/anthropic",
             api_key=self.api_key,
         )
-        model_name = "anthropic/claude-opus-4-5-20251101"
+        model_name = "anthropic/claude-opus-4-5"
         message = client.messages.create(
             max_tokens=1024,
             messages=[
@@ -75,7 +75,7 @@ class TestControllerResponses():
 
     def test_anthropic_controller_stream_chat(self):
         client = Anthropic(
-            base_url=self.base_url,
+            base_url=f"{self.base_url}/anthropic",
             api_key=self.api_key,
         )
 

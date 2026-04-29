@@ -23,6 +23,14 @@ from ._worker_class import HRModel, HModelConfig
 
 class LLMRemoteModelV2(HRModel):
 
+    # 参与 JSON 持久化的字段名（排除 worker_name/model_config_dir/secret_key 等运行时字段）
+    _JSON_FIELDS: set = {
+        "host", "port", "auto_start_port", "controller_address", "route_prefix",
+        "no_register", "permissions", "description", "daemon",
+        "limit_model_concurrency", "enable_secret_key", "enable_llm_router",
+        "is_free", "debug",
+    }
+
     def __init__(self, config: "LLMModelConfig"):
         super().__init__(config=config)
         self.cfg = config
@@ -70,15 +78,17 @@ class LLMRemoteModelV2(HRModel):
 
     def _resolve_anthropic_base_url(self) -> str:
         """
-        复刻 v1 async_client_with_anthropic_url 的逻辑：
-        去掉末尾 /vN，添加 /anthropic 后缀。
+        构建 anthropic-messages 请求的 base URL。
+        append_anthropic_path=True（默认）时去掉末尾 /vN 并追加 /anthropic；
+        append_anthropic_path=False 时直接使用 base_url。
         """
-        base = self.cfg.base_url
+        base = self.cfg.base_url.rstrip("/")
+        if not self.cfg.append_anthropic_path:
+            return base
         if re.search(r"/v\d+$", base):
-            base = base.rsplit("/", 1)[0]
-        base = base.rstrip("/")
-        if not base.endswith("/anthropic"):
-            base = base + "/anthropic"
+            base = base.rsplit("/", 1)[0].rstrip("/")
+        # if not base.endswith("/anthropic"):
+        #     base = base + "/anthropic"
         return base
 
     def _build_anthropic_url(self, path: str) -> str:
@@ -100,6 +110,9 @@ class LLMRemoteModelV2(HRModel):
     @staticmethod
     def _make_exception(kwargs, payload, url, resp, error_text: str = None) -> Exception:
         actual_text = error_text if error_text is not None else resp.text
+        # 如果actual_text过长，截取前300字符以免日志过大
+        if len(actual_text) > 300:
+            actual_text = actual_text[:300] + "..."
         error_msg = f"Upstream Responses Error {resp.status_code}: {actual_text}"
         exc = Exception(error_msg)
         exc.add_note(f"请求目标 URL: {url}")
@@ -112,35 +125,49 @@ class LLMRemoteModelV2(HRModel):
         """过滤掉值为 None 的顶层 key。"""
         return {k: v for k, v in d.items() if v is not None}
 
-    def _resolve_oai_auth_headers(self, kwargs: dict) -> dict:
-        """提取 Authorization 头，同时从 kwargs 中 pop 掉 api_key / extra_headers。"""
+    def _build_oai_headers(self, kwargs: dict) -> dict:
+        """构建 OpenAI 风格请求的完整 headers，封装 API key。
+
+        - need_external_api_key=True：从 kwargs 强制取 api_key
+        - need_external_api_key=False：使用 self.cfg.api_key；合并调用方的 extra_headers
+        """
         if self.cfg.need_external_api_key:
             api_key = kwargs.pop("api_key", None)
             if not api_key:
                 raise KeyError("You should provide API-KEY when calling this worker")
-            return {"Authorization": f"Bearer {api_key}"}
         else:
-            kwargs.pop("api_key", None)
-            return kwargs.pop("extra_headers", {}) or {}
+            api_key = kwargs.pop("api_key", None) or self.cfg.api_key
+        caller_extra = kwargs.pop("extra_headers", {}) or {}
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        headers.update(caller_extra)
+        return headers
 
-    def _resolve_anthropic_auth_headers(self, kwargs: dict) -> dict:
-        """提取 Anthropic 鉴权头（x-api-key），同时 pop 相关参数。"""
+    def _build_anthropic_headers(self, kwargs: dict) -> dict:
+        """构建 Anthropic 风格请求的完整 headers，封装 API key 及版本头。
+
+        - need_external_api_key=True：从 kwargs 强制取 api_key
+        - need_external_api_key=False：使用 self.cfg.api_key；合并调用方的 extra_headers
+        """
         if self.cfg.need_external_api_key:
             api_key = kwargs.pop("api_key", None)
             if not api_key:
                 raise KeyError("You should provide API-KEY when calling this worker")
-            headers = {"x-api-key": api_key}
         else:
-            kwargs.pop("api_key", None)
-            headers = dict(kwargs.pop("extra_headers", {}) or {})
-
+            api_key = kwargs.pop("api_key", None) or self.cfg.api_key
+        caller_extra = dict(kwargs.pop("extra_headers", {}) or {})
         anthropic_version = kwargs.pop("anthropic_version", None)
         anthropic_beta = kwargs.pop("anthropic_beta", None)
-        headers.setdefault("anthropic-version", "2023-06-01")
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["x-api-key"] = api_key
+        # headers.setdefault("anthropic-version", "2023-06-01")
         if anthropic_version:
             headers["anthropic-version"] = anthropic_version
         if anthropic_beta:
             headers["anthropic-beta"] = anthropic_beta
+        headers.update(caller_extra)
         return headers
 
     # ── 通用流式字节生成器 ────────────────────────────────────────────────
@@ -201,7 +228,7 @@ class LLMRemoteModelV2(HRModel):
 
         非流式返回 dict；流式返回 AsyncGenerator[bytes]，每个 chunk 为原始 SSE 字节。
         """
-        extra_headers = self._resolve_oai_auth_headers(kwargs)
+        headers = self._build_oai_headers(kwargs)
 
         chat_messages = kwargs.pop("messages")
         assert chat_messages, "messages is required"
@@ -234,10 +261,6 @@ class LLMRemoteModelV2(HRModel):
         payload.update(extra_body)
 
         url = self._build_oai_url("/chat/completions")
-        headers = {
-            "Content-Type": "application/json", 
-            "Authorization": f"Bearer {self.cfg.api_key}" if self.cfg.api_key else None,
-            **extra_headers}
 
         if should_stream:
             return self._stream_bytes(self.http_client, url, headers, payload, timeout)
@@ -250,15 +273,7 @@ class LLMRemoteModelV2(HRModel):
     @HRModel.remote_callable
     async def responses(self, *args, **kwargs):
         """处理 /v1/responses 接口（与 v1 逻辑相同，改用持久 http_client）。"""
-        if self.cfg.need_external_api_key:
-            api_key = kwargs.pop("api_key", None)
-            if not api_key:
-                raise KeyError("You should provide API-KEY when calling this worker")
-            extra_headers = {"Authorization": f"Bearer {api_key}"}
-        else:
-            api_key = kwargs.pop("api_key", None) or self.cfg.api_key
-            extra_headers = {"Authorization": f"Bearer {api_key}"}
-            extra_headers.update(kwargs.pop("extra_headers", {}) or {})
+        headers = self._build_oai_headers(kwargs)
 
         kwargs.pop("extra_body", None)
         kwargs.pop("extra_query", None)
@@ -276,9 +291,9 @@ class LLMRemoteModelV2(HRModel):
             url = f"{base_url}/v1/responses"
 
         if stream:
-            return self._stream_bytes(self.http_client, url, extra_headers, payload, timeout)
+            return self._stream_bytes(self.http_client, url, headers, payload, timeout)
         else:
-            resp = await self.http_client.post(url, headers=extra_headers, json=payload, timeout=timeout)
+            resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code != 200:
                 raise self._make_exception(kwargs, payload, url, resp)
             return resp.json()
@@ -286,7 +301,7 @@ class LLMRemoteModelV2(HRModel):
     @HRModel.remote_callable
     async def embeddings(self, *args, **kwargs):
         """OpenAI Embeddings 接口（/v1/embeddings）。"""
-        extra_headers = self._resolve_oai_auth_headers(kwargs)
+        headers = self._build_oai_headers(kwargs)
         extra_body: dict = kwargs.pop("extra_body", {}) or {}
         kwargs.pop("extra_query", None)
         kwargs.pop("stream", None)
@@ -302,7 +317,6 @@ class LLMRemoteModelV2(HRModel):
         })
 
         url = self._build_oai_url("/embeddings")
-        headers = {"Content-Type": "application/json", **extra_headers}
         resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
         if resp.status_code != 200:
             raise self._make_exception(kwargs, payload, url, resp)
@@ -311,7 +325,7 @@ class LLMRemoteModelV2(HRModel):
     @HRModel.remote_callable
     async def rerank(self, *args, **kwargs):
         """Rerank 接口（异步实现，移除了 v1 中的同步 httpx.Client）。"""
-        extra_headers = self._resolve_oai_auth_headers(kwargs)
+        headers = self._build_oai_headers(kwargs)
         extra_body: dict = kwargs.pop("extra_body", {}) or {}
         kwargs.pop("extra_query", None)
         kwargs.pop("stream", None)
@@ -338,7 +352,6 @@ class LLMRemoteModelV2(HRModel):
         else:
             url = f"{base_url}/v1/rerank"
 
-        headers = {"Content-Type": "application/json", **extra_headers}
         resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
         resp.raise_for_status()
         return resp.json()
@@ -346,7 +359,7 @@ class LLMRemoteModelV2(HRModel):
     @HRModel.remote_callable
     async def image_generations(self, *args, **kwargs):
         """OpenAI Images Generations 接口（/v1/images/generations）。"""
-        extra_headers = self._resolve_oai_auth_headers(kwargs)
+        headers = self._build_oai_headers(kwargs)
         extra_body: dict = kwargs.pop("extra_body", {}) or {}
         kwargs.pop("extra_query", None)
         kwargs.pop("stream", None)
@@ -362,7 +375,6 @@ class LLMRemoteModelV2(HRModel):
         })
 
         url = self._build_oai_url("/images/generations")
-        headers = {"Content-Type": "application/json", **extra_headers}
         resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
         if resp.status_code != 200:
             raise self._make_exception(kwargs, payload, url, resp)
@@ -375,29 +387,15 @@ class LLMRemoteModelV2(HRModel):
         非流式返回 dict；流式返回 AsyncGenerator[bytes]，原始 SSE 字节。
         moonshot/openai/kimi/gpt 模型自动路由到 chat_completions 并做格式转换。
         """
+        from copy import deepcopy
+        raw_kwargs = deepcopy(kwargs)
         modelx = kwargs.get("model", "")
         stream = kwargs.get("stream", False)
 
-        # 非 Claude 模型：路由到 OAI 接口并转换格式
-        if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
-            from . import general
-            oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
-            if stream:
-                oai_params["stream"] = True
-                bytes_stream = await self.chat_completions(**oai_params)
-                dict_stream = self._sse_bytes_to_dicts(bytes_stream)
-                gen = general.convert_openai_to_anthropic_format_stream(dict_stream, return_dict=False)
-                return gen
-            else:
-                rst_dict = await self.chat_completions(**oai_params)
-                # 使用纯 dict 版本的转换函数（v1 的 convert_object_openai_to_anthropic 需要 SDK 对象）
-                rst2 = await general.convert_openai_to_anthropic_format(rst_dict)
-                return rst2
-
         # Claude 模型：直接调用 Anthropic HTTP 接口
-        extra_headers = self._resolve_anthropic_auth_headers(kwargs)
-        extra_body: dict = kwargs.pop("extra_body", {}) or {}
-        kwargs.pop("extra_query", None)
+        headers = self._build_anthropic_headers(kwargs)
+        # extra_body: dict = kwargs.pop("extra_body", {}) or {}
+        # kwargs.pop("extra_query", None)
         timeout = kwargs.pop("timeout", None) or 600.0
 
         if "model" not in kwargs:
@@ -433,9 +431,9 @@ class LLMRemoteModelV2(HRModel):
                 else:
                     raise ValueError(f"Invalid reasoning effort level: {effort}")
 
-        stream = kwargs.pop("stream", False)
-        kwargs.pop("context_management", None)
-        kwargs.pop("store", None)
+        # stream = kwargs.pop("stream", False)
+        # kwargs.pop("context_management", None)
+        # kwargs.pop("store", None)
 
         payload: dict = {
             "model": self.engine,
@@ -448,10 +446,9 @@ class LLMRemoteModelV2(HRModel):
         for k, v in kwargs.items():
             if v is not None:
                 payload[k] = v
-        payload.update(extra_body)
+        # payload.update(extra_body)
 
         url = self._build_anthropic_url("/v1/messages")
-        headers = {"Content-Type": "application/json", **extra_headers}
 
         if stream:
             return self._stream_bytes(self.anthropic_http_client, url, headers, payload, timeout)
@@ -469,7 +466,7 @@ class LLMRemoteModelV2(HRModel):
     @HRModel.remote_callable
     async def anthropic_count_tokens(self, *args, **kwargs) -> Dict:
         """Anthropic Count Tokens 接口（/v1/messages/count_tokens）。"""
-        extra_headers = self._resolve_anthropic_auth_headers(kwargs)
+        headers = self._build_anthropic_headers(kwargs)
         extra_body: dict = kwargs.pop("extra_body", {}) or {}
         kwargs.pop("extra_query", None)
         timeout = kwargs.pop("timeout", None) or 120.0
@@ -490,7 +487,6 @@ class LLMRemoteModelV2(HRModel):
         }
 
         url = self._build_anthropic_url("/v1/messages/count_tokens")
-        headers = {"Content-Type": "application/json", **extra_headers}
         resp = await self.anthropic_http_client.post(
             url, headers=headers, json=payload, timeout=timeout
         )
@@ -502,6 +498,81 @@ class LLMRemoteModelV2(HRModel):
     def custom_method(self, a: int, b: int) -> int:
         """示例自定义方法。"""
         return a + b
+
+    @staticmethod
+    def bootstrap(worker_config, json_fields: set = None):
+        """Worker 启动引导：三层配置合并 + 密钥管理 + 模型加载 + App 创建。
+
+        优先级：代码默认值（dataclass）< JSON 运营覆盖 < CLI 显式传入。
+        - JSON 只存放通过管理 API 显式修改的字段，不在启动时全量写入。
+          这样修改 WorkerConfig 默认值后立即生效，不会被旧 JSON 覆盖。
+        - CLI 显式传入的判定：运行时值与 dataclass 字段默认值不同。
+        返回 (app, admin_key)。
+        """
+        if json_fields is None:
+            json_fields = LLMRemoteModelV2._JSON_FIELDS
+        import dataclasses
+        import secrets as _secrets
+        import string as _string
+        from hepai.components.haiddf.worker.config_manager import WorkerConfigManager
+        from hepai import HWorkerAPP
+        from hepai.components.haiddf.worker.singletons import authorizer
+
+        # 从 dataclass 反射拿到各字段的代码默认值
+        code_defaults = {
+            f.name: f.default
+            for f in dataclasses.fields(worker_config)
+            if f.name in json_fields and f.default is not dataclasses.MISSING
+        }
+        # 保存 parse_args 之后的运行时值（含 CLI 传入和默认值）
+        cli_values = {k: getattr(worker_config, k) for k in json_fields}
+
+        cfg_mgr = WorkerConfigManager(worker_id=worker_config.worker_name)
+
+        # 三层合并：代码默认值 → JSON 运营覆盖 → CLI 显式传入
+        merged = dict(code_defaults)
+        json_worker = cfg_mgr.get_worker_config()
+        if json_worker:
+            merged.update({k: v for k, v in json_worker.items() if k in json_fields})
+        for k, cli_v in cli_values.items():
+            if cli_v != code_defaults.get(k):  # 与默认值不同 → CLI 显式传入
+                merged[k] = cli_v
+        for k, v in merged.items():
+            setattr(worker_config, k, v)
+        # 不在首次启动时全量写入 JSON，JSON 只存管理 API 的显式修改
+
+        # secret key：只走 JSON，首次生成后持久化
+        existing_key = cfg_mgr.get_secret_key()
+        if existing_key:
+            worker_config.secret_key = existing_key
+
+        models = LLMRemoteModelV2.from_config(str(cfg_mgr.config_path))
+        app = HWorkerAPP(models, worker_config=worker_config)
+
+        if not existing_key and app.worker_secret_key:
+            cfg_mgr.set_secret_key(app.worker_secret_key)
+
+        # admin key：只走 JSON，首次生成后持久化
+        admin_key = cfg_mgr.get_admin_key()
+        if not admin_key:
+            admin_key = ''.join(_secrets.choice(_string.ascii_letters + _string.digits)
+                                for _ in range(12))
+            cfg_mgr.set_admin_key(admin_key)
+        authorizer.admin_key = admin_key
+
+        app.state.cfg_mgr = cfg_mgr
+
+        # 从 JSON 同步模型 enabled 初始状态
+        for model in app.worker.models:
+            model_data = cfg_mgr.get_model(model.name)
+            if model_data and "enabled" in model_data:
+                app.worker.set_model_enabled(model.name, model_data["enabled"])
+
+        wk_info = app.worker.get_worker_info()
+        print(wk_info, flush=True)
+        print(f"🚀 Worker is running. {len(wk_info.resource_info)} available models:", flush=True)
+        print(f"🔑 Admin key: `{admin_key}`", flush=True)
+        return app
 
     @staticmethod
     def from_config(config_path: str) -> List["LLMRemoteModelV2"]:
@@ -533,15 +604,19 @@ class LLMRemoteModelV2(HRModel):
             base_url = provider.get("baseUrl", "")
             api_key = provider.get("apiKey", "")
             need_external = provider.get("needExternalApiKey", False)
-            proxy = provider.get("proxy", None)
-            api_mode = provider.get("api", "openai-completions")
+            provider_proxy = provider.get("proxy", None)
+            provider_api_raw = provider.get("api", "openai-completions")
+            provider_api_mode = provider_api_raw[0] if isinstance(provider_api_raw, list) else provider_api_raw
+            provider_append_anthropic_path = provider.get("appendAnthropicPath", True)
 
             for m in provider.get("models", []):
                 model_id = m.get("id") or m.get("name")
                 engine = m.get("engine") or model_id
                 name = m.get("name") or model_id
-                proxy = m.get("proxy", proxy)  # 模型级 proxy 优先于 provider 级 proxy
-                api_mode = m.get("api", api_mode)  # 模型级 api 模式 优先于 provider 级 api 模式
+                proxy = m.get("proxy", provider_proxy)
+                api_raw = m.get("api", provider_api_mode)
+                api_mode = api_raw[0] if isinstance(api_raw, list) else api_raw
+                append_anthropic_path = m.get("appendAnthropicPath", provider_append_anthropic_path)
                 model_cfg = LLMModelConfig(
                     name=name,
                     engine=engine,
@@ -552,6 +627,7 @@ class LLMRemoteModelV2(HRModel):
                     proxy=proxy,
                     version=version,
                     need_external_api_key=need_external,
+                    append_anthropic_path=append_anthropic_path,
                 )
                 models.append(LLMRemoteModelV2(config=model_cfg))
         return models
@@ -587,6 +663,7 @@ class LLMModelConfig(HModelConfig):
     proxy: str = field(default=None, metadata={"help": "Proxy"})
     version: str = field(default="2.0", metadata={"help": "Model's version"})
     need_external_api_key: bool = field(default=False, metadata={"help": "Need external api key"})
+    append_anthropic_path: bool = field(default=True, metadata={"help": "Whether to append /anthropic to base_url when using anthropic-messages API"})
     enable_async: bool = field(default=True, metadata={"help": "Use async client"})
     permission: Union[str, Dict] = field(default=None, metadata={"help": "Model's permission"})
     test: bool = field(default=False, metadata={"help": "Test model"})
