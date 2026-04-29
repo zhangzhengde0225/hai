@@ -311,6 +311,21 @@ def gen_one_key(prefix='sk-', lenth=47, seed=None):
     return random_string
 
 
+def check_controller_connectivity(controller_url: str, timeout: float = 3.0) -> bool:
+    """
+    检查 controller 是否可达。
+    尝试 GET {controller_url}，超时或连接失败返回 False，HTTP 任意响应视为可达。
+    """
+    import requests as _requests
+    try:
+        _requests.get(controller_url, timeout=timeout)
+        return True
+    except (_requests.ConnectionError, _requests.Timeout):
+        return False
+    except Exception:
+        return False
+
+
 async def read_request_body(request: Optional[Request]) -> dict:
     """
     Asynchronous function to read the request body and parse it as JSON or literal data.

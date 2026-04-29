@@ -74,6 +74,22 @@ export default function WorkerInfoCard({ data, onRefresh }: Props) {
             {status_info.speed} req/s
           </Descriptions.Item>
 
+          <Descriptions.Item label="Owner">
+            {metadata?.permissions?.owner
+              ? <Tag color="gold">{metadata.permissions.owner}</Tag>
+              : <span style={{ color: '#999' }}>—</span>}
+          </Descriptions.Item>
+          <Descriptions.Item label="用户">
+            {metadata?.permissions?.users?.length
+              ? metadata.permissions.users.map(u => <Tag key={u}>{u}</Tag>)
+              : <span style={{ color: '#999' }}>所有用户</span>}
+          </Descriptions.Item>
+          <Descriptions.Item label="组">
+            {metadata?.permissions?.groups?.length
+              ? metadata.permissions.groups.map(g => <Tag key={g} color="purple">{g}</Tag>)
+              : <span style={{ color: '#999' }}>所有组</span>}
+          </Descriptions.Item>
+
           {metadata?.description && (
             <Descriptions.Item label="描述" span={3}>
               {metadata.description}

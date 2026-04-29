@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2026.04.30 v1.4.1 与ddf联调，现在可以设置权限了的。
 + 2026.04.18 v1.4.0 大版本更新，支持了HepAI Worker全新监控和配置面板，llm_model升级为v2，适配各种参数。
 + 2026.04.13 v1.3.9.1 修复model_config和worker_config的参数config_file冲突的问题。
 + 2026.04.11 v1.3.9 更新安全策略：Worker端需要设置HEPAI_API_KEY环境变量才能发起ddf注册请求了；Worker自动获取IP逻辑更新，支持K8s多网卡环境，优先选择非eth0的IP地址。

@@ -10,7 +10,7 @@ import ModelTable from '../components/Monitor/ModelTable'
 const { Text } = Typography
 
 export default function MonitorPage() {
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(false)
 
   const {
     data: workerInfo,

@@ -45,6 +45,8 @@ class ModelManagerRouterGroup:
         rt.put("/worker/config", dependencies=[admin_auth])(self.update_worker_config)
         rt.get("/providers/configs", dependencies=[admin_auth])(self.get_provider_configs)
         rt.put("/providers/config", dependencies=[admin_auth])(self.update_provider_config)
+        rt.post("/providers/provider", dependencies=[admin_auth])(self.add_provider)
+        rt.delete("/providers/provider", dependencies=[admin_auth])(self.delete_provider)
         rt.post("/models/model", dependencies=[admin_auth])(self.add_model)
         rt.delete("/models/model", dependencies=[admin_auth])(self.delete_model)
 
@@ -638,3 +640,78 @@ class ModelManagerRouterGroup:
         app._model_lookup_cache = {m.name: i for i, m in enumerate(worker.models)}
 
         return {"success": True, "model_id": model_id}
+
+    async def add_provider(self, request: Request):
+        """
+        新增 provider 配置（仅写入 JSON，models 列表初始化为空）。
+
+        Request Body:
+            {
+              "provider_name": "openrouter",
+              "config": {
+                "baseUrl": "https://openrouter.ai/api/",
+                "apiKey": "os.environ/OPENROUTER_API_KEY",
+                "api": "openai-completions",
+                "appendAnthropicPath": true,
+                "needExternalApiKey": false,
+                "proxy": null
+              }
+            }
+        """
+        cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
+        if cfg_mgr is None:
+            raise HTTPException(status_code=503, detail="Config manager not available")
+
+        body = await read_request_body(request)
+        provider_name = body.get("provider_name")
+        config: Dict = body.get("config") or {}
+
+        if not provider_name:
+            raise HTTPException(status_code=400, detail="provider_name is required")
+
+        # 仅保留白名单字段，避免误写未知键
+        _ALLOWED = {"baseUrl", "apiKey", "api", "appendAnthropicPath",
+                    "needExternalApiKey", "proxy"}
+        provider_config = {k: v for k, v in config.items() if k in _ALLOWED}
+        provider_config.setdefault("models", [])
+
+        try:
+            cfg_mgr.add_provider(provider_name, provider_config)
+        except ValueError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+
+        return {"success": True, "provider_name": provider_name}
+
+    async def delete_provider(self, request: Request):
+        """
+        删除指定 provider。若该 provider 下仍有模型，返回 409 拒绝删除。
+
+        Request Body:
+            { "provider_name": "openrouter" }
+        """
+        cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
+        if cfg_mgr is None:
+            raise HTTPException(status_code=503, detail="Config manager not available")
+
+        body = await read_request_body(request)
+        provider_name = body.get("provider_name")
+        if not provider_name:
+            raise HTTPException(status_code=400, detail="provider_name is required")
+
+        provider = cfg_mgr.get_provider(provider_name)
+        if provider is None:
+            raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
+
+        models = provider.get("models", []) or []
+        if len(models) > 0:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Provider '{provider_name}' still has {len(models)} model(s); remove them first",
+            )
+
+        try:
+            cfg_mgr.remove_provider(provider_name)
+        except KeyError:
+            raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
+
+        return {"success": True, "provider_name": provider_name}

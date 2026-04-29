@@ -57,11 +57,13 @@ class Authorizer:
         return True
 
     async def admin_auth(self, key: str = Depends(extract_api_key)):
-        """管理员认证，使用独立的 admin_key。未设置时允许所有访问。"""
+        """管理员认证：admin_key 或 secret_key 均可通过。未设置 admin_key 时允许所有访问。"""
         if self._admin_key is None:
             return True
         if not key:
             raise HTTPException(status_code=401, detail="Admin key is missing")
-        if key != self._admin_key:
-            raise HTTPException(status_code=403, detail="Invalid admin key")
-        return True
+        if key == self._admin_key:
+            return True
+        if self._secret_key and key == self._secret_key:
+            return True
+        raise HTTPException(status_code=403, detail="Invalid admin key")

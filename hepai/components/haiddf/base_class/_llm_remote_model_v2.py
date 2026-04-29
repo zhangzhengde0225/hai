@@ -23,6 +23,14 @@ from ._worker_class import HRModel, HModelConfig
 
 class LLMRemoteModelV2(HRModel):
 
+    # 参与 JSON 持久化的字段名（排除 worker_name/model_config_dir/secret_key 等运行时字段）
+    _JSON_FIELDS: set = {
+        "host", "port", "auto_start_port", "controller_address", "route_prefix",
+        "no_register", "permissions", "description", "daemon",
+        "limit_model_concurrency", "enable_secret_key", "enable_llm_router",
+        "is_free", "debug",
+    }
+
     def __init__(self, config: "LLMModelConfig"):
         super().__init__(config=config)
         self.cfg = config
@@ -79,8 +87,8 @@ class LLMRemoteModelV2(HRModel):
             return base
         if re.search(r"/v\d+$", base):
             base = base.rsplit("/", 1)[0].rstrip("/")
-        if not base.endswith("/anthropic"):
-            base = base + "/anthropic"
+        # if not base.endswith("/anthropic"):
+        #     base = base + "/anthropic"
         return base
 
     def _build_anthropic_url(self, path: str) -> str:
@@ -154,7 +162,7 @@ class LLMRemoteModelV2(HRModel):
         headers = {"Content-Type": "application/json"}
         if api_key:
             headers["x-api-key"] = api_key
-        headers.setdefault("anthropic-version", "2023-06-01")
+        # headers.setdefault("anthropic-version", "2023-06-01")
         if anthropic_version:
             headers["anthropic-version"] = anthropic_version
         if anthropic_beta:
@@ -379,29 +387,15 @@ class LLMRemoteModelV2(HRModel):
         非流式返回 dict；流式返回 AsyncGenerator[bytes]，原始 SSE 字节。
         moonshot/openai/kimi/gpt 模型自动路由到 chat_completions 并做格式转换。
         """
+        from copy import deepcopy
+        raw_kwargs = deepcopy(kwargs)
         modelx = kwargs.get("model", "")
         stream = kwargs.get("stream", False)
 
-        # 非 Claude 模型：路由到 OAI 接口并转换格式。20260418的禁用转换
-        # if any(x in modelx.lower() for x in ["moonshot", "openai", "kimi", "gpt"]):
-        #     from . import general
-        #     oai_params = await general.convert_input_anthropic_to_openai_format(kwargs)
-        #     if stream:
-        #         oai_params["stream"] = True
-        #         bytes_stream = await self.chat_completions(**oai_params)
-        #         dict_stream = self._sse_bytes_to_dicts(bytes_stream)
-        #         gen = general.convert_openai_to_anthropic_format_stream(dict_stream, return_dict=False)
-        #         return gen
-        #     else:
-        #         rst_dict = await self.chat_completions(**oai_params)
-        #         # 使用纯 dict 版本的转换函数（v1 的 convert_object_openai_to_anthropic 需要 SDK 对象）
-        #         rst2 = await general.convert_openai_to_anthropic_format(rst_dict)
-        #         return rst2
-
         # Claude 模型：直接调用 Anthropic HTTP 接口
         headers = self._build_anthropic_headers(kwargs)
-        extra_body: dict = kwargs.pop("extra_body", {}) or {}
-        kwargs.pop("extra_query", None)
+        # extra_body: dict = kwargs.pop("extra_body", {}) or {}
+        # kwargs.pop("extra_query", None)
         timeout = kwargs.pop("timeout", None) or 600.0
 
         if "model" not in kwargs:
@@ -437,9 +431,9 @@ class LLMRemoteModelV2(HRModel):
                 else:
                     raise ValueError(f"Invalid reasoning effort level: {effort}")
 
-        stream = kwargs.pop("stream", False)
-        kwargs.pop("context_management", None)
-        kwargs.pop("store", None)
+        # stream = kwargs.pop("stream", False)
+        # kwargs.pop("context_management", None)
+        # kwargs.pop("store", None)
 
         payload: dict = {
             "model": self.engine,
@@ -452,7 +446,7 @@ class LLMRemoteModelV2(HRModel):
         for k, v in kwargs.items():
             if v is not None:
                 payload[k] = v
-        payload.update(extra_body)
+        # payload.update(extra_body)
 
         url = self._build_anthropic_url("/v1/messages")
 
@@ -504,6 +498,81 @@ class LLMRemoteModelV2(HRModel):
     def custom_method(self, a: int, b: int) -> int:
         """示例自定义方法。"""
         return a + b
+
+    @staticmethod
+    def bootstrap(worker_config, json_fields: set = None):
+        """Worker 启动引导：三层配置合并 + 密钥管理 + 模型加载 + App 创建。
+
+        优先级：代码默认值（dataclass）< JSON 运营覆盖 < CLI 显式传入。
+        - JSON 只存放通过管理 API 显式修改的字段，不在启动时全量写入。
+          这样修改 WorkerConfig 默认值后立即生效，不会被旧 JSON 覆盖。
+        - CLI 显式传入的判定：运行时值与 dataclass 字段默认值不同。
+        返回 (app, admin_key)。
+        """
+        if json_fields is None:
+            json_fields = LLMRemoteModelV2._JSON_FIELDS
+        import dataclasses
+        import secrets as _secrets
+        import string as _string
+        from hepai.components.haiddf.worker.config_manager import WorkerConfigManager
+        from hepai import HWorkerAPP
+        from hepai.components.haiddf.worker.singletons import authorizer
+
+        # 从 dataclass 反射拿到各字段的代码默认值
+        code_defaults = {
+            f.name: f.default
+            for f in dataclasses.fields(worker_config)
+            if f.name in json_fields and f.default is not dataclasses.MISSING
+        }
+        # 保存 parse_args 之后的运行时值（含 CLI 传入和默认值）
+        cli_values = {k: getattr(worker_config, k) for k in json_fields}
+
+        cfg_mgr = WorkerConfigManager(worker_id=worker_config.worker_name)
+
+        # 三层合并：代码默认值 → JSON 运营覆盖 → CLI 显式传入
+        merged = dict(code_defaults)
+        json_worker = cfg_mgr.get_worker_config()
+        if json_worker:
+            merged.update({k: v for k, v in json_worker.items() if k in json_fields})
+        for k, cli_v in cli_values.items():
+            if cli_v != code_defaults.get(k):  # 与默认值不同 → CLI 显式传入
+                merged[k] = cli_v
+        for k, v in merged.items():
+            setattr(worker_config, k, v)
+        # 不在首次启动时全量写入 JSON，JSON 只存管理 API 的显式修改
+
+        # secret key：只走 JSON，首次生成后持久化
+        existing_key = cfg_mgr.get_secret_key()
+        if existing_key:
+            worker_config.secret_key = existing_key
+
+        models = LLMRemoteModelV2.from_config(str(cfg_mgr.config_path))
+        app = HWorkerAPP(models, worker_config=worker_config)
+
+        if not existing_key and app.worker_secret_key:
+            cfg_mgr.set_secret_key(app.worker_secret_key)
+
+        # admin key：只走 JSON，首次生成后持久化
+        admin_key = cfg_mgr.get_admin_key()
+        if not admin_key:
+            admin_key = ''.join(_secrets.choice(_string.ascii_letters + _string.digits)
+                                for _ in range(12))
+            cfg_mgr.set_admin_key(admin_key)
+        authorizer.admin_key = admin_key
+
+        app.state.cfg_mgr = cfg_mgr
+
+        # 从 JSON 同步模型 enabled 初始状态
+        for model in app.worker.models:
+            model_data = cfg_mgr.get_model(model.name)
+            if model_data and "enabled" in model_data:
+                app.worker.set_model_enabled(model.name, model_data["enabled"])
+
+        wk_info = app.worker.get_worker_info()
+        print(wk_info, flush=True)
+        print(f"🚀 Worker is running. {len(wk_info.resource_info)} available models:", flush=True)
+        print(f"🔑 Admin key: `{admin_key}`", flush=True)
+        return app
 
     @staticmethod
     def from_config(config_path: str) -> List["LLMRemoteModelV2"]:

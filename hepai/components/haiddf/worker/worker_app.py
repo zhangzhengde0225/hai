@@ -305,14 +305,14 @@ class HWorkerAPP(FastAPI):
 
         # 检查模型是否存在
         if model not in self.model_semaphores:
-            self.logger.warning(f"Model '{model}' not found.")
-            raise HTTPException(status_code=503, detail=f"Model '{model}' not found")
+            self.logger.warning(f"[Worker Unified Gate] Model '{model}' not found.")
+            raise HTTPException(status_code=503, detail=f"[Worker Unified Gate] Model '{model}' not found")
 
         # 【第一次检查】检查模型是否被禁用（获取信号量前）
         if not self.worker.is_model_enabled(model):
             raise HTTPException(
                 status_code=403,
-                detail=f"Model '{model}' is currently disabled by administrator"
+                detail=f"[Worker Unified Gate] Model '{model}' is currently disabled by administrator"
             )
 
         # 获取该模型的信号量
@@ -324,7 +324,7 @@ class HWorkerAPP(FastAPI):
             self.release_model_semaphore(model_semaphore)
             raise HTTPException(
                 status_code=403,
-                detail=f"Model '{model}' was disabled while request was queued"
+                detail=f"[Worker Unified Gate] Model '{model}' was disabled while request was queued"
             )
 
         # print(f"[{self.global_counter}] Acquired semaphore for model '{model}'. Current queue length: {self.get_queue_length(model)}")
