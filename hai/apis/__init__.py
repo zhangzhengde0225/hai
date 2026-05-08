@@ -58,10 +58,23 @@ from ..configs import CONST
 
 # init_register = InitRegister(internal_dir=hai_config.root_path)
 init_register = InitRegister(internal_dir=CONST.ROOT_PATH)
-uaii = UAII()
-cli = CommandLineInterface(
-    uaii=uaii, 
-    api_fold_name=CONST.API_FOLD_NAME,
-    root_path=CONST.ROOT_PATH,
-    )
+_uaii = None
+_cli = None
+
+def __getattr__(name):
+    global _uaii, _cli
+    if name == 'uaii':
+        if _uaii is None:
+            _uaii = UAII()
+        return _uaii
+    if name == 'cli':
+        if _cli is None:
+            _cli = CommandLineInterface(
+                uaii=__getattr__('uaii'),
+                api_fold_name=CONST.API_FOLD_NAME,
+                root_path=CONST.ROOT_PATH,
+            )
+        return _cli
+    raise AttributeError(f"module 'hai.apis' has no attribute {name!r}")
+
 api_key = os.getenv('HEPAI_API_KEY')

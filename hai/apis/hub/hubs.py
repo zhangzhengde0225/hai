@@ -1,5 +1,5 @@
 
-from .. import uaii
+import hai.apis as _apis
 
 
 def list(**kwargs):
@@ -7,7 +7,7 @@ def list(**kwargs):
     list all algorithms
     :return: list of algorithms
     """
-    info = uaii.ps(**kwargs)
+    info = _apis.uaii.ps(**kwargs)
     # print(info)
     return info
 
@@ -17,17 +17,17 @@ def list_weights(name=None, *args, **kwargs):
     :param name: algorithm name
     :return: list of weights
     """
-    info = uaii.list_weights(model_name=name, *args, **kwargs)
+    info = _apis.uaii.list_weights(model_name=name, *args, **kwargs)
     return info
 
 
 def load(name, *args, **kwargs):
     """
-    load algorithm by name  
-    :param name: algorithm name 
+    load algorithm by name
+    :param name: algorithm name
     :return: model
     """
-    model = uaii.load_model(name, *args, **kwargs)
+    model = _apis.uaii.load_model(name, *args, **kwargs)
     return model
     
 def docs(name):

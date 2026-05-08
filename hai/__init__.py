@@ -6,7 +6,40 @@ from .version import __url__
 from .apis import AbstractInput, AbstractModule, AbstractOutput, AbstractQue
 from .apis import MODULES, SCRIPTS, IOS, init_register
 from .apis import Config
-from .apis import UAII, uaii, cli
+from .apis import UAII
+import hai.apis as _hai_apis
+
+class _LazyInstance:
+    """Defers hai.apis singleton access until first attribute use."""
+    def __init__(self, attr_name):
+        object.__setattr__(self, '_attr_name', attr_name)
+        object.__setattr__(self, '_obj', None)
+
+    def _get(self):
+        obj = object.__getattribute__(self, '_obj')
+        if obj is None:
+            name = object.__getattribute__(self, '_attr_name')
+            obj = getattr(_hai_apis, name)
+            object.__setattr__(self, '_obj', obj)
+        return obj
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+    def __setattr__(self, name, value):
+        setattr(self._get(), name, value)
+
+    def __call__(self, *args, **kwargs):
+        return self._get()(*args, **kwargs)
+
+    def __repr__(self):
+        return repr(self._get())
+
+    def __str__(self):
+        return str(self._get())
+
+uaii = _LazyInstance('uaii')
+cli = _LazyInstance('cli')
 from .apis import hub
 # from .apis import hai_config as config  # inclue hai root_path, weights_root and other configs
 from .apis import grpc_secure_server
