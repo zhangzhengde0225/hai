@@ -30,13 +30,22 @@ class InitRegister(object):
         # dir_path = str(full_path.parent)
         # stem = str(full_path.stem)
 
+        if not full_path.exists():
+            if self.show_logger:
+                logger.warn(f'Internal module path "{full_path}" not found, skipped.')
+            return
+
         imp = internal_module_path.split('/')
         imp = '.'.join(imp)
 
         # print('import_internal_module', imp)
 
         code = f'from {imp} import __init__'
-        self.exec_import(code, internal_module_path)
+        try:
+            self.exec_import(code, internal_module_path)
+        except Exception as e:
+            if self.show_logger:
+                logger.warn(f'Internal module "{imp}" failed to import ({type(e).__name__}: {e}), skipped.')
         
     
     def import_external_module(self, external_module_path):

@@ -65,6 +65,8 @@ def __getattr__(name):
     global _uaii, _cli
     if name == 'uaii':
         if _uaii is None:
+            from hai import _ensure_registered
+            _ensure_registered()
             _uaii = UAII()
         return _uaii
     if name == 'cli':

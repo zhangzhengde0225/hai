@@ -81,7 +81,15 @@ external_folders = [
 if CONST.API_FOLD_NAME in os.listdir('.'):
     external_folders.insert(0, f'{os.getcwd()}')
 
-init_register(internal_modules=internal_modules, external_folders=external_folders)
+_registered = False
+
+def _ensure_registered():
+    """惰性注册内部和外部模块，首次访问 UAII 时触发。"""
+    global _registered
+    if _registered:
+        return
+    _registered = True
+    init_register(internal_modules=internal_modules, external_folders=external_folders)
 # """
 
 
