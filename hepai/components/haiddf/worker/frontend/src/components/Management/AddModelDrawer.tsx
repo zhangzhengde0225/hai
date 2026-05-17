@@ -43,7 +43,6 @@ export default function AddModelDrawer({ open, providerName, token, onClose, onS
     if ((values.input as string[] | undefined)?.length) model.input = values.input
     if (values.contextWindow != null) model.contextWindow = values.contextWindow
     if (values.maxTokens != null) model.maxTokens = values.maxTokens
-    if (values.appendAnthropicPath != null) model.appendAnthropicPath = values.appendAnthropicPath
     model.enabled = values.enabled ?? true
     const costInput = values.cost_input as number | undefined
     const costOutput = values.cost_output as number | undefined
@@ -111,15 +110,6 @@ export default function AddModelDrawer({ open, providerName, token, onClose, onS
             options={API_TYPE_OPTIONS}
             tokenSeparators={[',']}
           />
-        </Form.Item>
-
-        <Form.Item
-          label="追加 /anthropic 路径 (appendAnthropicPath)"
-          name="appendAnthropicPath"
-          valuePropName="checked"
-          extra="留空时继承 Provider 设置"
-        >
-          <Switch />
         </Form.Item>
 
         <Form.Item label="Proxy" name="proxy">

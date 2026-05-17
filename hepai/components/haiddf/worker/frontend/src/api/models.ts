@@ -77,7 +77,6 @@ export interface ModelConfig {
   engine?: string
   enabled: boolean
   api?: string | string[]
-  appendAnthropicPath?: boolean
   reasoning?: boolean
   input?: string[]
   cost?: ModelCost
@@ -130,7 +129,7 @@ export interface ProviderConfig {
   api?: string | string[]
   proxy?: string | null
   needExternalApiKey?: boolean
-  appendAnthropicPath?: boolean
+  anthropicUrl?: string | null
 }
 
 export interface ProviderConfigsResponse {

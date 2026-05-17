@@ -1,0 +1,44 @@
+# 仅用于 docker build 上下文裁剪，保持 hepai-llm-worker 镜像精简
+
+# Python 构建产物
+build/
+dist/
+*.egg-info/
+*.egg
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# 数据 / 日志 / 缓存
+data/
+logs/
+trials/
+output.png
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 外部仓库 / 文档 / 示例（大且与 worker 无关）
+repos/
+docs/
+examples/
+tutotials/
+demo_gpt_3.5.py
+
+# 前端及其依赖（hepai/components/haiddf/worker/frontend 仅 node_modules 就 200MB+）
+**/node_modules/
+**/frontend/dist/
+**/frontend/build/
+
+# Git / IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+
+# 机密信息：通过 --env-file 在运行时注入，不打进镜像
+.env
+.env.*
+!.env.example

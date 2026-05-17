@@ -18,11 +18,11 @@ load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
 class WorkerConfig(HWorkerConfig):
     worker_name: str = field(default="zhizz", metadata={"help": "Worker ID，用于定位 ~/.hepai/worker_configs/{worker_id}.json"})
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
-    port: int = field(default=42605, metadata={"help": "Worker's port"})
+    port: int = field(default=42505, metadata={"help": "Worker's port"})
     
     controller_address: str = field(default="http://localhost:42501", metadata={"help": "Controller's address"})
     # controller_address: str = field(default="https://aiapi.ihep.ac.cn", metadata={"help": "Controller's address"})
-    no_register: bool = field(default=False, metadata={"help": "Do not register to controller"})
+    no_register: bool = field(default=True, metadata={"help": "Do not register to controller"})
     
     description: str = field(default="This is a zhizz worker of HEP AI framework (HepAI)", metadata={"help": "Model's description"})
     limit_model_concurrency: int = field(default=1000, metadata={"help": "Limit the model's concurrency"})

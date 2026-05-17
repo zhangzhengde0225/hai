@@ -55,7 +55,12 @@ class LLMRemoteModelV2(HRModel):
         return self._anthropic_http_client
 
     def _build_async_client(self, base_url: str) -> httpx.AsyncClient:
-        limits = httpx.Limits(max_connections=100, max_keepalive_connections=20)
+        max_conc = getattr(self.cfg, "limit_model_concurrency", 4096) or 4096
+        limits = httpx.Limits(
+            max_connections=max_conc,
+            max_keepalive_connections=max(max_conc // 2, 256),
+            )
+        # limits = httpx.Limits(max_connections=100, max_keepalive_connections=20)
         timeout = httpx.Timeout(timeout=600.0, connect=10.0)
         kwargs: Dict = dict(
             base_url=base_url,
@@ -79,17 +84,11 @@ class LLMRemoteModelV2(HRModel):
     def _resolve_anthropic_base_url(self) -> str:
         """
         构建 anthropic-messages 请求的 base URL。
-        append_anthropic_path=True（默认）时去掉末尾 /vN 并追加 /anthropic；
-        append_anthropic_path=False 时直接使用 base_url。
+        若 cfg.anthropic_url 非空，使用它；否则回落到 cfg.base_url。
         """
-        base = self.cfg.base_url.rstrip("/")
-        if not self.cfg.append_anthropic_path:
-            return base
-        if re.search(r"/v\d+$", base):
-            base = base.rsplit("/", 1)[0].rstrip("/")
-        # if not base.endswith("/anthropic"):
-        #     base = base + "/anthropic"
-        return base
+        if self.cfg.anthropic_url:
+            return self.cfg.anthropic_url.rstrip("/")
+        return self.cfg.base_url.rstrip("/")
 
     def _build_anthropic_url(self, path: str) -> str:
         """Anthropic 接口完整 URL，如 /v1/messages。"""
@@ -546,7 +545,21 @@ class LLMRemoteModelV2(HRModel):
         if existing_key:
             worker_config.secret_key = existing_key
 
+        # 把 JSON metadata 中的 version 等运行时信息透传给 worker_config，
+        # 以便 worker 注册到 controller 时 WorkerInfo.version 反映配置文件版本。
+        json_metadata = cfg_mgr.get_metadata()
+        json_version = json_metadata.get("version")
+        if json_version:
+            worker_config.version = json_version
+        # 把整段 metadata 合并进 worker_config._metadata，供注册时上报
+        existing_meta = getattr(worker_config, "_metadata", None) or {}
+        merged_meta = {**existing_meta,
+                       **{k: v for k, v in json_metadata.items()
+                          if k not in ("secret_key", "admin_key")}}
+        worker_config._metadata = merged_meta
+
         models = LLMRemoteModelV2.from_config(str(cfg_mgr.config_path))
+
         app = HWorkerAPP(models, worker_config=worker_config)
 
         if not existing_key and app.worker_secret_key:
@@ -580,7 +593,8 @@ class LLMRemoteModelV2(HRModel):
 
         支持格式：
         {
-          "models": {
+          "metadata": { "version": "2.2", ... },
+          "model": {
             "providers": {
               "<provider>": {
                 "baseUrl": "...",
@@ -590,15 +604,15 @@ class LLMRemoteModelV2(HRModel):
             }
           }
         }
+        旧字段名 meta / models 仍兼容读取。
         """
         with open(config_path, "r", encoding="utf-8") as f:
             cfg: Dict = json.load(f)
 
+        metadata = cfg.get("metadata") or cfg.get("meta") or {}
+        version = metadata.get("version", "2.0")
 
-        meta = cfg.get("meta", {})
-        version = meta.get("version", "2.0")
-
-        providers = cfg.get("models", {}).get("providers", {})
+        providers = (cfg.get("model") or cfg.get("models") or {}).get("providers", {})
         models: List["LLMRemoteModelV2"] = []
         for provider_name, provider in providers.items():
             base_url = provider.get("baseUrl", "")
@@ -607,7 +621,7 @@ class LLMRemoteModelV2(HRModel):
             provider_proxy = provider.get("proxy", None)
             provider_api_raw = provider.get("api", "openai-completions")
             provider_api_mode = provider_api_raw[0] if isinstance(provider_api_raw, list) else provider_api_raw
-            provider_append_anthropic_path = provider.get("appendAnthropicPath", True)
+            anthropic_url = provider.get("anthropicUrl", None)
 
             for m in provider.get("models", []):
                 model_id = m.get("id") or m.get("name")
@@ -616,7 +630,6 @@ class LLMRemoteModelV2(HRModel):
                 proxy = m.get("proxy", provider_proxy)
                 api_raw = m.get("api", provider_api_mode)
                 api_mode = api_raw[0] if isinstance(api_raw, list) else api_raw
-                append_anthropic_path = m.get("appendAnthropicPath", provider_append_anthropic_path)
                 model_cfg = LLMModelConfig(
                     name=name,
                     engine=engine,
@@ -627,7 +640,7 @@ class LLMRemoteModelV2(HRModel):
                     proxy=proxy,
                     version=version,
                     need_external_api_key=need_external,
-                    append_anthropic_path=append_anthropic_path,
+                    anthropic_url=anthropic_url,
                 )
                 models.append(LLMRemoteModelV2(config=model_cfg))
         return models
@@ -663,7 +676,7 @@ class LLMModelConfig(HModelConfig):
     proxy: str = field(default=None, metadata={"help": "Proxy"})
     version: str = field(default="2.0", metadata={"help": "Model's version"})
     need_external_api_key: bool = field(default=False, metadata={"help": "Need external api key"})
-    append_anthropic_path: bool = field(default=True, metadata={"help": "Whether to append /anthropic to base_url when using anthropic-messages API"})
+    anthropic_url: Optional[str] = field(default=None, metadata={"help": "Override base URL for anthropic-messages API. If None, use base_url directly."})
     enable_async: bool = field(default=True, metadata={"help": "Use async client"})
     permission: Union[str, Dict] = field(default=None, metadata={"help": "Model's permission"})
     test: bool = field(default=False, metadata={"help": "Test model"})

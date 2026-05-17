@@ -38,7 +38,6 @@ export default function ModelConfigDrawer({ open, model, token, onClose, onSaved
         enabled: model.enabled,
         engine: model.engine ?? '',
         api: toApiArray(model.api),
-        appendAnthropicPath: model.appendAnthropicPath,   // undefined = 继承 provider
         proxy: model.proxy ?? '',
         reasoning: model.reasoning ?? false,
         input: model.input ?? [],
@@ -59,7 +58,6 @@ export default function ModelConfigDrawer({ open, model, token, onClose, onSaved
       enabled: values.enabled,
       engine: values.engine || undefined,
       api: (values.api as string[]).length > 0 ? values.api : undefined,
-      appendAnthropicPath: values.appendAnthropicPath,
       proxy: values.proxy || null,
       reasoning: values.reasoning,
       input: values.input,
@@ -123,15 +121,6 @@ export default function ModelConfigDrawer({ open, model, token, onClose, onSaved
             options={API_TYPE_OPTIONS}
             tokenSeparators={[',']}
           />
-        </Form.Item>
-
-        <Form.Item
-          label="追加 /anthropic 路径 (appendAnthropicPath)"
-          name="appendAnthropicPath"
-          valuePropName="checked"
-          extra="留空时继承 Provider 设置；关闭则直接使用 Base URL"
-        >
-          <Switch />
         </Form.Item>
 
         <Form.Item label="Proxy" name="proxy">

@@ -68,10 +68,6 @@ class ModelManagerRouterGroup:
                 if v is not None:
                     api_raw = v
                     cfg.api_mode = api_raw[0] if isinstance(api_raw, list) else api_raw
-            elif k == 'appendAnthropicPath':
-                if v is not None:
-                    cfg.append_anthropic_path = bool(v)
-                    need_reset = True
             elif k == 'endpoint_version':
                 if v is not None:
                     cfg.version = v
@@ -81,7 +77,7 @@ class ModelManagerRouterGroup:
 
     def _sync_provider_cfg(self, provider_name: str, updates: Dict, cfg_mgr) -> None:
         """将 provider JSON 更新同步到该 provider 下所有内存模型的 cfg 字段。"""
-        provider_cfg = cfg_mgr.config.get("models", {}).get("providers", {}).get(provider_name, {})
+        provider_cfg = cfg_mgr.config.get("model", {}).get("providers", {}).get(provider_name, {})
 
         # 解析 provider 级别的最新值
         new_base_url = provider_cfg.get("baseUrl", "")
@@ -90,7 +86,7 @@ class ModelManagerRouterGroup:
         new_provider_proxy = provider_cfg.get("proxy", None)
         new_provider_api_raw = provider_cfg.get("api", "openai-completions")
         new_provider_api_mode = new_provider_api_raw[0] if isinstance(new_provider_api_raw, list) else new_provider_api_raw
-        new_provider_append = provider_cfg.get("appendAnthropicPath", True)
+        new_provider_anthropic_url = provider_cfg.get("anthropicUrl", None)
 
         # 解析 apiKey 中的环境变量
         if isinstance(new_api_key_raw, str) and new_api_key_raw.startswith("os.environ/"):
@@ -120,7 +116,7 @@ class ModelManagerRouterGroup:
             if 'needExternalApiKey' in updates:
                 cfg.need_external_api_key = new_need_external
 
-            # proxy / api / appendAnthropicPath：模型级别有值时不覆盖
+            # proxy / api：模型级别有值时不覆盖
             if 'proxy' in updates and 'proxy' not in model_entry:
                 cfg.proxy = new_provider_proxy
                 need_reset = True
@@ -128,8 +124,9 @@ class ModelManagerRouterGroup:
             if 'api' in updates and 'api' not in model_entry:
                 cfg.api_mode = new_provider_api_mode
 
-            if 'appendAnthropicPath' in updates and 'appendAnthropicPath' not in model_entry:
-                cfg.append_anthropic_path = new_provider_append
+            # anthropicUrl 仅 provider 级别，直接同步到所有模型
+            if 'anthropicUrl' in updates:
+                cfg.anthropic_url = new_provider_anthropic_url
                 need_reset = True
 
             if need_reset:
@@ -169,7 +166,7 @@ class ModelManagerRouterGroup:
 
         enabled_map = self.parent_app.worker._enabled_models
 
-        providers = cfg_mgr.config.get("models", {}).get("providers", {})
+        providers = cfg_mgr.config.get("model", {}).get("providers", {})
         data: Dict = {}
         for provider_name, provider in providers.items():
             models = []
@@ -483,7 +480,7 @@ class ModelManagerRouterGroup:
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
 
-        providers = cfg_mgr.config.get("models", {}).get("providers", {})
+        providers = cfg_mgr.config.get("model", {}).get("providers", {})
         data = {
             name: {k: v for k, v in provider.items() if k != "models"}
             for name, provider in providers.items()
@@ -555,14 +552,14 @@ class ModelManagerRouterGroup:
             raise HTTPException(status_code=409, detail=str(e))
 
         # 构建内存对象（与 from_config 逻辑一致）
-        provider_cfg = cfg_mgr.config.get("models", {}).get("providers", {}).get(provider_name, {})
+        provider_cfg = cfg_mgr.config.get("model", {}).get("providers", {}).get(provider_name, {})
         base_url = provider_cfg.get("baseUrl", "")
         api_key_raw = provider_cfg.get("apiKey", "")
         need_external = provider_cfg.get("needExternalApiKey", False)
         provider_proxy = provider_cfg.get("proxy", None)
         provider_api_raw = provider_cfg.get("api", "openai-completions")
         provider_api_mode = provider_api_raw[0] if isinstance(provider_api_raw, list) else provider_api_raw
-        provider_append = provider_cfg.get("appendAnthropicPath", True)
+        anthropic_url = provider_cfg.get("anthropicUrl", None)
 
         # 解析 apiKey 环境变量
         if isinstance(api_key_raw, str) and api_key_raw.startswith("os.environ/"):
@@ -575,7 +572,6 @@ class ModelManagerRouterGroup:
         proxy = model_info.get("proxy", provider_proxy)
         api_raw = model_info.get("api", provider_api_mode)
         api_mode = api_raw[0] if isinstance(api_raw, list) else api_raw
-        append = model_info.get("appendAnthropicPath", provider_append)
 
         model_cfg = LLMModelConfig(
             name=name,
@@ -586,7 +582,7 @@ class ModelManagerRouterGroup:
             api_mode=api_mode,
             proxy=proxy,
             need_external_api_key=need_external,
-            append_anthropic_path=append,
+            anthropic_url=anthropic_url,
         )
         model_cfg._api_key = api_key  # __post_init__ 可能已处理，再次确保已解析
 
@@ -652,7 +648,7 @@ class ModelManagerRouterGroup:
                 "baseUrl": "https://openrouter.ai/api/",
                 "apiKey": "os.environ/OPENROUTER_API_KEY",
                 "api": "openai-completions",
-                "appendAnthropicPath": true,
+                "anthropicUrl": null,
                 "needExternalApiKey": false,
                 "proxy": null
               }
@@ -670,7 +666,7 @@ class ModelManagerRouterGroup:
             raise HTTPException(status_code=400, detail="provider_name is required")
 
         # 仅保留白名单字段，避免误写未知键
-        _ALLOWED = {"baseUrl", "apiKey", "api", "appendAnthropicPath",
+        _ALLOWED = {"baseUrl", "apiKey", "api", "anthropicUrl",
                     "needExternalApiKey", "proxy"}
         provider_config = {k: v for k, v in config.items() if k in _ALLOWED}
         provider_config.setdefault("models", [])

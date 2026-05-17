@@ -5,7 +5,10 @@ WorkerConfigManager — worker_config.json 的持久化配置管理器。
 无需手动指定路径，天然支持同机多 worker 共存。
 
 首次启动时若目标文件不存在，自动从同目录的 worker_config.json 模板复制初始化。
-所有写操作线程安全，写后自动更新 meta.lastTouchedAt。
+所有写操作线程安全，写后自动更新 metadata.lastTouchedAt。
+
+JSON 顶层字段：metadata（旧名 meta）、worker、model（旧名 models）。
+旧文件加载时会自动迁移并回写。
 """
 
 import json
@@ -20,6 +23,13 @@ DEFAULT_CONFIG_DIR = Path.home() / ".hepai" / "worker_configs"
 
 # 本文件所在目录（用于定位本地模板）
 _HERE = Path(__file__).parent
+
+# 顶层字段名
+_KEY_METADATA = "metadata"
+_KEY_MODEL = "model"
+# 旧字段名（用于一次性迁移）
+_LEGACY_KEY_METADATA = "meta"
+_LEGACY_KEY_MODEL = "models"
 
 
 class WorkerConfigManager:
@@ -84,9 +94,9 @@ class WorkerConfigManager:
         else:
             # 本地无模板，创建空骨架
             skeleton = {
-                "meta": {"version": "2.1"},
+                _KEY_METADATA: {"version": "2.2"},
                 "worker": {},
-                "models": {"providers": {}},
+                _KEY_MODEL: {"providers": {}},
             }
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(skeleton, f, indent=2, ensure_ascii=False)
@@ -98,17 +108,43 @@ class WorkerConfigManager:
     # ── 文件 I/O ──────────────────────────────────────────────────────────
 
     def reload(self) -> None:
-        """从磁盘重新加载配置（覆盖内存中的状态）。"""
+        """从磁盘重新加载配置（覆盖内存中的状态），并迁移旧字段名。"""
         with self._lock:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 self._config = json.load(f)
+            if self._migrate_legacy_keys():
+                # 旧字段名 → 新字段名，回写磁盘
+                self._save()
+
+    def _migrate_legacy_keys(self) -> bool:
+        """把顶层 meta→metadata、models→model 就地改名。返回是否发生迁移。"""
+        migrated = False
+        if _LEGACY_KEY_METADATA in self._config and _KEY_METADATA not in self._config:
+            self._config[_KEY_METADATA] = self._config.pop(_LEGACY_KEY_METADATA)
+            migrated = True
+        elif _LEGACY_KEY_METADATA in self._config and _KEY_METADATA in self._config:
+            # 同时存在：丢弃旧的，保留新的
+            self._config.pop(_LEGACY_KEY_METADATA)
+            migrated = True
+        if _LEGACY_KEY_MODEL in self._config and _KEY_MODEL not in self._config:
+            self._config[_KEY_MODEL] = self._config.pop(_LEGACY_KEY_MODEL)
+            migrated = True
+        elif _LEGACY_KEY_MODEL in self._config and _KEY_MODEL in self._config:
+            self._config.pop(_LEGACY_KEY_MODEL)
+            migrated = True
+        if migrated:
+            print(
+                f"[WorkerConfigManager] 迁移旧字段名 → metadata/model: {self.config_path}",
+                flush=True,
+            )
+        return migrated
 
     def _save(self) -> None:
-        """将内存配置写回磁盘，并更新 meta.lastTouchedAt。
+        """将内存配置写回磁盘，并更新 metadata.lastTouchedAt。
         调用前必须已持有 self._lock。
         """
-        meta = self._config.setdefault("meta", {})
-        meta["lastTouchedAt"] = (
+        metadata = self._config.setdefault(_KEY_METADATA, {})
+        metadata["lastTouchedAt"] = (
             datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         )
         with open(self.config_path, "w", encoding="utf-8") as f:
@@ -118,7 +154,7 @@ class WorkerConfigManager:
 
     @property
     def _providers(self) -> Dict:
-        return self._config.get("models", {}).get("providers", {})
+        return self._config.get(_KEY_MODEL, {}).get("providers", {})
 
     # ── 只读查询 ──────────────────────────────────────────────────────────
 
@@ -180,7 +216,7 @@ class WorkerConfigManager:
         :raises ValueError: 若 provider 已存在。
         """
         with self._lock:
-            providers = self._config.setdefault("models", {}).setdefault("providers", {})
+            providers = self._config.setdefault(_KEY_MODEL, {}).setdefault("providers", {})
             if provider_name in providers:
                 raise ValueError(f"Provider '{provider_name}' already exists")
             providers[provider_name] = provider_config
@@ -230,7 +266,7 @@ class WorkerConfigManager:
         :raises ValueError: 若该 provider 下已有同 id 的模型。
         """
         with self._lock:
-            providers = self._config.setdefault("models", {}).setdefault("providers", {})
+            providers = self._config.setdefault(_KEY_MODEL, {}).setdefault("providers", {})
             if provider_name not in providers:
                 raise KeyError(
                     f"Provider '{provider_name}' not found, use add_provider() first"
@@ -300,23 +336,31 @@ class WorkerConfigManager:
 
     def get_secret_key(self) -> Optional[str]:
         """读取持久化的 worker secret key，不存在时返回 None。"""
-        return self._config.get("meta", {}).get("secret_key")
+        return self._config.get(_KEY_METADATA, {}).get("secret_key")
 
     def set_secret_key(self, key: str) -> None:
-        """将 worker secret key 写入 meta.secret_key 并持久化。"""
+        """将 worker secret key 写入 metadata.secret_key 并持久化。"""
         with self._lock:
-            self._config.setdefault("meta", {})["secret_key"] = key
+            self._config.setdefault(_KEY_METADATA, {})["secret_key"] = key
             self._save()
 
     def get_admin_key(self) -> Optional[str]:
         """读取持久化的 admin key，不存在时返回 None。"""
-        return self._config.get("meta", {}).get("admin_key")
+        return self._config.get(_KEY_METADATA, {}).get("admin_key")
 
     def set_admin_key(self, key: str) -> None:
-        """将 admin key 写入 meta.admin_key 并持久化。"""
+        """将 admin key 写入 metadata.admin_key 并持久化。"""
         with self._lock:
-            self._config.setdefault("meta", {})["admin_key"] = key
+            self._config.setdefault(_KEY_METADATA, {})["admin_key"] = key
             self._save()
+
+    def get_metadata(self) -> Dict:
+        """返回 metadata 整段（包含 version、lastTouchedAt、secret_key、admin_key 等）。"""
+        return dict(self._config.get(_KEY_METADATA, {}))
+
+    def get_version(self) -> Optional[str]:
+        """读取 metadata.version。"""
+        return self._config.get(_KEY_METADATA, {}).get("version")
 
     def get_worker_config(self) -> Optional[Dict]:
         """读取持久化的 worker 配置，为空 dict 或不存在时返回 None。"""

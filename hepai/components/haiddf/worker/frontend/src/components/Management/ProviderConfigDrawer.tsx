@@ -49,7 +49,7 @@ export default function ProviderConfigDrawer({
         api: toApiArray(config.api),
         proxy: config.proxy ?? '',
         needExternalApiKey: config.needExternalApiKey ?? false,
-        appendAnthropicPath: config.appendAnthropicPath ?? true,
+        anthropicUrl: config.anthropicUrl ?? '',
       })
     }
   }, [open, config, form])
@@ -62,7 +62,7 @@ export default function ProviderConfigDrawer({
       api: (values.api as string[]).length > 0 ? values.api : undefined,
       proxy: values.proxy || null,
       needExternalApiKey: values.needExternalApiKey,
-      appendAnthropicPath: values.appendAnthropicPath,
+      anthropicUrl: values.anthropicUrl ? values.anthropicUrl : null,
     }
     setSaving(true)
     try {
@@ -123,12 +123,11 @@ export default function ProviderConfigDrawer({
           </Form.Item>
 
           <Form.Item
-            label="追加 /anthropic 路径 (appendAnthropicPath)"
-            name="appendAnthropicPath"
-            valuePropName="checked"
-            extra="使用 anthropic-messages API 时是否自动在 Base URL 末尾追加 /anthropic"
+            label="Anthropic URL (anthropicUrl)"
+            name="anthropicUrl"
+            extra="留空则使用 Base URL；填写则作为 anthropic-messages API 的请求 URL"
           >
-            <Switch />
+            <Input placeholder="https://example.com/anthropic" allowClear />
           </Form.Item>
         </Form>
       )}
