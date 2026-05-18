@@ -5,14 +5,20 @@ from dataclasses import dataclass, field, fields as dc_fields
 from pathlib import Path
 here = Path(__file__).parent
 
-sys.path.insert(0, str(here.parent.parent.parent))
+# sys.path.insert(0, str(here.parent.parent.parent))
 
 import hepai as hai
 from hepai import HWorkerConfig, HWorkerAPP
 from hepai import LLMRemoteModelV2 as LLMRemoteModel
 
 from dotenv import load_dotenv
-load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
+
+if os.path.exists(f"{here}/.env"):
+    load_dotenv(f"{here}/.env")  # 优先加载当前目录的 .env 文件，方便不同 worker 定义不同的环境变量
+elif os.path.exists(f"{here.parent.parent.parent}/.env"):
+    load_dotenv(f"{here.parent.parent.parent}/.env")  # 加载环境变量
+else:
+    load_dotenv()  # 默认加载当前工作目录及其父目录的 .env 文件
 
 
 @dataclass

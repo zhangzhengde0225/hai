@@ -14,14 +14,7 @@
 #   WORKER_NAME=openrouter_cn bash run_worker_gunicorn.sh
 set -euo pipefail
 
-
-if [[ -z "${WORKER_NAME:-}" ]]; then
-    echo "[run_worker_gunicorn.sh] Error: WORKER_NAME env var is required." >&2
-    echo "  Example: WORKER_NAME=openrouter_cn bash run_worker_gunicorn.sh" >&2
-    exit 2
-fi
-
-export WORKER_NAME
+export WORKER_NAME="${WORKER_NAME:-zhizzv2}"
 export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-42602}"
 # export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-http://localhost:42501}"
@@ -40,5 +33,3 @@ exec gunicorn -w "$GUNICORN_WORKERS" \
     --bind "${HOST}:${PORT}" \
     "hepai.workers.llm_worker.llm_worker:create_app()"
 
-
-    # llm_worker:app
