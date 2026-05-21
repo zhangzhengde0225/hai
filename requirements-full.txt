@@ -7,7 +7,7 @@ easydict  # for config_loader.py
 fastapi  # for hai worker
 requests  # for hai worker
 uvicorn  # for hai worker
-openai>=1.63.0
+openai>=2.37.0
 python-dotenv >=1.1.1
 
 

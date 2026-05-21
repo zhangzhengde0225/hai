@@ -106,15 +106,27 @@ class Worker(SyncAPIResource):
         stream = kwargs.get("stream", False) if kwargs is not None else False
 
         from typing import cast, Mapping
-        from openai._utils import deepcopy_minimal, extract_files      
-        
+        from openai._utils import extract_files
+        try:
+            # 老版本 openai 提供 deepcopy_minimal
+            from openai._utils import deepcopy_minimal  # type: ignore[attr-defined]
+        except ImportError:
+            # 新版本（>= 2.x 某个版本起）已移除，本地复刻一份：
+            # 仅对 dict / list 递归深拷贝，其它对象（如文件句柄）原样保留。
+            def deepcopy_minimal(item):
+                if isinstance(item, dict):
+                    return {k: deepcopy_minimal(v) for k, v in item.items()}
+                if isinstance(item, list):
+                    return [deepcopy_minimal(v) for v in item]
+                return item
+
         # set payload
         payload = dict()
         if args:
             payload["args"] = args
         if kwargs:
             payload["kwargs"] = kwargs
-        
+
         # 适配文件上传，可从file字段中提取文件
         files = extract_files(cast(Mapping[str, object], kwargs), paths=[["file"]])
         payload = deepcopy_minimal(payload)

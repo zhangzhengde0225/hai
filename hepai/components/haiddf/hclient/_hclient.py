@@ -245,6 +245,13 @@ class HClient(SyncAPIClient):
             return {}
         return {"Authorization": f"Bearer {api_key}"}
 
+    @override
+    def _auth_headers(self, security=None) -> dict[str, str]:
+        # 新版 openai base client 通过 _auth_headers(security) 注入鉴权头，
+        # 旧版通过 auth_headers 属性，这里两者都覆盖以兼容。
+        del security
+        return self.auth_headers
+
     @property
     @override
     def default_headers(self) -> dict[str, str | Omit]:
@@ -253,7 +260,7 @@ class HClient(SyncAPIClient):
             "X-Stainless-Async": "false",
             **self._custom_headers,
         }
-    
+
     def stream_to_generator(self, stream_obj: "Stream") -> Generator:
         """make a stream object to a generator that fit to client stream decoder"""
         for x in stream_obj:
@@ -382,6 +389,13 @@ class AsyncHClient(AsyncAPIClient):
         if api_key is None:
             return {}
         return {"Authorization": f"Bearer {api_key}"}
+
+    @override
+    def _auth_headers(self, security=None) -> dict[str, str]:
+        # 新版 openai base client 通过 _auth_headers(security) 注入鉴权头，
+        # 旧版通过 auth_headers 属性，这里两者都覆盖以兼容。
+        del security
+        return self.auth_headers
 
     @property
     @override
