@@ -48,6 +48,28 @@ def get_fastapi_init_params():
         params.append(name)
     return params
 
+
+def _mask_api_key(raw: str) -> str:
+    """对 Authorization / x-api-key 做脱敏，仅保留前后片段用于日志识别。"""
+    if not raw:
+        return "-"
+    k = raw[7:] if raw.lower().startswith("bearer ") else raw
+    if len(k) <= 12:
+        return "***"
+    return f"{k[:6]}...{k[-4:]}"
+
+
+# 高频心跳/监控类路径，access log 跳过以免刷屏
+_ACCESS_LOG_SKIP_PATHS = {
+    "/",
+    "/worker/get_status",
+    "/worker_get_status",
+    "/worker/monitor_status",
+    "/worker/models",
+    "/favicon.ico",
+}
+
+
 class HWorkerAPP(FastAPI):
     """
     FastAPI app for worker
@@ -95,6 +117,35 @@ class HWorkerAPP(FastAPI):
             try:
                 response = await call_next(request)
                 response.headers["X-Request-ID"] = req_id
+
+                # 访问日志：打印请求来源关键字段，便于排查"哪里来的"
+                path = request.url.path
+                access_log_enabled = os.environ.get(
+                    "WORKER_ACCESS_LOG", "true"
+                ).strip().lower() not in ("0", "false", "no", "off")
+                if (
+                    access_log_enabled
+                    and path not in _ACCESS_LOG_SKIP_PATHS
+                    and not path.startswith("/assets/")
+                    and not path.startswith("/docs")
+                ):
+                    h = request.headers
+                    real_ip = (
+                        h.get("x-forwarded-for", "").split(",")[0].strip()
+                        or h.get("x-real-ip")
+                        or (request.client.host if request.client else "-")
+                    )
+                    user = h.get("x-user-id") or h.get("x-user-email") or "-"
+                    ua = h.get("user-agent", "-")
+                    ak = _mask_api_key(h.get("authorization") or h.get("x-api-key") or "")
+                    qp = request.query_params
+                    model = qp.get("model", "-")
+                    func = qp.get("function", "-")
+                    self.logger.info(
+                        f"access: {request.method} {path} status={response.status_code} "
+                        f"ip={real_ip} user={user} ak={ak} model={model} func={func} ua={ua!r}"
+                    )
+
                 return response
             finally:
                 request_id_context.reset(token)

@@ -42,18 +42,30 @@ class AnthropicRouterGroup:
         # print(json.dumps(request_body, indent=2), flush=True)
         pass
 
+    @staticmethod
+    def _forward_anthropic_headers(request: Request, request_body: Dict) -> None:
+        """把客户端传来的 anthropic-version / anthropic-beta header 注入到 body kwargs，
+        以便下游 _build_anthropic_headers 能拿到。body 已有同名字段时不覆盖。"""
+        h = request.headers
+        if "anthropic-version" in h and "anthropic_version" not in request_body:
+            request_body["anthropic_version"] = h["anthropic-version"]
+        if "anthropic-beta" in h and "anthropic_beta" not in request_body:
+            request_body["anthropic_beta"] = h["anthropic-beta"]
+
     async def anthropic_messages(self, request: Request):
         request_body: Dict = await read_request_body(request=request)
         if "model" not in request_body:
             raise HTTPException(status_code=400, detail="[AnthropicRouterGroup] This `model` must be specified")
-        
+
+        self._forward_anthropic_headers(request, request_body)
+
         # Auto rename
         model = request_body["model"]
         if '/' not in model:
             model_name = f'{get_provider_by_model_name(model)}/{model}'
         else:
             model_name = model
-        
+
         self.count += 1
         func_params = FunctionParamsItem(
             args=[],
@@ -61,7 +73,7 @@ class AnthropicRouterGroup:
         )
         rst = await self.parent_app.worker_unified_gate(
             function_params=func_params,
-            model=model_name, 
+            model=model_name,
             function="anthropic_messages",
         )
         return rst
@@ -71,14 +83,16 @@ class AnthropicRouterGroup:
         if "model" not in request_body:
             raise HTTPException(status_code=400, detail="[AnthropicRouterGroup] This `model` must be specified")
         model = request_body["model"]
-        
+
+        self._forward_anthropic_headers(request, request_body)
+
         # Auto rename
         model = request_body["model"]
         if '/' not in model:
             model_name = f'{get_provider_by_model_name(model)}/{model}'
         else:
             model_name = model
-        
+
 
         self.count += 1
         func_params = FunctionParamsItem(

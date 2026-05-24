@@ -124,6 +124,303 @@ class LLMRemoteModelV2(HRModel):
         """过滤掉值为 None 的顶层 key。"""
         return {k: v for k, v in d.items() if v is not None}
 
+    # ─────────────────────────────────────────────────────────────────────
+    # Anthropic 请求规整层（多客户端兼容）
+    #
+    # 抹平 Claude Code / OpenCode / cline / anthropic-sdk 等客户端在协议
+    # 细节上的差异，保证上游（Anthropic 官方或智增增等中转商）能接受。
+    # 新增字段兼容时只动这一段；anthropic_messages / anthropic_count_tokens
+    # 函数本身不用关心这些细节。
+    # ─────────────────────────────────────────────────────────────────────
+
+    # Anthropic 内置工具的 type 前缀，原样透传不做 OpenAI→Anthropic 转换
+    _ANTHROPIC_BUILTIN_TOOL_PREFIXES = (
+        "bash_", "text_editor_", "computer_", "code_execution_", "memory_",
+        "web_search_", "file_search_",
+    )
+
+    # 上游 Anthropic Messages 接口不接受、必须在转发前 drop 的字段
+    _ANTHROPIC_INCOMPATIBLE_FIELDS = (
+        "context_management",     # Claude Code 2.0.62+ 自动对话压缩（beta）
+        "store",                  # 服务端记忆（beta）
+        "stream_options",         # OpenAI 客户端流式自动附加
+        "max_completion_tokens",  # OpenAI 字段（Anthropic 用 max_tokens）
+        "output_config",          # Anthropic Opus 4.6+ 新字段（effort/task_budget/format），需要
+                                  # task-budgets-2026-03-13 等 beta header；多数中转商不支持，
+                                  # 解析时会让整个 body 失败（症状：上游报 "Missing 'model'"）
+    )
+
+    @staticmethod
+    def _strip_thinking_blocks(messages: list) -> list:
+        """剥离历史 assistant 中的 thinking / redacted_thinking content block。
+
+        extended thinking 返回的 thinking block 带 signature 字段，回传时会被
+        服务端验证；signature 与生成它的上游账号绑定，跨中转商必失败。这里统一
+        剥离历史 thinking，副作用是 Claude 看不到上几轮"内心思考"，text 输出
+        仍保留——实测对回答质量影响极小。
+        """
+        cleaned = []
+        for msg in messages:
+            if not isinstance(msg, dict) or msg.get("role") != "assistant":
+                cleaned.append(msg)
+                continue
+            content = msg.get("content")
+            if not isinstance(content, list):
+                cleaned.append(msg)
+                continue
+            new_content = [
+                c for c in content
+                if not (isinstance(c, dict) and c.get("type") in ("thinking", "redacted_thinking"))
+            ]
+            if not new_content:
+                # 剥离后内容为空就跳过整条 assistant 消息（Anthropic 不接受空 content）
+                continue
+            new_msg = dict(msg)
+            new_msg["content"] = new_content
+            cleaned.append(new_msg)
+        return cleaned
+
+    @staticmethod
+    def _extract_system_from_messages(messages: list, current_system):
+        """把 messages 中 role=system 的条目抽出来合并到顶级 system 字段。
+
+        OpenAI 风格客户端常把 system prompt 塞到 messages[0]，但 Anthropic 要求
+        system 走顶级字段，messages 里只允许 user/assistant。返回
+        (cleaned_messages, system_value)；若顶级 system 已存在则把消息中的
+        system 文本拼到其前面。
+        """
+        sys_parts: list = []
+        cleaned: list = []
+        for msg in messages:
+            if isinstance(msg, dict) and msg.get("role") == "system":
+                content = msg.get("content")
+                if isinstance(content, str):
+                    sys_parts.append(content)
+                elif isinstance(content, list):
+                    for c in content:
+                        if isinstance(c, dict) and c.get("type") == "text" and isinstance(c.get("text"), str):
+                            sys_parts.append(c["text"])
+                        elif isinstance(c, str):
+                            sys_parts.append(c)
+                continue
+            cleaned.append(msg)
+        if not sys_parts:
+            return cleaned, current_system
+        sys_from_msgs = "\n\n".join(sys_parts)
+        if current_system in (None, ""):
+            return cleaned, sys_from_msgs
+        if isinstance(current_system, str):
+            return cleaned, f"{sys_from_msgs}\n\n{current_system}"
+        if isinstance(current_system, list):
+            return cleaned, [{"type": "text", "text": sys_from_msgs}] + current_system
+        return cleaned, current_system
+
+    @staticmethod
+    def _sanitize_messages(messages: list) -> list:
+        """收尾清洗 messages：移除顶层 cache_control + 去掉相邻重复消息。
+
+        - 顶层 cache_control 是 OpenAI 风格客户端的常见错放（Anthropic 要求在
+          content block 内）。直接 drop。
+        - 客户端 bug 偶尔重发相同消息，Anthropic 拒绝同 role 连续——这里仅合并
+          "相邻且 content 完全一致"的同 role 消息（保守去重）。
+        """
+        cleaned = []
+        for msg in messages:
+            if not isinstance(msg, dict):
+                cleaned.append(msg)
+                continue
+            new_msg = {k: v for k, v in msg.items() if k != "cache_control"}
+            if cleaned and isinstance(cleaned[-1], dict):
+                prev = cleaned[-1]
+                if (
+                    prev.get("role") == new_msg.get("role")
+                    and prev.get("content") == new_msg.get("content")
+                ):
+                    continue
+            cleaned.append(new_msg)
+        return cleaned
+
+    @staticmethod
+    def _normalize_tool_choice(tool_choice):
+        """OpenAI 风格 tool_choice → Anthropic 风格 object。
+
+        OpenAI: "auto" / "none" / "required" 字符串，或 {"type":"function","function":{"name":"X"}}
+        Anthropic: {"type":"auto"} / {"type":"any"} / {"type":"tool","name":"X"}（无 "none"）
+        返回 None 表示该字段应当从 payload 中移除。
+        """
+        if tool_choice is None:
+            return None
+        if isinstance(tool_choice, dict):
+            if "function" in tool_choice and isinstance(tool_choice["function"], dict):
+                name = tool_choice["function"].get("name")
+                return {"type": "tool", "name": name} if name else {"type": "auto"}
+            return tool_choice
+        if isinstance(tool_choice, str):
+            return {
+                "auto": {"type": "auto"},
+                "required": {"type": "any"},
+                "any": {"type": "any"},
+                "none": None,
+            }.get(tool_choice, {"type": "auto"})
+        return tool_choice
+
+    @classmethod
+    def _normalize_tools(cls, tools):
+        """OpenAI 风格 tools → Anthropic 风格自定义工具；内置工具原样保留。
+
+        OpenAI:    {"type":"function","function":{"name":...,"description":...,"parameters":{...}}}
+        Anthropic: {"name":...,"description":...,"input_schema":{...}}
+        """
+        if not isinstance(tools, list):
+            return tools
+        converted = []
+        for t in tools:
+            if not isinstance(t, dict):
+                converted.append(t)
+                continue
+            t_type = t.get("type")
+            if isinstance(t_type, str) and t_type.startswith(cls._ANTHROPIC_BUILTIN_TOOL_PREFIXES):
+                converted.append(t)
+                continue
+            if t_type == "function" and isinstance(t.get("function"), dict):
+                fn = t["function"]
+                converted.append({
+                    "name": fn.get("name"),
+                    "description": fn.get("description", ""),
+                    "input_schema": fn.get("parameters") or {"type": "object", "properties": {}},
+                })
+                continue
+            converted.append(t)
+        return converted
+
+    # ─────────────────────────────────────────────────────────────────────
+    # OpenAI Responses 请求规整层
+    # 同样针对跨上游兼容；目前主要是剥离 encrypted_content（reasoning 加密内容）。
+    # ─────────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _strip_responses_encrypted_content(input_value):
+        """剥离 Responses input 中的 reasoning 项与 encrypted_content 字段。
+
+        gpt-5 系列模型返回的 output 中会带 type=reasoning 项以及各 content 块上
+        的 encrypted_content（服务端加密 token）。Codex 等客户端会把这些原样回传
+        给下一轮请求，跨上游账号必然解不开（"encrypted content could not be
+        verified"）。这里在转发前统一剥离，等同于 anthropic thinking signature
+        的兜底——副作用是历史 reasoning 上下文丢失，但 message 文本输出仍保留。
+        """
+        if not isinstance(input_value, list):
+            return input_value
+        cleaned = []
+        for item in input_value:
+            if not isinstance(item, dict):
+                cleaned.append(item)
+                continue
+            # 整条 drop 历史 reasoning 项
+            if item.get("type") == "reasoning":
+                continue
+            new_item = {k: v for k, v in item.items() if k != "encrypted_content"}
+            content = new_item.get("content")
+            if isinstance(content, list):
+                new_content = []
+                for c in content:
+                    if isinstance(c, dict):
+                        new_content.append({k: v for k, v in c.items() if k != "encrypted_content"})
+                    else:
+                        new_content.append(c)
+                new_item["content"] = new_content
+            cleaned.append(new_item)
+        return cleaned
+
+    @classmethod
+    def _normalize_responses_request(cls, kwargs: dict) -> dict:
+        """统一规整 responses() 的 kwargs（原地修改并返回）。
+
+        当前处理：剥离 input 中跨上游解不开的 encrypted_content。
+        新增 OpenAI 客户端兼容项时扩展本方法。
+        """
+        if "input" in kwargs:
+            kwargs["input"] = cls._strip_responses_encrypted_content(kwargs["input"])
+        # include 字段若申请返回加密内容会污染下一轮，过滤掉
+        include = kwargs.get("include")
+        if isinstance(include, list):
+            include = [x for x in include if x != "reasoning.encrypted_content"]
+            if include:
+                kwargs["include"] = include
+            else:
+                kwargs.pop("include", None)
+        return kwargs
+
+    @staticmethod
+    def _resolve_thinking(kwargs: dict, max_tokens: int):
+        """解析 thinking / reasoning 参数，返回 (thinking_dict, max_tokens)。
+
+        - thinking 直接透传给 Anthropic；budget_tokens 触发 max_tokens 上浮。
+        - reasoning 是 OpenAI / 通用风格，按 effort 映射到 anthropic thinking。
+        - 两者不可同时存在。
+        """
+        thinking = kwargs.pop("thinking", {}) or {}
+        reasoning = kwargs.pop("reasoning", {}) or {}
+        assert not (thinking and reasoning), "thinking 和 reasoning 不能同时存在"
+        if thinking:
+            if thinking.get("type") == "enabled":
+                budget_tokens = thinking.get("budget_tokens", 0)
+                max_tokens = max(max_tokens, budget_tokens + 1)
+        elif reasoning:
+            enabled = reasoning.get("enabled", False)
+            if enabled:
+                thinking = {"type": "enabled", "budget_tokens": max_tokens - 1}
+            else:
+                effort = str(reasoning.get("effort", "low"))
+                if effort in ("None", "minimal", "low"):
+                    thinking = {"type": "disabled"}
+                elif effort in ("medium", "high", "xhigh"):
+                    thinking = {"type": "adaptive"}
+                else:
+                    raise ValueError(f"Invalid reasoning effort level: {effort}")
+        return thinking, max_tokens
+
+    @classmethod
+    def _normalize_anthropic_request(cls, kwargs: dict) -> dict:
+        """统一规整 anthropic_messages / anthropic_count_tokens 的 kwargs。
+
+        兼容客户端：Claude Code、OpenCode、cline、anthropic-sdk 等。
+        新增兼容项时只动这一段。kwargs 被原地修改并返回，便于链式书写。
+
+        处理项：
+          messages —— 剥离历史 thinking、抽 system 到顶级、移除顶层 cache_control、去重相邻重复
+          tools    —— OpenAI function-style → Anthropic 自定义工具；内置工具原样保留
+          tool_choice —— 字符串 / OpenAI function 形态 → Anthropic object（"none" 直接删字段）
+          字段过滤 —— drop _ANTHROPIC_INCOMPATIBLE_FIELDS 中列出的字段
+        """
+        # messages
+        if "messages" in kwargs:
+            messages = kwargs["messages"]
+            messages = cls._strip_thinking_blocks(messages)
+            messages, system = cls._extract_system_from_messages(messages, kwargs.get("system"))
+            if system in (None, ""):
+                kwargs.pop("system", None)
+            else:
+                kwargs["system"] = system
+            kwargs["messages"] = cls._sanitize_messages(messages)
+
+        # tool_choice
+        if "tool_choice" in kwargs:
+            tc = cls._normalize_tool_choice(kwargs["tool_choice"])
+            if tc is None:
+                kwargs.pop("tool_choice", None)
+            else:
+                kwargs["tool_choice"] = tc
+
+        # tools
+        if kwargs.get("tools"):
+            kwargs["tools"] = cls._normalize_tools(kwargs["tools"])
+
+        # 上游不兼容字段
+        for k in cls._ANTHROPIC_INCOMPATIBLE_FIELDS:
+            kwargs.pop(k, None)
+
+        return kwargs
+
     def _build_oai_headers(self, kwargs: dict) -> dict:
         """构建 OpenAI 风格请求的完整 headers，封装 API key。
 
@@ -161,9 +458,10 @@ class LLMRemoteModelV2(HRModel):
         headers = {"Content-Type": "application/json"}
         if api_key:
             headers["x-api-key"] = api_key
-        # headers.setdefault("anthropic-version", "2023-06-01")
         if anthropic_version:
             headers["anthropic-version"] = anthropic_version
+        else:
+            headers.setdefault("anthropic-version", "2023-06-01")
         if anthropic_beta:
             headers["anthropic-beta"] = anthropic_beta
         headers.update(caller_extra)
@@ -171,33 +469,94 @@ class LLMRemoteModelV2(HRModel):
 
     # ── 通用流式字节生成器 ────────────────────────────────────────────────
 
+    @staticmethod
+    def _format_sse_error_bytes(status_code: int, error_text: str, url: str, model: str) -> bytes:
+        """构造一个标准 SSE 错误事件，让客户端 SDK 能解析到具体错误。
+
+        流式响应 HTTP 200 头已经发出后，再 raise Exception 会让 starlette 截断流，
+        客户端只能看到模糊的"stream interrupted"。改为 yield 这个 SSE 错误事件，
+        OpenAI / Anthropic 风格客户端都能识别出错误细节。
+        """
+        # 截断超长 error_text 避免日志/响应过大
+        truncated = error_text if len(error_text) <= 1500 else error_text[:1500] + "...[truncated]"
+        payload = {
+            "type": "error",
+            "error": {
+                "type": "upstream_error",
+                "code": status_code,
+                "message": truncated,
+                "upstream_url": url,
+                "model": model,
+            },
+        }
+        return f"event: error\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
+
     async def _stream_bytes(self, client: httpx.AsyncClient, url: str,
                             headers: dict, payload: dict,
                             timeout: float) -> AsyncGenerator[bytes, None]:
-        """向 url 发送流式 POST，透传原始 SSE 字节，带内联 JSON 错误检测。"""
-        async with client.stream("POST", url, headers=headers,
-                                 json=payload, timeout=timeout) as resp:
-            if resp.status_code != 200:
-                await resp.aread()
-                raise self._make_exception({}, payload, url, resp)
+        """向 url 发送流式 POST，透传原始 SSE 字节，带内联 JSON 错误检测。
 
-            is_first = True
-            is_error = False
-            error_buf = bytearray()
+        中途出错时不 raise（HTTP 200 头已发，starlette 无法回滚状态码），改为
+        yield 一个 SSE 错误事件，并把详细信息写入 logger 供运维排查。
+        """
+        model = payload.get("model", "-")
+        try:
+            async with client.stream("POST", url, headers=headers,
+                                     json=payload, timeout=timeout) as resp:
+                if resp.status_code != 200:
+                    await resp.aread()
+                    exc = self._make_exception({}, payload, url, resp)
+                    self._log_stream_error(exc)
+                    yield self._format_sse_error_bytes(
+                        resp.status_code, resp.text, url, model
+                    )
+                    return
 
-            async for chunk in resp.aiter_bytes():
-                if is_first:
-                    is_first = False
-                    if chunk.lstrip().startswith(b"{"):
-                        is_error = True
+                is_first = True
+                is_error = False
+                error_buf = bytearray()
+
+                async for chunk in resp.aiter_bytes():
+                    if is_first:
+                        is_first = False
+                        if chunk.lstrip().startswith(b"{"):
+                            is_error = True
+                    if is_error:
+                        error_buf.extend(chunk)
+                    else:
+                        yield chunk
+
                 if is_error:
-                    error_buf.extend(chunk)
-                else:
-                    yield chunk
+                    full = error_buf.decode("utf-8", errors="ignore")
+                    exc = self._make_exception({}, payload, url, resp, error_text=full)
+                    self._log_stream_error(exc)
+                    yield self._format_sse_error_bytes(resp.status_code, full, url, model)
+                    return
+        except Exception as e:
+            # 网络异常 / timeout / SSL 等：上游未必有 status_code，照样兜底
+            self._log_stream_error(e)
+            yield self._format_sse_error_bytes(
+                getattr(e, "status_code", 0) or 0,
+                f"{type(e).__name__}: {e}",
+                url, model,
+            )
 
-            if is_error:
-                full = error_buf.decode("utf-8", errors="ignore")
-                raise self._make_exception({}, payload, url, resp, error_text=full)
+    def _log_stream_error(self, exc: Exception):
+        """把流式出错的详细信息写入 logger（保留 add_note 信息）。"""
+        try:
+            logger = getattr(self, "logger", None)
+            msg = f"[_stream_bytes] {type(exc).__name__}: {exc}"
+            notes = getattr(exc, "__notes__", None)
+            if notes:
+                msg += "\n" + "\n".join(notes)
+            if logger:
+                logger.error(msg)
+            else:
+                # 没接 logger 也要让信息进 stderr 不至于丢
+                import sys as _sys
+                print(msg, file=_sys.stderr)
+        except Exception:
+            pass
 
     @staticmethod
     async def _sse_bytes_to_dicts(stream: AsyncGenerator[bytes, None]) -> AsyncGenerator[dict, None]:
@@ -271,13 +630,20 @@ class LLMRemoteModelV2(HRModel):
 
     @HRModel.remote_callable
     async def responses(self, *args, **kwargs):
-        """处理 /v1/responses 接口（与 v1 逻辑相同，改用持久 http_client）。"""
+        """处理 /v1/responses 接口（与 v1 逻辑相同，改用持久 http_client）。
+
+        支持 Codex / openai-sdk / OpenCode 等客户端；跨上游兼容由
+        _normalize_responses_request 处理（剥离跨账号解不开的 encrypted_content）。
+        """
         headers = self._build_oai_headers(kwargs)
 
         kwargs.pop("extra_body", None)
         kwargs.pop("extra_query", None)
         kwargs.pop("stream_options", None)
         timeout = kwargs.pop("timeout", 60.0) or 60.0
+
+        # 跨客户端兼容规整
+        self._normalize_responses_request(kwargs)
 
         kwargs["model"] = self.cfg.engine
         stream = kwargs.get("stream", False)
@@ -383,57 +749,34 @@ class LLMRemoteModelV2(HRModel):
     async def anthropic_messages(self, *args, **kwargs) -> Union[Dict, AsyncGenerator]:
         """Anthropic Messages API（/v1/messages）。
 
-        非流式返回 dict；流式返回 AsyncGenerator[bytes]，原始 SSE 字节。
-        moonshot/openai/kimi/gpt 模型自动路由到 chat_completions 并做格式转换。
+        支持的客户端：Claude Code、OpenCode、cline、anthropic-sdk 等。各客户端
+        在协议细节上的差异由 _normalize_anthropic_request 统一抹平，本函数只负责
+        校验必填字段、解析 thinking、组装 payload、发请求。
+
+        非流式返回 dict；流式返回 AsyncGenerator[bytes]（原始 SSE 字节）。
         """
-        from copy import deepcopy
-        raw_kwargs = deepcopy(kwargs)
-        modelx = kwargs.get("model", "")
-        stream = kwargs.get("stream", False)
+        # 1. 必填校验
+        for required in ("model", "messages", "max_tokens"):
+            if required not in kwargs:
+                raise ValueError(f"{required} parameter is required")
 
-        # Claude 模型：直接调用 Anthropic HTTP 接口
+        # 2. headers（会从 kwargs 中 pop 掉 api_key / anthropic_version / anthropic_beta / extra_headers）
         headers = self._build_anthropic_headers(kwargs)
-        # extra_body: dict = kwargs.pop("extra_body", {}) or {}
-        # kwargs.pop("extra_query", None)
-        timeout = kwargs.pop("timeout", None) or 600.0
 
-        if "model" not in kwargs:
-            raise ValueError("model parameter is required")
-        if "messages" not in kwargs:
-            raise ValueError("messages parameter is required")
-        if "max_tokens" not in kwargs:
-            raise ValueError("max_tokens parameter is required")
+        # 3. 跨客户端兼容规整（messages / tools / tool_choice / 字段过滤）
+        self._normalize_anthropic_request(kwargs)
 
+        # 4. 提取主字段
         kwargs.pop("model")
         messages = kwargs.pop("messages")
         max_tokens = kwargs.pop("max_tokens")
+        stream = kwargs.pop("stream", False)
+        timeout = kwargs.pop("timeout", None) or 600.0
 
-        # thinking / reasoning 参数处理（与 v1 完全一致）
-        thinking = kwargs.pop("thinking", {}) or {}
-        reasoning = kwargs.pop("reasoning", {}) or {}
-        assert not (thinking and reasoning), "thinking and reasoning parameters cannot exist at the same time"
-        if thinking:
-            if thinking.get("type") == "enabled":
-                budget_tokens = thinking.get("budget_tokens", 0)
-                max_tokens = max(max_tokens, budget_tokens + 1)
-        elif reasoning:
-            enabled = reasoning.get("enabled", False)
-            if enabled:
-                budget_tokens = max_tokens - 1
-                thinking = {"type": "enabled", "budget_tokens": budget_tokens}
-            else:
-                effort = reasoning.get("effort", "low")
-                if str(effort) in ["None", "minimal", "low"]:
-                    thinking = {"type": "disabled"}
-                elif str(effort) in ["medium", "high", "xhigh"]:
-                    thinking = {"type": "adaptive"}
-                else:
-                    raise ValueError(f"Invalid reasoning effort level: {effort}")
+        # 5. thinking / reasoning（可能上浮 max_tokens）
+        thinking, max_tokens = self._resolve_thinking(kwargs, max_tokens)
 
-        # stream = kwargs.pop("stream", False)
-        # kwargs.pop("context_management", None)
-        # kwargs.pop("store", None)
-
+        # 6. 组装 payload，剩余 kwargs 视为 anthropic 合法字段透传
         payload: dict = {
             "model": self.engine,
             "messages": messages,
@@ -445,39 +788,46 @@ class LLMRemoteModelV2(HRModel):
         for k, v in kwargs.items():
             if v is not None:
                 payload[k] = v
-        # payload.update(extra_body)
 
+        # 7. 发请求
         url = self._build_anthropic_url("/v1/messages")
-
         if stream:
             return self._stream_bytes(self.anthropic_http_client, url, headers, payload, timeout)
-        else:
-            resp = await self.anthropic_http_client.post(
-                url, headers=headers, json=payload, timeout=timeout
-            )
-            if resp.status_code != 200:
-                raise self._make_exception(kwargs, payload, url, resp)
-            data = resp.json()
-            if data.get("type") == "error":
-                raise ValueError(f"Anthropic API Error: {data.get('error', {})}")
-            return data
+        resp = await self.anthropic_http_client.post(
+            url, headers=headers, json=payload, timeout=timeout
+        )
+        if resp.status_code != 200:
+            raise self._make_exception(kwargs, payload, url, resp)
+        data = resp.json()
+        if data.get("type") == "error":
+            raise ValueError(f"Anthropic API Error: {data.get('error', {})}")
+        return data
 
     @HRModel.remote_callable
     async def anthropic_count_tokens(self, *args, **kwargs) -> Dict:
-        """Anthropic Count Tokens 接口（/v1/messages/count_tokens）。"""
+        """Anthropic Count Tokens 接口（/v1/messages/count_tokens）。
+
+        与 anthropic_messages 共享 _normalize_anthropic_request 规整逻辑。
+        """
+        # 1. 必填校验
+        for required in ("model", "messages"):
+            if required not in kwargs:
+                raise ValueError(f"{required} parameter is required")
+
+        # 2. headers
         headers = self._build_anthropic_headers(kwargs)
+
+        # 3. 提取本函数特有字段
         extra_body: dict = kwargs.pop("extra_body", {}) or {}
         kwargs.pop("extra_query", None)
         timeout = kwargs.pop("timeout", None) or 120.0
 
-        if "model" not in kwargs:
-            raise ValueError("model parameter is required")
-        if "messages" not in kwargs:
-            raise ValueError("messages parameter is required")
+        # 4. 跨客户端兼容规整
+        self._normalize_anthropic_request(kwargs)
 
+        # 5. 组装 payload
         kwargs.pop("model")
         messages = kwargs.pop("messages")
-
         payload: dict = {
             "model": self.engine,
             "messages": messages,
@@ -485,6 +835,7 @@ class LLMRemoteModelV2(HRModel):
             **extra_body,
         }
 
+        # 6. 发请求
         url = self._build_anthropic_url("/v1/messages/count_tokens")
         resp = await self.anthropic_http_client.post(
             url, headers=headers, json=payload, timeout=timeout
