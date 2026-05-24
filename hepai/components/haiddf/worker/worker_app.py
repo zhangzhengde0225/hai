@@ -133,6 +133,18 @@ class HWorkerAPP(FastAPI):
             app=self, models=models, worker_config=worker_config,
             logger=self.logger)
 
+        # 通过 ASGI lifespan shutdown 显式通知 controller。
+        # 必要原因：CommonWorker 里只挂了 atexit，在 gunicorn + UvicornWorker
+        # 下 SIGTERM/超时 SIGKILL 路径上 atexit 可能不可靠（也无法吞掉断言异常）；
+        # 而 uvicorn 在 graceful shutdown 时一定会跑 lifespan shutdown。
+        # exit_handler 已做幂等，与 atexit 双路径触发也安全。
+        @self.on_event("shutdown")
+        async def _notify_controller_on_shutdown():
+            try:
+                self.worker.exit_handler()
+            except Exception as e:  # 兜底，避免影响关停
+                self.logger.warning(f"shutdown notify controller failed: {e!r}")
+
         # 模型管理认证统一复用 worker_secret_key，无需单独的 admin_password
 
 

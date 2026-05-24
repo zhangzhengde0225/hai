@@ -531,27 +531,94 @@ class CommonWorker:
   
     def exit_handler(self):
         """
-        退出时向Contoller发送退出信息
+        退出时向Contoller发送退出信息。
+        三层去重：
+          1) 进程内置位 `_is_deleted_in_controller`，避免 atexit + shutdown 双路径重复；
+          2) 进程间用基于 ppid（gunicorn master pid）的文件锁 + marker 互斥，
+             保证同一组 gunicorn worker 只发一次 delete；
+          3) 任何异常只记日志不抛出，避免 atexit 阶段异常被吞 / 多 worker 互踩。
         """
         if self.config.no_register:  # 初始化时没有注册到controller，不需要发送退出信息
             return
         if self._is_deleted_in_controller:
             return
-        # logger.info(f'Remove model "{self.model_name}" from controller {self.controller_addr}, ')
-        # url = self.base_url + "/stop_worker"
+        # 先置位，避免并发/重复触发（atexit + shutdown event 双路径）
+        self._is_deleted_in_controller = True
+
+        # ---- 进程间互斥：同一 gunicorn master 下只让一个子进程发 delete ----
+        import tempfile
+        try:
+            import fcntl  # POSIX only；Windows 下没有，回退到不去重
+            _has_fcntl = True
+        except ImportError:
+            _has_fcntl = False
+
+        ppid = os.getppid()  # gunicorn 子进程的 ppid = master pid；单进程跑则为 shell pid，也唯一
+        safe_wid = "".join(c if c.isalnum() or c in "-_." else "_" for c in str(self.worker_id))
+        lock_path = os.path.join(
+            tempfile.gettempdir(),
+            f"hepai_worker_exit_{safe_wid}_{ppid}.lock",
+        )
+        done_marker = lock_path + ".done"
+
+        fd = None
+        already_notified = False
+        if _has_fcntl:
+            try:
+                fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o644)
+                fcntl.flock(fd, fcntl.LOCK_EX)  # 阻塞独占锁
+                if os.path.exists(done_marker):
+                    already_notified = True
+            except OSError:
+                # 锁失败就回退到不去重（最多多发几次 delete，controller 端能容忍）
+                if fd is not None:
+                    try:
+                        os.close(fd)
+                    except Exception:
+                        pass
+                fd = None
+
+        if already_notified:
+            self.logger.info("Stop worker skipped (already notified by sibling process).")
+            if fd is not None:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                    os.close(fd)
+                except Exception:
+                    pass
+            return
+
         url = self.base_url + "/worker/stop_worker"
-        
-        worker_info: WorkerInfo = self.get_worker_info()
-        wid = worker_info.id
-        payload = {"worker_id": wid, "permanent": False}
-        # data = worker_info.to_dict()
-        r = requests.post(
-            url, 
-            json=payload, 
-            headers=self.headers)
-        assert r.status_code == 200, f"Stop worker failed. {r.text}\n worker_info: {worker_info}"
-        # logger.info(f'Done. {r.text}') 
-        self.logger.info(f"Stop worker successful. res: {r.text}")
+        try:
+            worker_info: WorkerInfo = self.get_worker_info()
+            wid = worker_info.id
+            payload = {"worker_id": wid, "permanent": False}
+            r = requests.post(
+                url,
+                json=payload,
+                headers=self.headers,
+                timeout=5,
+            )
+            if r.status_code == 200:
+                self.logger.info(f"Stop worker successful. res: {r.text}")
+                if fd is not None:
+                    try:
+                        open(done_marker, "w").close()
+                    except Exception:
+                        pass
+            else:
+                self.logger.warning(
+                    f"Stop worker non-200: status={r.status_code}, body={r.text}"
+                )
+        except Exception as e:
+            self.logger.warning(f"Stop worker request failed: {e!r}")
+        finally:
+            if fd is not None:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                    os.close(fd)
+                except Exception:
+                    pass
 
     ### --- 此处是处理Controller的请求的相关函数 --- ###
     def unified_gate(
