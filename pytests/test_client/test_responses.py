@@ -224,6 +224,30 @@ class TestControllerResponses():
         for event in stream:
             print(event)
 
+    def test_openai_controller_responses_compact(self):
+        """集成测试：通过 controller 调用 /responses/compact。"""
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+
+        model_name = "openai/gpt-4.1"
+        # 1. 先创建一个 response
+        response = client.responses.create(
+            model=model_name,
+            input="Hello, this is a test for compact via controller."
+        )
+        print(f"Created response: {response.id}")
+
+        # 2. 调用 compact
+        compacted = client.responses.compact(
+            model=model_name,
+            previous_response_id=response.id,
+        )
+        print(f"Compacted response: {compacted}")
+
 
 class TestZhizzAPI:
     api_secret_key = os.environ.get("ZHIZENGZENG_API_KEY")
