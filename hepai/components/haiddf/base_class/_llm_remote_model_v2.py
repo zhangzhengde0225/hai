@@ -664,7 +664,7 @@ class LLMRemoteModelV2(HRModel):
             return resp.json()
 
     @HRModel.remote_callable
-    async def compact(self, *args, **kwargs):
+    async def responses_compact(self, *args, **kwargs):
         """OpenAI Responses Compact 接口（/v1/responses/compact）。
 
         对话压缩：将历史 response 压缩为更紧凑的形式，节省 token。

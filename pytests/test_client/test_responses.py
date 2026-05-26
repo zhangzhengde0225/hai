@@ -233,7 +233,7 @@ class TestControllerResponses():
             base_url=self.base_url
         )
 
-        model_name = "openai/gpt-4.1"
+        model_name = "openai/gpt-5.5"
         # 1. 先创建一个 response
         response = client.responses.create(
             model=model_name,
