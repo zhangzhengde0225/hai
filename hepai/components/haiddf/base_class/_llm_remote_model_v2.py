@@ -664,6 +664,32 @@ class LLMRemoteModelV2(HRModel):
             return resp.json()
 
     @HRModel.remote_callable
+    async def compact(self, *args, **kwargs):
+        """OpenAI Responses Compact 接口（/v1/responses/compact）。
+
+        对话压缩：将历史 response 压缩为更紧凑的形式，节省 token。
+        请求体：response_id (必填), model (可选), input (可选)
+        """
+        headers = self._build_oai_headers(kwargs)
+        kwargs.pop("extra_body", None)
+        kwargs.pop("extra_query", None)
+        timeout = kwargs.pop("timeout", 60.0) or 60.0
+
+        kwargs["model"] = self.cfg.engine
+        payload = dict(kwargs)
+
+        base_url = self.cfg.base_url.rstrip("/")
+        if re.search(r"/v\d+$", base_url):
+            url = f"{base_url}/responses/compact"
+        else:
+            url = f"{base_url}/v1/responses/compact"
+
+        resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
+        if resp.status_code != 200:
+            raise self._make_exception(kwargs, payload, url, resp)
+        return resp.json()
+
+    @HRModel.remote_callable
     async def embeddings(self, *args, **kwargs):
         """OpenAI Embeddings 接口（/v1/embeddings）。"""
         headers = self._build_oai_headers(kwargs)

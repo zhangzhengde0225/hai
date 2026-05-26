@@ -53,6 +53,8 @@ class LLMRouterGroup:
         # openai
         rt.post("/responses", dependencies=[api_key_auth])(self.responses)
         rt.post("/v1/responses", dependencies=[api_key_auth])(self.responses)
+        rt.post("/responses/compact", dependencies=[api_key_auth])(self.compact)
+        rt.post("/v1/responses/compact", dependencies=[api_key_auth])(self.compact)
 
 
     async def chat_completions(self, request: Request):
@@ -201,6 +203,24 @@ class LLMRouterGroup:
             function_params=func_params,
             model=model,
             function="responses",
+        )
+        return rst
+
+    async def compact(self, request: Request):
+        request_body: Dict = await read_request_body(request=request)
+        if "model" not in request_body:
+            raise HTTPException(status_code=400, detail="[LLMRouterGroup] This `model` must be specified")
+        model = request_body["model"]
+
+        func_params = FunctionParamsItem(
+            args=[],
+            kwargs=request_body
+        )
+
+        rst = await self.parent_app.worker_unified_gate(
+            function_params=func_params,
+            model=model,
+            function="compact",
         )
         return rst
     
