@@ -107,7 +107,7 @@ class TestWorkerResponses():
             base_url=self.base_url
         )
 
-        model_name = "openai/gpt-4.1"
+        model_name = "openai/gpt-5.5"
         response = client.responses.create(
             model=model_name,
             input="Hello"
@@ -128,6 +128,31 @@ class TestWorkerResponses():
         )
         for event in stream:
             print(event)
+
+    def test_openai_worker_responses_compact(self):
+        """测试 /responses/compact 接口：先创建 response，再 compact。"""
+        import os
+        from openai import OpenAI
+
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url
+        )
+
+        model_name = "openai/gpt-5.5"
+        # 1. 先创建一个 response
+        response = client.responses.create(
+            model=model_name,
+            input="Hello, this is a test for compact."
+        )
+        print(f"Created response: {response.id}")
+
+        # 2. 调用 compact
+        compacted = client.responses.compact(
+            model=model_name,
+            previous_response_id=response.id,
+        )
+        print(f"Compacted response: {compacted.id}")
 
 
 class TestControllerResponses():
@@ -247,6 +272,35 @@ class TestZhizzAPI:
             input="Hello"
         )
         print(response.output_text)
+
+    def test_direct_zhizz_compact(self):
+        """测试智增增上游 /v1/responses/compact 接口。"""
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {self.api_secret_key}"
+        }
+        model_name = "gpt-4.1"
+
+        # 1. 先创建一个 response
+        r = httpx.post(
+            f"{self.base_url_v1}/responses",
+            headers=headers,
+            json={'model': model_name, 'input': 'Hello'},
+            timeout=30,
+        )
+        assert r.status_code == 200, f"Create failed: {r.status_code} {r.text[:200]}"
+        resp_id = r.json().get('id')
+        print(f"Created response: {resp_id}")
+
+        # 2. 调用 compact
+        r2 = httpx.post(
+            f"{self.base_url_v1}/responses/compact",
+            headers=headers,
+            json={'model': model_name, 'previous_response_id': resp_id},
+            timeout=60,
+        )
+        print(f"Compact status: {r2.status_code}")
+        print(f"Compact body: {r2.text[:500]}")
 
     def test_openai_zhizz_stream_responses(self):
         client = OpenAI(
