@@ -27,6 +27,7 @@ from .singletons import authorizer
 #
 from .mcp_adapter.utils import build_mcp_kwargs_for_starlette
 
+
 class FunctionParamsItem(BaseModel):
     args: List = []
     kwargs: Dict = {}
@@ -41,8 +42,8 @@ def get_fastapi_init_params():
         if name == "self":
             continue
         if param.kind in (
-            inspect.Parameter.VAR_POSITIONAL,  # *args
-            inspect.Parameter.VAR_KEYWORD       # **kwargs
+                inspect.Parameter.VAR_POSITIONAL,  # *args
+                inspect.Parameter.VAR_KEYWORD  # **kwargs
         ):
             continue
         params.append(name)
@@ -78,11 +79,11 @@ class HWorkerAPP(FastAPI):
 
     def __init__(
             self,
-            models: HRemoteModel | List[HRemoteModel], 
+            models: HRemoteModel | List[HRemoteModel],
             worker_config: HWorkerConfig = None,  # Alias of config
             logger: Logger = None,
             **worker_overrides,
-            ):
+    ):
         # 获取父类的所有可能参数并传递给父类
         # 获取 FastAPI 接受的参数名
         fastapi_params = get_fastapi_init_params()
@@ -98,7 +99,7 @@ class HWorkerAPP(FastAPI):
         # 如果有任意model中enable_mcp为True，则启用MCP路由
         mcp_kwargs = build_mcp_kwargs_for_starlette(models, route_prefix=worker_config.route_prefix)
         fastapi_kwargs.update(mcp_kwargs)
-        
+
         super().__init__(**fastapi_kwargs)
 
         from hepai.tools.global_unhandle_exception import global_unhandled_exception_handler
@@ -124,16 +125,16 @@ class HWorkerAPP(FastAPI):
                     "WORKER_ACCESS_LOG", "true"
                 ).strip().lower() not in ("0", "false", "no", "off")
                 if (
-                    access_log_enabled
-                    and path not in _ACCESS_LOG_SKIP_PATHS
-                    and not path.startswith("/assets/")
-                    and not path.startswith("/docs")
+                        access_log_enabled
+                        and path not in _ACCESS_LOG_SKIP_PATHS
+                        and not path.startswith("/assets/")
+                        and not path.startswith("/docs")
                 ):
                     h = request.headers
                     real_ip = (
-                        h.get("x-forwarded-for", "").split(",")[0].strip()
-                        or h.get("x-real-ip")
-                        or (request.client.host if request.client else "-")
+                            h.get("x-forwarded-for", "").split(",")[0].strip()
+                            or h.get("x-real-ip")
+                            or (request.client.host if request.client else "-")
                     )
                     user = h.get("x-user-id") or h.get("x-user-email") or "-"
                     ua = h.get("user-agent", "-")
@@ -149,19 +150,18 @@ class HWorkerAPP(FastAPI):
                 return response
             finally:
                 request_id_context.reset(token)
-        
-        
+
         self.logger = self.get_logger(logger)
         worker_config = worker_config if worker_config is not None else HWorkerConfig()
         assert isinstance(worker_config, HWorkerConfig), f"worker_config should be an instance of HWorkerConfig"
         worker_config.update_from_dict(worker_overrides)
-        
+
         # 用于控制模型访问的信号量 - 改为每个模型独立的信号量
         self.limit_model_concurrency = worker_config.limit_model_concurrency
         self.model_semaphores: Dict[str, Semaphore] = {}  # 每个模型独立的信号量
         self.global_counter = 0
         self._model_lookup_cache: Dict[str, int] = {}  # 模型查找缓存
-        
+
         # 初始化线程池用于I/O密集型操作
         self._thread_pool = ThreadPoolExecutor(max_workers=100, thread_name_prefix="worker_io")
         if worker_config.enable_secret_key:
@@ -171,7 +171,8 @@ class HWorkerAPP(FastAPI):
             else:
                 seed = utils.get_simple_machine_seed()
                 worker_secret_key = utils.gen_one_key(prefix='sk-', lenth=47, seed=seed)
-            self.logger.info(f"Worker secret key: `{worker_secret_key}`, please pass it in the `Authorization` header when you call this worker.")
+            self.logger.info(
+                f"Worker secret key: `{worker_secret_key}`, please pass it in the `Authorization` header when you call this worker.")
             authorizer.secret_key = worker_secret_key
         else:
             worker_secret_key = None
@@ -184,20 +185,25 @@ class HWorkerAPP(FastAPI):
             app=self, models=models, worker_config=worker_config,
             logger=self.logger)
 
+        # 初始化时间戳并启动轮询
+        self._last_config_mtime = 0
+
+        @self.on_event("startup")
+        async def _start_config_polling_task():
+            import os
+            import asyncio
+            cfg_mgr = getattr(self.state, 'cfg_mgr', None)
+            if cfg_mgr and hasattr(cfg_mgr, 'config_path') and cfg_mgr.config_path.exists():
+                self._last_config_mtime = os.path.getmtime(cfg_mgr.config_path)
+            asyncio.create_task(self._poll_config_changes())
+
         # 通过 ASGI lifespan shutdown 显式通知 controller。
-        # 必要原因：CommonWorker 里只挂了 atexit，在 gunicorn + UvicornWorker
-        # 下 SIGTERM/超时 SIGKILL 路径上 atexit 可能不可靠（也无法吞掉断言异常）；
-        # 而 uvicorn 在 graceful shutdown 时一定会跑 lifespan shutdown。
-        # exit_handler 已做幂等，与 atexit 双路径触发也安全。
         @self.on_event("shutdown")
         async def _notify_controller_on_shutdown():
             try:
                 self.worker.exit_handler()
             except Exception as e:  # 兜底，避免影响关停
                 self.logger.warning(f"shutdown notify controller failed: {e!r}")
-
-        # 模型管理认证统一复用 worker_secret_key，无需单独的 admin_password
-
 
         self._docs_content_cache = None  # 缓存docs内容
         self._html_mk_content_cache = None  # 缓存markdown内容
@@ -210,6 +216,104 @@ class HWorkerAPP(FastAPI):
         if (_dist / "assets").exists():
             self.mount("/assets", StaticFiles(directory=str(_dist / "assets")), name="frontend_assets")
 
+    # ==========================================
+    # 多进程配置文件同步逻辑
+    # ==========================================
+    @property
+    def _config_sync_lock(self):
+        if not hasattr(self, '_sync_lock_obj'):
+            self._sync_lock_obj = asyncio.Lock()
+        return self._sync_lock_obj
+
+    async def _poll_config_changes(self):
+        """后台轮询任务：每 3 秒检查一次配置文件"""
+        import asyncio
+        while True:
+            try:
+                await asyncio.sleep(3)
+                await self.check_and_sync_config()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                self.logger.warning(f"Config polling error: {e}")
+
+    async def check_and_sync_config(self):
+        """检查磁盘文件 mtime，如有更新则全量重载到内存（双重检查锁）"""
+        import os
+        cfg_mgr = getattr(self.state, 'cfg_mgr', None)
+        if not cfg_mgr or not hasattr(cfg_mgr, 'config_path') or not cfg_mgr.config_path.exists():
+            return
+
+        try:
+            current_mtime = os.path.getmtime(cfg_mgr.config_path)
+            if current_mtime > self._last_config_mtime:
+                async with self._config_sync_lock:
+                    current_mtime = os.path.getmtime(cfg_mgr.config_path)
+                    if current_mtime > self._last_config_mtime:
+                        self.logger.info(f"Detect config changes (mtime: {current_mtime}), syncing to memory...")
+
+                        cfg_mgr.reload()
+                        self._apply_config_to_memory(cfg_mgr)
+                        self._last_config_mtime = current_mtime
+        except Exception as e:
+            self.logger.error(f"Failed to sync config from disk: {e}")
+
+    def _apply_config_to_memory(self, cfg_mgr):
+        """核心对齐逻辑：将 cfg_mgr 中的最新配置覆盖到 Worker 内存"""
+        import os
+
+        # 1. 同步 Worker 级别配置
+        worker_cfg = cfg_mgr.get_worker_config() or {}
+        _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions"}
+        for k, v in worker_cfg.items():
+            if k in _ALLOWED:
+                if hasattr(self.worker.config, k):
+                    setattr(self.worker.config, k, v)
+                if k == 'permissions':
+                    self.worker.worker_permissions = self.worker._parse_permissions(v)
+
+        # 2. 同步 Provider 和 Model 级别配置
+        providers = cfg_mgr.config.get("model", {}).get("providers", {})
+        for provider_name, provider in providers.items():
+            provider_api_key_raw = provider.get("apiKey", "")
+            provider_base_url = provider.get("baseUrl", "")
+            provider_proxy = provider.get("proxy")
+
+            if isinstance(provider_api_key_raw, str) and provider_api_key_raw.startswith("os.environ/"):
+                provider_api_key = os.environ.get(provider_api_key_raw.split("/")[1], "")
+            else:
+                provider_api_key = provider_api_key_raw
+
+            for m in provider.get("models", []):
+                model_id = m.get("id") or m.get("name", "")
+
+                if model_id in self.worker._model_map:
+                    model_obj = self.worker._model_map[model_id]
+
+                    is_enabled = m.get("enabled", True)
+                    self.worker.set_model_enabled(model_id, bool(is_enabled))
+
+                    if hasattr(model_obj, 'cfg'):
+                        cfg = model_obj.cfg
+                        need_reset = False
+
+                        if cfg._api_key != provider_api_key:
+                            cfg._api_key = provider_api_key
+                            need_reset = True
+
+                        if cfg.base_url != provider_base_url:
+                            cfg.base_url = provider_base_url
+                            need_reset = True
+
+                        model_proxy = m.get("proxy", provider_proxy)
+                        if cfg.proxy != model_proxy:
+                            cfg.proxy = model_proxy
+                            need_reset = True
+
+                        if need_reset:
+                            model_obj._http_client = None
+                            model_obj._anthropic_http_client = None
+
     def _init_model_resources(self, models: Union[HRemoteModel, List[HRemoteModel]]):
         """初始化模型资源：信号量和查找缓存"""
         if not isinstance(models, List):
@@ -220,10 +324,9 @@ class HWorkerAPP(FastAPI):
             self.model_semaphores[model_name] = asyncio.Semaphore(self.limit_model_concurrency)
             # 建立模型名到索引的快速查找缓存
             self._model_lookup_cache[model_name] = i
-        
-    
+
     def _init_routers(self, config: HWorkerConfig):
-        
+
         # 1 index router
         index_router = APIRouter(prefix="", tags=["base"])
         index_router.get("/")(self.index)
@@ -232,7 +335,7 @@ class HWorkerAPP(FastAPI):
         # 2 worker router
         worker_router = self.get_worker_router(router_prefix=config.route_prefix)
         self.include_router(worker_router)
-        
+
         # 3 llm router
         if config.enable_llm_router:
             from .routers.llm_router import LLMRouterGroup
@@ -253,7 +356,7 @@ class HWorkerAPP(FastAPI):
         #     from .mcp_adapter.mcp_router import MCPRouterGroup
         #     mcp_rg = MCPRouterGroup(prefix=config.route_prefix, parent_app=self)
         #     self.include_router(mcp_rg.router, prefix=mcp_rg.prefix, tags=mcp_rg.tags)
-        
+
     def get_worker_router(self, router_prefix: str = ""):
         # router_prefix = self.worker.config_dict.get("route_prefix", "/apiv2")
         router = APIRouter(prefix=router_prefix, tags=["worker"])
@@ -271,7 +374,7 @@ class HWorkerAPP(FastAPI):
         router.get("/worker_get_status")(self.worker_get_status)
         router.post("/worker/shutdown")(self.shutdown_worker)
         router.post("/shutdown_worker")(self.shutdown_worker)
-        
+
         return router
 
     @classmethod
@@ -288,11 +391,10 @@ class HWorkerAPP(FastAPI):
     @property
     def host(self):
         return self.worker.network_info.host
-    
+
     @property
     def port(self):
         return self.worker.network_info.port
-    
 
     def get_queue_length(self, model_name: str = None):
         """获取队列长度，如果指定模型则返回该模型的队列长度，否则返回总队列长度"""
@@ -302,7 +404,8 @@ class HWorkerAPP(FastAPI):
                 return 0
             try:
                 _value = model_semaphore._value
-                _num_waiters = len(model_semaphore._waiters) if hasattr(model_semaphore, "_waiters") and model_semaphore._waiters is not None else 0
+                _num_waiters = len(model_semaphore._waiters) if hasattr(model_semaphore,
+                                                                        "_waiters") and model_semaphore._waiters is not None else 0
                 return self.limit_model_concurrency - _value + _num_waiters
             except Exception:
                 return 0
@@ -312,17 +415,18 @@ class HWorkerAPP(FastAPI):
             for semaphore in self.model_semaphores.values():
                 try:
                     _value = semaphore._value
-                    _num_waiters = len(semaphore._waiters) if hasattr(semaphore, "_waiters") and semaphore._waiters is not None else 0
+                    _num_waiters = len(semaphore._waiters) if hasattr(semaphore,
+                                                                      "_waiters") and semaphore._waiters is not None else 0
                     total_queue += self.limit_model_concurrency - _value + _num_waiters
                 except Exception:
                     continue
             return total_queue
-            
+
     def release_model_semaphore(self, model_semaphore: Semaphore):
         """释放指定模型的信号量"""
         if model_semaphore is not None:
             model_semaphore.release()
-            
+
     async def index(self):
         # 优先返回 React 构建产物，回退到旧 HTML
         from pathlib import Path
@@ -356,7 +460,7 @@ class HWorkerAPP(FastAPI):
             function_params: FunctionParamsItem,
             model: str = None,
             function: str = "__call__",
-            ):
+    ):
         self.global_counter += 1
 
         # 确定使用的模型
@@ -364,7 +468,8 @@ class HWorkerAPP(FastAPI):
             if len(self.worker.models) == 1:
                 model = self.worker.models[0].name
             else:
-                raise HTTPException(status_code=400, detail="Model parameter is required when multiple models available")
+                raise HTTPException(status_code=400,
+                                    detail="Model parameter is required when multiple models available")
 
         # 检查模型是否存在
         if model not in self.model_semaphores:
@@ -410,16 +515,16 @@ class HWorkerAPP(FastAPI):
         # background_tasks.add_task(self.release_model_semaphore, model_semaphore)
         self.release_model_semaphore(model_semaphore)
         return rst
-    
+
     async def worker_get_status(self):
         """获取worker的状态信息，即WorkerStatusInfo"""
         return self.worker.get_status_info().to_dict()
-    
+
     async def get_worker_info(
-            self, 
+            self,
             worker_info_request: WorkerInfoRequest,
             # user_auth: HAPIKeyAuth = api_key_auth,
-            ) -> JSONResponse:
+    ) -> JSONResponse:
         """
         与controller的worker_info接口一致，以便client调用
         """
@@ -429,12 +534,12 @@ class HWorkerAPP(FastAPI):
 
     async def get_models(self):
         mrs: List[ModelResourceInfo] = self.worker.get_model_resource_info()
-        
+
         return {
             "object": "list",
             "data": [mr.to_dict() for mr in mrs],
         }
-    
+
     async def get_monitor_status(self):
         """获取实时监控状态信息"""
         try:
@@ -442,21 +547,22 @@ class HWorkerAPP(FastAPI):
             model_status = {}
             total_queue = 0
             total_active = 0
-            
+
             for model_name, semaphore in self.model_semaphores.items():
                 try:
                     available = semaphore._value
-                    waiters = len(semaphore._waiters) if hasattr(semaphore, "_waiters") and semaphore._waiters is not None else 0
+                    waiters = len(semaphore._waiters) if hasattr(semaphore,
+                                                                 "_waiters") and semaphore._waiters is not None else 0
                     active = self.limit_model_concurrency - available
                     queue = waiters
-                    
+
                     model_status[model_name] = {
                         "active": active,
                         "queue": queue,
                         "available": available,
                         "limit": self.limit_model_concurrency
                     }
-                    
+
                     total_queue += queue
                     total_active += active
                 except Exception as e:
@@ -467,10 +573,10 @@ class HWorkerAPP(FastAPI):
                         "available": self.limit_model_concurrency,
                         "limit": self.limit_model_concurrency
                     }
-            
+
             # 获取worker基本状态
             status_info = self.worker.get_status_info()
-            
+
             return {
                 "timestamp": time.time(),
                 "total_active": total_active,
@@ -488,18 +594,17 @@ class HWorkerAPP(FastAPI):
                 "error": str(e),
                 "timestamp": time.time()
             }
-    
-    
+
     async def shutdown_worker(self, background_tasks: BackgroundTasks):
         """接收来自Ctrl的关闭worker的信息"""
         background_tasks.add_task(self.worker.shutdown_worker)
         self.worker._is_deleted_in_controller = True
         wid = self.worker.worker_id
         return WorkerStoppedInfo(
-            id=wid, stopped=True, 
+            id=wid, stopped=True,
             message=f"Worker `{wid}` shutdown",
             shutdown=True,
-            )
+        )
 
     @classmethod
     def register_worker(
@@ -509,17 +614,18 @@ class HWorkerAPP(FastAPI):
             daemon: bool = False,
             standalone: bool = False,
             **kwargs,
-            ):
+    ):
         """注册HModelWorker到HaiDDF"""
         from .utils import run_standlone_worker_demo
         if standalone:  # 独立程序模式，用户测试程序
             # cls().logger.info("Running `worker` in standalone mode.")
             print("Running `worker` in standalone mode.")
             return run_standlone_worker_demo()
-        
+
         assert model is not None, f"Model should be not None"
         import uvicorn
         app: FastAPI = HWorkerAPP(model, worker_config=worker_config, **kwargs)
+
         def run_uvicron():
             uvicorn.run(app, host=app.host, port=app.port)
 
@@ -533,15 +639,8 @@ class HWorkerAPP(FastAPI):
     def run(self):
         import uvicorn
         uvicorn.run(self, host=self.host, port=self.port)
-    
+
     def __del__(self):
         """清理资源"""
         if hasattr(self, '_thread_pool') and self._thread_pool:
             self._thread_pool.shutdown(wait=False)
-
-
-
-
-
-
-

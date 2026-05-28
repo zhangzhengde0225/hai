@@ -50,89 +50,6 @@ class ModelManagerRouterGroup:
         rt.post("/models/model", dependencies=[admin_auth])(self.add_model)
         rt.delete("/models/model", dependencies=[admin_auth])(self.delete_model)
 
-    def _sync_model_cfg(self, model_id: str, updates: Dict) -> None:
-        """将 JSON 更新同步到内存中对应 LLMRemoteModelV2 的 cfg 字段。"""
-        model_obj = self.parent_app.worker._model_map.get(model_id)
-        if model_obj is None or not hasattr(model_obj, 'cfg'):
-            return
-        cfg = model_obj.cfg
-        need_reset = False
-        for k, v in updates.items():
-            if k == 'engine':
-                cfg.engine = v or model_id
-                model_obj.engine = cfg.engine
-            elif k == 'proxy':
-                cfg.proxy = v  # None/null 清除代理
-                need_reset = True
-            elif k == 'api':
-                if v is not None:
-                    api_raw = v
-                    cfg.api_mode = api_raw[0] if isinstance(api_raw, list) else api_raw
-            elif k == 'endpoint_version':
-                if v is not None:
-                    cfg.version = v
-        if need_reset:
-            model_obj._http_client = None
-            model_obj._anthropic_http_client = None
-
-    def _sync_provider_cfg(self, provider_name: str, updates: Dict, cfg_mgr) -> None:
-        """将 provider JSON 更新同步到该 provider 下所有内存模型的 cfg 字段。"""
-        provider_cfg = cfg_mgr.config.get("model", {}).get("providers", {}).get(provider_name, {})
-
-        # 解析 provider 级别的最新值
-        new_base_url = provider_cfg.get("baseUrl", "")
-        new_api_key_raw = provider_cfg.get("apiKey", "")
-        new_need_external = provider_cfg.get("needExternalApiKey", False)
-        new_provider_proxy = provider_cfg.get("proxy", None)
-        new_provider_api_raw = provider_cfg.get("api", "openai-completions")
-        new_provider_api_mode = new_provider_api_raw[0] if isinstance(new_provider_api_raw, list) else new_provider_api_raw
-        new_provider_anthropic_url = provider_cfg.get("anthropicUrl", None)
-
-        # 解析 apiKey 中的环境变量
-        if isinstance(new_api_key_raw, str) and new_api_key_raw.startswith("os.environ/"):
-            new_api_key = os.environ.get(new_api_key_raw.split("/")[1], "")
-        else:
-            new_api_key = new_api_key_raw or ""
-
-        for model_obj in self.parent_app.worker.models:
-            if not hasattr(model_obj, 'cfg') or model_obj.cfg.provider != provider_name:
-                continue
-            model_id = model_obj.name
-            # 获取该模型的 JSON 条目，用于判断模型级别是否有覆盖
-            model_entry = next(
-                (m for m in provider_cfg.get("models", []) if (m.get("id") or m.get("name")) == model_id),
-                {}
-            )
-            cfg = model_obj.cfg
-            need_reset = False
-
-            if 'baseUrl' in updates:
-                cfg.base_url = new_base_url
-                need_reset = True
-
-            if 'apiKey' in updates:
-                cfg._api_key = new_api_key
-
-            if 'needExternalApiKey' in updates:
-                cfg.need_external_api_key = new_need_external
-
-            # proxy / api：模型级别有值时不覆盖
-            if 'proxy' in updates and 'proxy' not in model_entry:
-                cfg.proxy = new_provider_proxy
-                need_reset = True
-
-            if 'api' in updates and 'api' not in model_entry:
-                cfg.api_mode = new_provider_api_mode
-
-            # anthropicUrl 仅 provider 级别，直接同步到所有模型
-            if 'anthropicUrl' in updates:
-                cfg.anthropic_url = new_provider_anthropic_url
-                need_reset = True
-
-            if need_reset:
-                model_obj._http_client = None
-                model_obj._anthropic_http_client = None
-
     async def dashboard_page(self):
         """返回 Dashboard HTML 页面"""
         html_file = os.path.join(os.path.dirname(__file__), "../html", "dashboard.html")
@@ -149,17 +66,11 @@ class ModelManagerRouterGroup:
     async def get_model_configs(self):
         """
         返回所有模型的完整配置字段（来自 JSON）+ enabled 状态
-
-        Returns:
-            {
-                "success": True,
-                "data": {
-                    "openrouter": [
-                        { "id": "openai/gpt-5.4", "engine": "...", "enabled": True, ... }
-                    ]
-                }
-            }
         """
+        # [多进程同步] 读前强制检查
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -182,9 +93,6 @@ class ModelManagerRouterGroup:
     async def update_model_config(self, request: Request):
         """
         更新模型的配置字段（写回 JSON）并可选更新 enabled 状态
-
-        Request Body:
-            { "model_id": "openai/gpt-5.4", "updates": { ...任意字段..., "enabled"?: bool } }
         """
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
@@ -209,26 +117,20 @@ class ModelManagerRouterGroup:
             if cfg_mgr:
                 cfg_mgr.update_model(model_id, {"enabled": bool(enabled)})
 
-        # Sync config changes to in-memory model object
-        if updates:
-            self._sync_model_cfg(model_id, updates)
+        # [多进程同步] 立即触发当前 Worker 内存对齐
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
 
         return {"success": True, "model_id": model_id}
 
     async def list_models_grouped(self):
         """
         按提供者分组返回所有模型及状态
-
-        Returns:
-            {
-                "success": True,
-                "data": {
-                    "hepai": [{"name": "hepai/gpt-4", "enabled": True}, ...],
-                    "Uncategorized": [{"name": "local-llama", "enabled": False}, ...]
-                },
-                "timestamp": 1703001234.567
-            }
         """
+        # [多进程同步] 读前强制检查
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         worker = self.parent_app.worker
         grouped: Dict = {}
         for model in worker.models:
@@ -245,20 +147,7 @@ class ModelManagerRouterGroup:
         }
 
     async def enable_model(self, model_name: str):
-        """
-        启用指定模型
-
-        Args:
-            model_name: 模型名称
-
-        Returns:
-            {
-                "success": True,
-                "message": "Model xxx enabled",
-                "model_name": "xxx",
-                "enabled": True
-            }
-        """
+        """启用指定模型"""
         # 检查模型是否存在
         if model_name not in self.parent_app.worker._model_map:
             raise HTTPException(
@@ -271,6 +160,9 @@ class ModelManagerRouterGroup:
         if cfg_mgr:
             cfg_mgr.update_model(model_name, {"enabled": True})
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         return {
             "success": True,
             "message": f"Model '{model_name}' enabled",
@@ -279,23 +171,7 @@ class ModelManagerRouterGroup:
         }
 
     async def disable_model(self, model_name: str):
-        """
-        禁用指定模型
-
-        注意：正在处理的请求会完成，排队中的请求会在获取信号量后被拒绝
-
-        Args:
-            model_name: 模型名称
-
-        Returns:
-            {
-                "success": True,
-                "message": "Model xxx disabled",
-                "model_name": "xxx",
-                "enabled": False,
-                "note": "..."
-            }
-        """
+        """禁用指定模型"""
         # 检查模型是否存在
         if model_name not in self.parent_app.worker._model_map:
             raise HTTPException(
@@ -308,6 +184,9 @@ class ModelManagerRouterGroup:
         if cfg_mgr:
             cfg_mgr.update_model(model_name, {"enabled": False})
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         return {
             "success": True,
             "message": f"Model '{model_name}' disabled",
@@ -317,28 +196,7 @@ class ModelManagerRouterGroup:
         }
 
     async def batch_update_models(self, request: Request):
-        """
-        批量更新多个模型的状态
-
-        Request Body:
-            {
-                "updates": [
-                    {"model_name": "xxx", "enabled": true},
-                    {"model_name": "yyy", "enabled": false},
-                    ...
-                ]
-            }
-
-        Returns:
-            {
-                "success": True,
-                "results": [
-                    {"model_name": "xxx", "enabled": true, "success": True},
-                    {"model_name": "yyy", "enabled": false, "success": True}
-                ],
-                "count": 2
-            }
-        """
+        """批量更新多个模型的状态"""
         body = await read_request_body(request)
         updates = body.get("updates", [])
 
@@ -398,11 +256,12 @@ class ModelManagerRouterGroup:
                     "error": str(e)
                 })
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         # 如果 worker 已注册到 controller，发送一次心跳更新状态
-        worker = self.parent_app.worker
         if not worker.config.no_register:
             try:
-                # 在后台线程中发送心跳，避免阻塞响应
                 import asyncio
                 loop = asyncio.get_event_loop()
                 loop.run_in_executor(None, worker.register_to_controller, True)
@@ -420,20 +279,10 @@ class ModelManagerRouterGroup:
         }
 
     async def get_all_status(self):
-        """
-        获取所有模型的状态（用于验证密码）
+        """获取所有模型的状态"""
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
 
-        Returns:
-            {
-                "success": True,
-                "models": {
-                    "hepai/gpt-4": True,
-                    "local-llama": False,
-                    ...
-                },
-                "timestamp": 1703001234.567
-            }
-        """
         return {
             "success": True,
             "models": dict(self.parent_app.worker._enabled_models),
@@ -441,15 +290,7 @@ class ModelManagerRouterGroup:
         }
 
     async def update_worker_config(self, request: Request):
-        """
-        更新 worker 运行时配置并持久化到 JSON。
-
-        可更新字段：description, limit_model_concurrency, is_free, debug, permissions
-        注意：limit_model_concurrency 修改需重启才对并发信号量生效。
-
-        Request Body:
-            { "updates": { "description": "...", "is_free": false, ... } }
-        """
+        """更新 worker 运行时配置并持久化到 JSON。"""
         _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions"}
 
         body = await read_request_body(request)
@@ -459,23 +300,21 @@ class ModelManagerRouterGroup:
         if not updates:
             raise HTTPException(status_code=400, detail="No valid fields to update")
 
-        worker = self.parent_app.worker
-        worker_config = worker.config
-        for k, v in updates.items():
-            if hasattr(worker_config, k):
-                setattr(worker_config, k, v)
-            if k == 'permissions':
-                worker.worker_permissions = worker._parse_permissions(v)
-
         # 持久化到 JSON
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr:
             cfg_mgr.set_worker_config(updates)
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         return {"success": True, "updated": list(updates.keys())}
 
     async def get_provider_configs(self):
         """返回所有 provider 的顶层配置（不含 models 列表）"""
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -488,12 +327,7 @@ class ModelManagerRouterGroup:
         return {"success": True, "data": data, "timestamp": time.time()}
 
     async def update_provider_config(self, request: Request):
-        """
-        更新指定 provider 的顶层配置（浅合并，不影响 models 列表）。
-
-        Request Body:
-            { "provider_name": "openrouter", "updates": { "proxy": "...", ... } }
-        """
+        """更新指定 provider 的顶层配置（浅合并，不影响 models 列表）。"""
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -512,18 +346,13 @@ class ModelManagerRouterGroup:
         except KeyError:
             raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
 
-        # Sync provider config changes to all in-memory models of this provider
-        self._sync_provider_cfg(provider_name, updates, cfg_mgr)
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
 
         return {"success": True, "provider_name": provider_name, "updated": list(updates.keys())}
 
     async def add_model(self, request: Request):
-        """
-        向指定 provider 添加新模型，同时注册到内存。
-
-        Request Body:
-            { "provider_name": "openrouter", "model": { "id": "...", "engine": "...", ... } }
-        """
+        """向指定 provider 添加新模型，同时注册到内存。"""
         import asyncio
         from hepai.components.haiddf.base_class._llm_remote_model_v2 import (
             LLMRemoteModelV2, LLMModelConfig,
@@ -551,7 +380,7 @@ class ModelManagerRouterGroup:
         except ValueError as e:
             raise HTTPException(status_code=409, detail=str(e))
 
-        # 构建内存对象（与 from_config 逻辑一致）
+        # 构建内存对象
         provider_cfg = cfg_mgr.config.get("model", {}).get("providers", {}).get(provider_name, {})
         base_url = provider_cfg.get("baseUrl", "")
         api_key_raw = provider_cfg.get("apiKey", "")
@@ -561,7 +390,6 @@ class ModelManagerRouterGroup:
         provider_api_mode = provider_api_raw[0] if isinstance(provider_api_raw, list) else provider_api_raw
         anthropic_url = provider_cfg.get("anthropicUrl", None)
 
-        # 解析 apiKey 环境变量
         if isinstance(api_key_raw, str) and api_key_raw.startswith("os.environ/"):
             api_key = os.environ.get(api_key_raw.split("/")[1], "")
         else:
@@ -584,7 +412,7 @@ class ModelManagerRouterGroup:
             need_external_api_key=need_external,
             anthropic_url=anthropic_url,
         )
-        model_cfg._api_key = api_key  # __post_init__ 可能已处理，再次确保已解析
+        model_cfg._api_key = api_key
 
         new_model = LLMRemoteModelV2(config=model_cfg)
 
@@ -599,15 +427,13 @@ class ModelManagerRouterGroup:
         app.model_semaphores[model_id] = asyncio.Semaphore(app.limit_model_concurrency)
         app._model_lookup_cache[model_id] = len(worker.models) - 1
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         return {"success": True, "model_id": model_id, "provider_name": provider_name}
 
     async def delete_model(self, request: Request):
-        """
-        从指定 provider 删除模型，同时从内存中注销。
-
-        Request Body:
-            { "model_id": "openai/gpt-5", "provider_name": "openrouter" }
-        """
+        """从指定 provider 删除模型，同时从内存中注销。"""
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -632,28 +458,16 @@ class ModelManagerRouterGroup:
         worker._enabled_models.pop(model_id, None)
         app.model_semaphores.pop(model_id, None)
         app._model_lookup_cache.pop(model_id, None)
-        # 重建 lookup cache 索引
+
         app._model_lookup_cache = {m.name: i for i, m in enumerate(worker.models)}
+
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
 
         return {"success": True, "model_id": model_id}
 
     async def add_provider(self, request: Request):
-        """
-        新增 provider 配置（仅写入 JSON，models 列表初始化为空）。
-
-        Request Body:
-            {
-              "provider_name": "openrouter",
-              "config": {
-                "baseUrl": "https://openrouter.ai/api/",
-                "apiKey": "os.environ/OPENROUTER_API_KEY",
-                "api": "openai-completions",
-                "anthropicUrl": null,
-                "needExternalApiKey": false,
-                "proxy": null
-              }
-            }
-        """
+        """新增 provider 配置（仅写入 JSON，models 列表初始化为空）。"""
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -665,9 +479,7 @@ class ModelManagerRouterGroup:
         if not provider_name:
             raise HTTPException(status_code=400, detail="provider_name is required")
 
-        # 仅保留白名单字段，避免误写未知键
-        _ALLOWED = {"baseUrl", "apiKey", "api", "anthropicUrl",
-                    "needExternalApiKey", "proxy"}
+        _ALLOWED = {"baseUrl", "apiKey", "api", "anthropicUrl", "needExternalApiKey", "proxy"}
         provider_config = {k: v for k, v in config.items() if k in _ALLOWED}
         provider_config.setdefault("models", [])
 
@@ -676,15 +488,13 @@ class ModelManagerRouterGroup:
         except ValueError as e:
             raise HTTPException(status_code=409, detail=str(e))
 
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
+
         return {"success": True, "provider_name": provider_name}
 
     async def delete_provider(self, request: Request):
-        """
-        删除指定 provider。若该 provider 下仍有模型，返回 409 拒绝删除。
-
-        Request Body:
-            { "provider_name": "openrouter" }
-        """
+        """删除指定 provider。若该 provider 下仍有模型，返回 409 拒绝删除。"""
         cfg_mgr = getattr(self.parent_app.state, 'cfg_mgr', None)
         if cfg_mgr is None:
             raise HTTPException(status_code=503, detail="Config manager not available")
@@ -709,5 +519,8 @@ class ModelManagerRouterGroup:
             cfg_mgr.remove_provider(provider_name)
         except KeyError:
             raise HTTPException(status_code=404, detail=f"Provider '{provider_name}' not found")
+
+        if hasattr(self.parent_app, 'check_and_sync_config'):
+            await self.parent_app.check_and_sync_config()
 
         return {"success": True, "provider_name": provider_name}
