@@ -193,31 +193,7 @@ class CommonWorker:
                 self.logger = logging.getLogger("CommonWorker")
 
         # 注册模型
-        if not self.config.no_register:
-            success: bool = self.register_to_controller()
-            if success:  # sent hartbeat every 60s
-                # 使用异步心跳以提高性能
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # 在异步环境下，创建后台任务
-                        loop.create_task(self.worker_heartbeat_async())
-                    else:
-                        # 没有事件循环，回退到线程模式
-                        self.heartbeat_thread = threading.Thread(
-                            target=self.worker_heartbeat, 
-                            daemon=True,
-                            )
-                        self.heartbeat_thread.start()
-                except RuntimeError:
-                    # 没有事件循环，回退到线程模式
-                    self.heartbeat_thread = threading.Thread(
-                        target=self.worker_heartbeat, 
-                        daemon=True,
-                        )
-                    self.heartbeat_thread.start()
-            else:  # if not success, flags as local worker only
-                self._is_deleted_in_controller = True
+        # 放在HWorkerAPP中的startup事件里执行
 
         # 标识是否已经在controller中删除，如果已经删除，则exit_handler不再向controller发送删除信息
         # 用于适配controllre端主动向worker发送删除worker时

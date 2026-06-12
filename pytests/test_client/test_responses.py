@@ -59,6 +59,54 @@ class TestChatCompletions():
             result = response.json()
             print(result)
 
+    async def test_minimax_chat_completions_httpx(self):
+        # 获取环境变量
+        api_key = os.environ.get("CONTROLLER_API_KEY")
+        base_url = os.environ.get("CONTROLLER_API_BASE_URL")
+
+        if not api_key or not base_url:
+            raise ValueError("请确保已设置 CONTROLLER_API_KEY 和 CONTROLLER_API_BASE_URL 环境变量")
+
+        # 拼接完整的请求 URL
+        endpoint = f"{base_url.rstrip('/')}/chat/completions"
+
+        # 设置请求头
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        # 设置请求体参数
+        payload = {
+            "model": "minimax/minimax-m2.7",
+            "messages": [
+                {"role": "user", "content": "Hello"}
+            ],
+            "stream": False
+        }
+
+        # 发起异步 HTTP POST 请求
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(endpoint, headers=headers, json=payload)
+
+            try:
+                # 检查 HTTP 状态码是否为 200 OK
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                # 💥 发生 HTTP 错误时，打印出完整的请求信息和服务器返回的错误正文
+                print(f"\n[{e.response.status_code} Error] 请求失败！")
+                print(f"请求 URL: {e.request.url}")
+                print(f"请求 Payload: {payload}")
+                print(f"服务器返回的错误详情: {e.response.text}")
+
+                # 重新抛出异常，让 pytest 标记该测试失败
+                raise
+
+            # 解析并打印 JSON 响应
+            result = response.json()
+            print(result)
+
+
     def test_openai_controller_stream_chat_completions(self):
         import os
         from hepai import HepAI
@@ -230,7 +278,7 @@ class TestControllerResponses():
             base_url=self.base_url
         )
 
-        model_name = "openai/gpt-5.4-pro-2026-03-05"
+        model_name = "openai/gpt-5.5"
         response = client.responses.create(
             model=model_name,
             input="Hello"

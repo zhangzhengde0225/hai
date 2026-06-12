@@ -192,10 +192,25 @@ class HWorkerAPP(FastAPI):
         async def _start_config_polling_task():
             import os
             import asyncio
+            # 1. 优先触发一次配置同步，确保 self._enabled_models 拿到了 JSON 里的最新状态
             cfg_mgr = getattr(self.state, 'cfg_mgr', None)
             if cfg_mgr and hasattr(cfg_mgr, 'config_path') and cfg_mgr.config_path.exists():
                 self._last_config_mtime = os.path.getmtime(cfg_mgr.config_path)
-            asyncio.create_task(self._poll_config_changes())
+                await self.check_and_sync_config()
+
+            # 2. 状态全部就绪后，再向 Controller 发起注册
+            if not self.worker.config.no_register:
+                loop = asyncio.get_event_loop()
+                # 使用线程池防止 requests.post 阻塞 FastAPI 主事件循环
+                success = await loop.run_in_executor(None, self.worker.register_to_controller, False)
+                if success:
+                    loop.create_task(self.worker.worker_heartbeat_async())
+                else:
+                    self.worker._is_deleted_in_controller = True
+
+            # 3. 启动后台配置轮询任务
+            if cfg_mgr:
+                asyncio.create_task(self._poll_config_changes())
 
         # 通过 ASGI lifespan shutdown 显式通知 controller。
         @self.on_event("shutdown")
