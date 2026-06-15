@@ -1,4 +1,4 @@
-from fastapi import Request, HTTPException
+from fastapi import Request, Response, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -9,7 +9,7 @@ from hepai.tools.request_context import request_id_context
 logger = Logger.get_logger("global_error_handler")
 
 
-async def global_unhandled_exception_handler(request: Request, exc: Exception):
+async def global_unhandled_exception_handler(request: Request, exc: Exception) -> Response:
     """全局兜底：拦截所有未捕获异常"""
 
     if isinstance(exc, (HTTPException, StarletteHTTPException, RequestValidationError)):
@@ -19,7 +19,7 @@ async def global_unhandled_exception_handler(request: Request, exc: Exception):
     if getattr(exc, "__logged__", False):
         # 如果已经发过头了（针对流式响应），直接结束，不再尝试返回 JSON
         if request.scope.get("type") == "http" and await request.is_disconnected():
-            return
+            return Response(status_code=499)
         # 否则只返回响应，不打日志
         return _build_500_response()
 
