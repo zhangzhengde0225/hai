@@ -15,6 +15,7 @@ mcp>=1.15.0
 numpy
 contextvars
 uvloop
+gunicorn
 
 # pytest 相关
 pytest

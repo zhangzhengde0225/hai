@@ -79,7 +79,7 @@ class TestControllerResponses():
             api_key=self.api_key,
         )
 
-        model_name = "anthropic/claude-opus-4-5-20251101"
+        model_name = "anthropic/claude-opus-4-7"
 
         with client.messages.stream(
                 max_tokens=1024,
