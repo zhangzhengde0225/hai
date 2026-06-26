@@ -410,7 +410,7 @@ class CommonWorker:
             "is_free": self.config.is_free,
             "worker_name": self.config_dict.get("worker_name", None),
             "priority": self.config_dict.get("priority", 0),
-            "weight": self.config_dict.get("priority", 1)
+            "weight": self.config_dict.get("weight", 1)
         }
         worker_meta = self.config._metadata
         metadata.update(worker_meta)
