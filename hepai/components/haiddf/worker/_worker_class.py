@@ -50,6 +50,7 @@ class HWorkerConfig:  # (2) worker的参数配置和启动代码
     daemon: bool = field(default=False, metadata={"help": "Run as daemon"})
     is_free: bool = field(default=True, metadata={"help": "Whether the model is free to use, if False, model owner should setup model pricing via controller"})
     priority: int = field(default=0, metadata={"help": "worker priority priority=0（缺省）= 最优先，数值越大越靠后"})
+    weight: int = field(default=1, metadata={"help": "worker weight"})
     _metadata: dict = field(default_factory=dict, metadata={"help": "Additional metadata for worker/model"})
     
     # config for common features
@@ -408,7 +409,8 @@ class CommonWorker:
             "uptime": time.time() - (status_info.start_time if status_info.start_time else time.time()),
             "is_free": self.config.is_free,
             "worker_name": self.config_dict.get("worker_name", None),
-            "priority": self.config_dict.get("priority", 0)
+            "priority": self.config_dict.get("priority", 0),
+            "weight": self.config_dict.get("priority", 1)
         }
         worker_meta = self.config._metadata
         metadata.update(worker_meta)

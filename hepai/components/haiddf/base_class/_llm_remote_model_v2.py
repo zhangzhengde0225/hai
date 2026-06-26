@@ -28,7 +28,7 @@ class LLMRemoteModelV2(HRModel):
         "host", "port", "auto_start_port", "controller_address", "route_prefix",
         "no_register", "permissions", "description", "daemon",
         "limit_model_concurrency", "enable_secret_key", "enable_llm_router",
-        "is_free", "debug",
+        "is_free", "debug","priority","weight"
     }
 
     def __init__(self, config: "LLMModelConfig"):
