@@ -291,7 +291,7 @@ class ModelManagerRouterGroup:
 
     async def update_worker_config(self, request: Request):
         """更新 worker 运行时配置并持久化到 JSON。"""
-        _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions"}
+        _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions", "priority", "weight"}
 
         body = await read_request_body(request)
         updates: Dict = body.get("updates", {})
@@ -307,6 +307,17 @@ class ModelManagerRouterGroup:
 
         if hasattr(self.parent_app, 'check_and_sync_config'):
             await self.parent_app.check_and_sync_config()
+
+        # 编辑后立即触发一次心跳，让 controller 秒级感知 priority/weight 等调度相关字段的变化
+        worker = self.parent_app.worker
+        if not worker.config.no_register:
+            try:
+                import asyncio
+                loop = asyncio.get_event_loop()
+                loop.run_in_executor(None, worker.register_to_controller, True)
+            except Exception as e:
+                if hasattr(worker, 'logger'):
+                    worker.logger.warning(f"Failed to send heartbeat after worker config update: {e}")
 
         return {"success": True, "updated": list(updates.keys())}
 

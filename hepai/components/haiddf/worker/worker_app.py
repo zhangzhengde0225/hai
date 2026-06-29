@@ -279,7 +279,7 @@ class HWorkerAPP(FastAPI):
 
         # 1. 同步 Worker 级别配置
         worker_cfg = cfg_mgr.get_worker_config() or {}
-        _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions"}
+        _ALLOWED = {"description", "limit_model_concurrency", "is_free", "debug", "permissions", "priority", "weight"}
         for k, v in worker_cfg.items():
             if k in _ALLOWED:
                 if hasattr(self.worker.config, k):
