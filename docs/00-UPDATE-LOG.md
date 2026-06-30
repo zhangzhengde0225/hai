@@ -1,5 +1,6 @@
 # 更新日志
 
++ 2026.06.30 v1.4.8 轻量化默认安装依赖，拆分worker、mcp、legacy、ai、dev、full等可选依赖组，并将`hai`命令入口改为轻量代理。
 + 2026.05.25 v1.4.7 修复了llm_worker_v2在thinking tool calls等场景下，以及responsed接口的问题，现在zhizz上游一切正常。
 + 2026.05.24 v1.4.6 修复了llm_worker在gunicorn下运行退出时不触发atexit注册的退出函数的bug。
 + 2026.05.21 v1.4.5 修复了hepai包在openai>=2.37.0版本中由于接口变更导致的兼容性问题。
