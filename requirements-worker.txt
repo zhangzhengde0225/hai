@@ -1,0 +1,7 @@
+# Dependencies for running HepAI workers and worker dashboards.
+fastapi
+requests
+uvicorn
+python-multipart>=0.0.18
+gunicorn; platform_system != "Windows"
+uvloop; platform_system != "Windows"

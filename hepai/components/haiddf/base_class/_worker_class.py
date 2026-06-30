@@ -14,9 +14,15 @@ from typing import (
 import json
 import inspect
 from inspect import signature, Parameter, ismethod, iscoroutinefunction
+from typing import TYPE_CHECKING
 
 
 AnyFunction: TypeAlias = Callable[..., Any]
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
+else:
+    FastMCP = Any
 
 @dataclass
 class permission:
@@ -230,8 +236,6 @@ DEFAULT_STREAM_DATA = [
     {"a": "b", "c": "d"},
 ]
 
-from mcp.server.fastmcp import FastMCP
-    
 class HRemoteModel(BaseWorkerModel):
     """
     The Remote Model of HAI Framework

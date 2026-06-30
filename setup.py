@@ -37,7 +37,7 @@ def read_requirements(filename='requirements.txt'):
     try:
         with open(filename) as f:
             for line in f:
-                line = line.strip()
+                line = line.split('#', 1)[0].strip()
                 # 跳过空行、注释行和分组标记行
                 if line and not line.startswith('#') and not line.startswith('###'):
                     requirements.append(line)
@@ -46,16 +46,42 @@ def read_requirements(filename='requirements.txt'):
         requirements = []
     return requirements
 
-def read_full_requirements():
-    """读取完整的 requirements-full.txt 文件"""
-    return read_requirements('requirements-full.txt')
+def merge_requirements(*filenames):
+    """Merge requirement files while preserving order and removing duplicates."""
+    merged = []
+    seen = set()
+    for filename in filenames:
+        for requirement in read_requirements(filename):
+            key = requirement.lower()
+            if key not in seen:
+                merged.append(requirement)
+                seen.add(key)
+    return merged
 
 # 基础依赖 - 从 requirements.txt 读取
 REQUIRED = read_requirements()
 
 # 完整依赖配置
+WORKER_REQUIRES = read_requirements('requirements-worker.txt')
+MCP_REQUIRES = read_requirements('requirements-mcp.txt')
+LEGACY_REQUIRES = read_requirements('requirements-legacy.txt')
+AI_REQUIRES = read_requirements('requirements-ai.txt')
+DEV_REQUIRES = read_requirements('requirements-dev.txt')
+
 EXTRAS = {
-    'full': read_full_requirements(),
+    'worker': WORKER_REQUIRES,
+    'mcp': MCP_REQUIRES,
+    'legacy': LEGACY_REQUIRES,
+    'ai': AI_REQUIRES,
+    'dev': DEV_REQUIRES,
+    'full': merge_requirements(
+        'requirements.txt',
+        'requirements-worker.txt',
+        'requirements-mcp.txt',
+        'requirements-legacy.txt',
+        'requirements-ai.txt',
+        'requirements-dev.txt',
+    ),
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -144,7 +170,7 @@ setup(
     # py_modules=['mypackage'],
 
     entry_points={
-         'console_scripts': ['hai = hai.uaii.cli.cli_main:run'],
+         'console_scripts': ['hai = hepai._cli:run'],
     },
 
     install_requires=REQUIRED,

@@ -1,24 +1,8 @@
-
-# Note: 以###{{depGroup}}###来分组
-
-###{{base}}###
-pyyaml
-easydict  # for config_loader.py
-fastapi  # for hai worker
-requests  # for hai worker
-uvicorn  # for hai worker
+# Minimal dependencies installed by `pip install hepai`.
 openai>=2.37.0
 anthropic>=0.96.0
+httpx>=0.28.1
+pydantic>=2.11.3
+typing_extensions
 python-dotenv>=1.1.1
-damei>=1.1.135
-mcp>=1.15.0
-numpy
-contextvars
-uvloop
-gunicorn
-
-# pytest 相关
-pytest
-asyncio
-pytest-asyncio
-
+damei>=1.1.136

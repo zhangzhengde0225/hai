@@ -1,0 +1,5 @@
+# Dependencies for the legacy `hai` algorithm framework.
+pyyaml
+easydict
+numpy
+damei>=1.1.136

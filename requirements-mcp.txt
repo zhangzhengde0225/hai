@@ -1,0 +1,2 @@
+# Dependencies for MCP-enabled remote models.
+mcp>=1.15.0
