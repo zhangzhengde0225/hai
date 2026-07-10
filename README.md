@@ -91,7 +91,7 @@ hepai -V  # 查看版本
     
     client = HepAI(api_key="your_api_key")
     models = client.list_models()
-    response = client.chat.completion.create(
+    response = client.chat.completions.create(
         model="hepai/deepseek-r1:671b", 
         prompt="你好",
         )

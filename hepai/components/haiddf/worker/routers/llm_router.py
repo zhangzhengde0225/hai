@@ -149,15 +149,17 @@ class LLMRouterGroup:
             raise HTTPException(status_code=400, detail="[LLMRouterGroup] For dall-e-3, only n=1 is supported")
         if request_body["n"] < 1 or request_body["n"] > 10:
             raise HTTPException(status_code=400, detail="[LLMRouterGroup] n must be between 1 and 10")
-        if user_auth.resc_attr.resource_type == "worker":
+        if getattr(getattr(user_auth, "resc_attr", None), "resource_type", None) == "worker":
             request_body = self.update_request_body_for_worker(request_body, user_auth)
         self.count += 1
-        await save_minitor_log(logger, user_auth)
-        return await self.worker.unified_gate_async(
-            model=model, 
-            function="image_generations",
+        func_params = FunctionParamsItem(
             args=[],
-            kwargs=request_body,
+            kwargs=request_body
+        )
+        return await self.parent_app.worker_unified_gate(
+            function_params=func_params,
+            model=model,
+            function="image_generations",
         )
 
     def update_request_body_for_worker(self, request_body: Dict, user_auth) -> Dict:

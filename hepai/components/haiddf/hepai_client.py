@@ -33,7 +33,7 @@ class HepAIClient(HClient):
             config: HClientConfig = None,
             **overrides,
             ):
-        config = config or HClientConfig()
+        config = config or HepAIClientConfig()
         super().__init__(config, **overrides)
 
         self.worker = resources.Worker(self)
@@ -228,7 +228,7 @@ class AsyncHepAIClient(AsyncHClient):
             config: HClientConfig = None,
             **overrides,
             ):
-        config = config or HClientConfig()
+        config = config or HepAIClientConfig()
         super().__init__(config, **overrides)
 
         self.worker = resources.AsyncWorker(self)
