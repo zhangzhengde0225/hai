@@ -17,11 +17,11 @@ set -euo pipefail
 export WORKER_NAME="${WORKER_NAME:-tencent}"
 export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-42603}"
-# export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-http://localhost:42501}"
-export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-https://aiapi.ihep.ac.cn}"
+export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-http://localhost:42501}"
+# export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-https://aiapi.ihep.ac.cn}"
 export NO_REGISTER="${NO_REGISTER:-false}"
 
-GUNICORN_WORKERS="${GUNICORN_WORKERS:-4}"
+GUNICORN_WORKERS="${GUNICORN_WORKERS:-1}"
 
 echo "[gunicorn] WORKER_NAME       = $WORKER_NAME"
 echo "[gunicorn] bind              = ${HOST}:${PORT}"
