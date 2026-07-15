@@ -27,6 +27,7 @@ class Logger:
 
     format_str = (
         "\033[1;35m[%(asctime)s]\033[0m "
+        "\033[1;33m[PID:%(process)d]\033[0m "
         "\033[1;32m[%(name)s]\033[0m "
         "\033[90m[%(request_id)s]\033[0m "
         "\033[1;36m[%(levelname)s]:\033[0m %(message)s"
