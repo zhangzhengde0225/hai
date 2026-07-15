@@ -543,7 +543,7 @@ class HWorkerAPP(FastAPI):
         """
         与controller的worker_info接口一致，以便client调用
         """
-        # return self.worker.get_worker_info()
+        await self.check_and_sync_config()
         rst = self.worker.get_worker_info()
         return rst
 
