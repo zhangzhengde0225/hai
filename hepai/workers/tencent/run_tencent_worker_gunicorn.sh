@@ -15,10 +15,11 @@
 set -euo pipefail
 
 export WORKER_NAME="${WORKER_NAME:-tencent}"
+export WORKER_ID="${WORKER_ID:-wk-tencent-ff1}"
 export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-42603}"
-# export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-http://localhost:42501}"
-export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-https://aiapi.ihep.ac.cn}"
+export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-http://localhost:42601}"
+# export CONTROLLER_ADDRESS="${CONTROLLER_ADDRESS:-https://aiapi.ihep.ac.cn}"
 export NO_REGISTER="${NO_REGISTER:-false}"
 
 GUNICORN_WORKERS="${GUNICORN_WORKERS:-4}"

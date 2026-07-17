@@ -26,7 +26,7 @@ class WorkerConfig(HWorkerConfig):
     # 必填：决定 controller 注册标识 和 ~/.hepai/worker_configs/{worker_name}.json 配置文件路径
     # 用空字符串当 sentinel，在 __post_init__ 里校验（dataclass 继承不允许无默认值字段）
     worker_name: str = field(default="", metadata={"help": "[Required] Worker ID，用于定位 ~/.hepai/worker_configs/{worker_name}.json"})
-    worker_id: str = field(default="", metadata={"help": "固定 worker_id，留空则自动生成 wk-xxx"})
+    worker_id: str = field(default="", metadata={"help": "固定 worker_id，留空则自动生成并持久化到 JSON"})
     host: str = field(default="0.0.0.0", metadata={"help": "Worker's address, enable to access from outside if set to `0.0.0.0`, otherwise only localhost can access"})
     port: Union[int, str, None] = field(default="auto", metadata={"help": "Worker's port"})
 
@@ -56,7 +56,7 @@ def _build_config_from_env() -> "WorkerConfig":
     """从环境变量构造 WorkerConfig，供 gunicorn / 其他 ASGI 服务器作为入口使用。
 
     支持的环境变量（与 WorkerConfig 字段同名，全大写）：
-      WORKER_NAME（必填）、HOST、PORT、CONTROLLER_ADDRESS、NO_REGISTER、
+      WORKER_NAME（必填）、WORKER_ID、HOST、PORT、CONTROLLER_ADDRESS、NO_REGISTER、
       DESCRIPTION、LIMIT_MODEL_CONCURRENCY、ENABLE_SECRET_KEY、
       ENABLE_LLM_ROUTER、TYPE
     """

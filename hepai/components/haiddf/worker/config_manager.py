@@ -354,6 +354,16 @@ class WorkerConfigManager:
             self._config.setdefault(_KEY_METADATA, {})["admin_key"] = key
             self._save()
 
+    def get_worker_id(self) -> Optional[str]:
+        """读取持久化的 worker_id，不存在时返回 None。"""
+        return self._config.get(_KEY_METADATA, {}).get("worker_id")
+
+    def set_worker_id(self, worker_id: str) -> None:
+        """将 worker_id 写入 metadata.worker_id 并持久化。"""
+        with self._lock:
+            self._config.setdefault(_KEY_METADATA, {})["worker_id"] = worker_id
+            self._save()
+
     def get_metadata(self) -> Dict:
         """返回 metadata 整段（包含 version、lastTouchedAt、secret_key、admin_key 等）。"""
         return dict(self._config.get(_KEY_METADATA, {}))

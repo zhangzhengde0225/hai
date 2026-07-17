@@ -156,6 +156,38 @@ class HWorkerAPP(FastAPI):
         assert isinstance(worker_config, HWorkerConfig), f"worker_config should be an instance of HWorkerConfig"
         worker_config.update_from_dict(worker_overrides)
 
+        # worker_id 解析优先级：环境变量/CLI 显式传入 > JSON 持久化 > 首次生成并持久化。
+        # 显式传入时同步覆盖 JSON，保证 JSON 与运行时一致。
+        # 首次生成格式 wk-{worker_name}-{owner}-{uuid8}，写回 JSON，保证重启后 id 稳定。
+        # 兼容无 worker_name 的旧 worker（跳过持久化，走 CommonWorker 的随机生成）。
+        _wk_name = getattr(worker_config, "worker_name", None)
+        _explicit_wid = getattr(worker_config, "worker_id", None)
+        if _wk_name:
+            try:
+                from .config_manager import WorkerConfigManager
+                _cfg_mgr = WorkerConfigManager(worker_id=_wk_name)
+                if _explicit_wid:
+                    # 显式传入：覆盖 JSON，保持一致
+                    worker_config.worker_id = _explicit_wid
+                    _cfg_mgr.set_worker_id(_explicit_wid)
+                else:
+                    _existing_wid = _cfg_mgr.get_worker_id()
+                    if _existing_wid:
+                        worker_config.worker_id = _existing_wid
+                    else:
+                        import uuid as _uuid
+                        _perms = getattr(worker_config, "permissions", None) or {}
+                        _owner = _perms.get("owner") if isinstance(_perms, dict) else None
+                        _owner = _owner or getattr(worker_config, "author", "") or "hepai"
+                        _short_uuid = _uuid.uuid4().hex[:8]
+                        worker_config.worker_id = f"wk-{_wk_name}-{_owner}-{_short_uuid}"
+                        _cfg_mgr.set_worker_id(worker_config.worker_id)
+                # 暴露给后续 bootstrap 复用，避免重复创建
+                if not getattr(self.state, "cfg_mgr", None):
+                    self.state.cfg_mgr = _cfg_mgr
+            except Exception as _e:
+                self.logger.warning(f"worker_id 持久化失败，将退回随机生成: {_e}")
+
         # 用于控制模型访问的信号量 - 改为每个模型独立的信号量
         self.limit_model_concurrency = worker_config.limit_model_concurrency
         self.model_semaphores: Dict[str, Semaphore] = {}  # 每个模型独立的信号量
