@@ -747,7 +747,13 @@ class CommonWorker:
                 # 获取报错类型：e.__class__.__name__
                 tb_str = traceback.format_exception(*sys.exc_info())
                 tb_str = "".join(tb_str)
-                self.logger.error(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
+
+                if isinstance(e, HTTPException):
+                    self.logger.error(f"[CommonWorker]HTTP {e.status_code}: {e.detail}")
+                else:
+                    tb_str = "".join(traceback.format_exception(*sys.exc_info()))
+                    self.logger.error(f"[CommonWorker]Error: {e}.\nTraceback: {tb_str}")
+    
                 e_class = e.__class__.__name__
                 error_msg = e.__dict__.get("body", None)
                 error_msg = error_msg if error_msg else f"{e_class}: {str(e)}"
@@ -761,6 +767,9 @@ class CommonWorker:
                     raise HTTPException(status_code=500, detail=error_msg)
                 elif e_class == "APITimeoutError":
                     raise HTTPException(status_code=504, detail=error_msg)
+                elif isinstance(e, HTTPException):
+                    raise e
+                
                 ## TODO: 其他报错类型转换为合适的报错状态码
                 error_msg2 = f"{e_class}: {str(e)}"
                 self.logger.error(f"[CommonWorker]一种新的错误类型：{e_class}, 错误信息：{error_msg}\n{error_msg2}")

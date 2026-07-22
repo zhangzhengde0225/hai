@@ -15,6 +15,7 @@ import re
 import json
 from typing import Union, Dict, List, Optional, AsyncGenerator, Literal
 from dataclasses import dataclass, field
+from fastapi import HTTPException
 
 import httpx
 
@@ -493,53 +494,76 @@ class LLMRemoteModelV2(HRModel):
 
     async def _open_stream(self, client: httpx.AsyncClient, url: str,
                            headers: dict, payload: dict,
-                           timeout: float) -> "httpx.Response":
-        """打开上游流式连接并校验状态码（在 StreamingResponse 构造前执行）。
+                           timeout: float) -> tuple:
+        """打开上游流式连接并校验（在 StreamingResponse 构造前执行）。
 
-        成功返回已打开的 stream Response（调用方负责最终 aclose）；
+        返回 (aiter, first_chunk, resp)：
+        - aiter: 已创建的 resp.aiter_bytes() 迭代器，调用方在 _iter_stream 中继续迭代
+        - first_chunk: 已读取的首个字节块，调用方需先 yield 它
+        - resp: 原始 Response，供 _iter_stream finally 中 aclose
         失败直接 raise HTTPException —— 此时 Starlette 尚未发送 200 头，
         worker 能返回正常的 HTTP 错误响应。
+
+        覆盖两种上游错误：
+        1. 非 200 状态码 —— 直接 raise
+        2. 200 状态码但 body 是 JSON 错误（首个 chunk 以 { 开头）—— 读完 body 后 raise
         """
         req = client.build_request("POST", url, headers=headers,
                                    json=payload, timeout=timeout)
         resp = await client.send(req, stream=True)
+
         if resp.status_code != 200:
             await resp.aread()
+            error_text = resp.text
             await resp.aclose()
             exc = self._make_exception({}, payload, url, resp)
             self._log_stream_error(exc)
-            from fastapi import HTTPException
-            raise HTTPException(status_code=resp.status_code, detail=resp.text)
-        return resp
 
-    async def _iter_stream(self, resp: "httpx.Response", payload: dict,
-                           url: str) -> AsyncGenerator[bytes, None]:
-        """从已校验的 upstream Response 透传 SSE 字节。
+            raise HTTPException(status_code=resp.status_code, detail=error_text)
 
+        # 创建迭代器一次，读取首个 chunk 检查是否为 JSON 错误
+        aiter = resp.aiter_bytes()
+        first_chunk = b""
+        async for chunk in aiter:
+            first_chunk = chunk
+            break
+
+        if first_chunk.lstrip().startswith(b"{"):
+            # 继续从同一迭代器读取剩余 body
+            remaining = bytearray()
+            async for chunk in aiter:
+                remaining.extend(chunk)
+            await resp.aclose()
+            full = (first_chunk + bytes(remaining)).decode("utf-8", errors="ignore")
+            exc = self._make_exception({}, payload, url, resp, error_text=full)
+            # self._log_stream_error(exc)
+
+            try:
+                err_data = json.loads(full)
+                upstream_code = err_data.get("error", {}).get("code", 400)
+                if not isinstance(upstream_code, int):
+                    upstream_code = 400
+            except Exception:
+                upstream_code = 400
+            raise HTTPException(status_code=upstream_code, detail=full)
+
+        return aiter, first_chunk, resp
+
+    async def _iter_stream(self, aiter: AsyncGenerator[bytes, None],
+                           first_chunk: bytes, resp: "httpx.Response",
+                           payload: dict, url: str) -> AsyncGenerator[bytes, None]:
+        """从已校验的 upstream 迭代器透传 SSE 字节。
+
+        first_chunk 是 _open_stream 已读取的首个块（已确认非 JSON 错误），先 yield 它。
+        aiter 是同一个 resp.aiter_bytes() 迭代器，继续从中读取。
         200 头已由 StreamingResponse 发出，中途出错只能 yield SSE 错误事件。
         """
         model = payload.get("model", "-")
         try:
-            is_first = True
-            is_error = False
-            error_buf = bytearray()
-
-            async for chunk in resp.aiter_bytes():
-                if is_first:
-                    is_first = False
-                    if chunk.lstrip().startswith(b"{"):
-                        is_error = True
-                if is_error:
-                    error_buf.extend(chunk)
-                else:
-                    yield chunk
-
-            if is_error:
-                full = error_buf.decode("utf-8", errors="ignore")
-                exc = self._make_exception({}, payload, url, resp, error_text=full)
-                self._log_stream_error(exc)
-                yield self._format_sse_error_bytes(resp.status_code, full, url, model)
-                return
+            if first_chunk:
+                yield first_chunk
+            async for chunk in aiter:
+                yield chunk
         except Exception as e:
             self._log_stream_error(e)
             yield self._format_sse_error_bytes(
@@ -630,8 +654,8 @@ class LLMRemoteModelV2(HRModel):
         url = self._build_oai_url("/chat/completions")
 
         if should_stream:
-            resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
-            return self._iter_stream(resp, payload, url)
+            aiter, first_chunk, resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
+            return self._iter_stream(aiter, first_chunk, resp, payload, url)
         else:
             resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code != 200:
@@ -666,8 +690,8 @@ class LLMRemoteModelV2(HRModel):
             url = f"{base_url}/v1/responses"
 
         if stream:
-            resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
-            return self._iter_stream(resp, payload, url)
+            aiter, first_chunk, resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
+            return self._iter_stream(aiter, first_chunk, resp, payload, url)
         else:
             resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code != 200:
@@ -829,8 +853,8 @@ class LLMRemoteModelV2(HRModel):
         # 7. 发请求
         url = self._build_anthropic_url("/v1/messages")
         if stream:
-            resp = await self._open_stream(self.anthropic_http_client, url, headers, payload, timeout)
-            return self._iter_stream(resp, payload, url)
+            aiter, first_chunk, resp = await self._open_stream(self.anthropic_http_client, url, headers, payload, timeout)
+            return self._iter_stream(aiter, first_chunk, resp, payload, url)
         resp = await self.anthropic_http_client.post(
             url, headers=headers, json=payload, timeout=timeout
         )
