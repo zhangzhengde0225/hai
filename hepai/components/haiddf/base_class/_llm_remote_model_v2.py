@@ -491,55 +491,64 @@ class LLMRemoteModelV2(HRModel):
         }
         return f"event: error\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n".encode("utf-8")
 
-    async def _stream_bytes(self, client: httpx.AsyncClient, url: str,
-                            headers: dict, payload: dict,
-                            timeout: float) -> AsyncGenerator[bytes, None]:
-        """向 url 发送流式 POST，透传原始 SSE 字节，带内联 JSON 错误检测。
+    async def _open_stream(self, client: httpx.AsyncClient, url: str,
+                           headers: dict, payload: dict,
+                           timeout: float) -> "httpx.Response":
+        """打开上游流式连接并校验状态码（在 StreamingResponse 构造前执行）。
 
-        中途出错时不 raise（HTTP 200 头已发，starlette 无法回滚状态码），改为
-        yield 一个 SSE 错误事件，并把详细信息写入 logger 供运维排查。
+        成功返回已打开的 stream Response（调用方负责最终 aclose）；
+        失败直接 raise HTTPException —— 此时 Starlette 尚未发送 200 头，
+        worker 能返回正常的 HTTP 错误响应。
+        """
+        req = client.build_request("POST", url, headers=headers,
+                                   json=payload, timeout=timeout)
+        resp = await client.send(req, stream=True)
+        if resp.status_code != 200:
+            await resp.aread()
+            await resp.aclose()
+            exc = self._make_exception({}, payload, url, resp)
+            self._log_stream_error(exc)
+            from fastapi import HTTPException
+            raise HTTPException(status_code=resp.status_code, detail=resp.text)
+        return resp
+
+    async def _iter_stream(self, resp: "httpx.Response", payload: dict,
+                           url: str) -> AsyncGenerator[bytes, None]:
+        """从已校验的 upstream Response 透传 SSE 字节。
+
+        200 头已由 StreamingResponse 发出，中途出错只能 yield SSE 错误事件。
         """
         model = payload.get("model", "-")
         try:
-            async with client.stream("POST", url, headers=headers,
-                                     json=payload, timeout=timeout) as resp:
-                if resp.status_code != 200:
-                    await resp.aread()
-                    exc = self._make_exception({}, payload, url, resp)
-                    self._log_stream_error(exc)
-                    yield self._format_sse_error_bytes(
-                        resp.status_code, resp.text, url, model
-                    )
-                    return
+            is_first = True
+            is_error = False
+            error_buf = bytearray()
 
-                is_first = True
-                is_error = False
-                error_buf = bytearray()
-
-                async for chunk in resp.aiter_bytes():
-                    if is_first:
-                        is_first = False
-                        if chunk.lstrip().startswith(b"{"):
-                            is_error = True
-                    if is_error:
-                        error_buf.extend(chunk)
-                    else:
-                        yield chunk
-
+            async for chunk in resp.aiter_bytes():
+                if is_first:
+                    is_first = False
+                    if chunk.lstrip().startswith(b"{"):
+                        is_error = True
                 if is_error:
-                    full = error_buf.decode("utf-8", errors="ignore")
-                    exc = self._make_exception({}, payload, url, resp, error_text=full)
-                    self._log_stream_error(exc)
-                    yield self._format_sse_error_bytes(resp.status_code, full, url, model)
-                    return
+                    error_buf.extend(chunk)
+                else:
+                    yield chunk
+
+            if is_error:
+                full = error_buf.decode("utf-8", errors="ignore")
+                exc = self._make_exception({}, payload, url, resp, error_text=full)
+                self._log_stream_error(exc)
+                yield self._format_sse_error_bytes(resp.status_code, full, url, model)
+                return
         except Exception as e:
-            # 网络异常 / timeout / SSL 等：上游未必有 status_code，照样兜底
             self._log_stream_error(e)
             yield self._format_sse_error_bytes(
                 getattr(e, "status_code", 0) or 0,
                 f"{type(e).__name__}: {e}",
                 url, model,
             )
+        finally:
+            await resp.aclose()
 
     def _log_stream_error(self, exc: Exception):
         """把流式出错的详细信息写入 logger（保留 add_note 信息）。"""
@@ -621,7 +630,8 @@ class LLMRemoteModelV2(HRModel):
         url = self._build_oai_url("/chat/completions")
 
         if should_stream:
-            return self._stream_bytes(self.http_client, url, headers, payload, timeout)
+            resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
+            return self._iter_stream(resp, payload, url)
         else:
             resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code != 200:
@@ -656,7 +666,8 @@ class LLMRemoteModelV2(HRModel):
             url = f"{base_url}/v1/responses"
 
         if stream:
-            return self._stream_bytes(self.http_client, url, headers, payload, timeout)
+            resp = await self._open_stream(self.http_client, url, headers, payload, timeout)
+            return self._iter_stream(resp, payload, url)
         else:
             resp = await self.http_client.post(url, headers=headers, json=payload, timeout=timeout)
             if resp.status_code != 200:
@@ -818,7 +829,8 @@ class LLMRemoteModelV2(HRModel):
         # 7. 发请求
         url = self._build_anthropic_url("/v1/messages")
         if stream:
-            return self._stream_bytes(self.anthropic_http_client, url, headers, payload, timeout)
+            resp = await self._open_stream(self.anthropic_http_client, url, headers, payload, timeout)
+            return self._iter_stream(resp, payload, url)
         resp = await self.anthropic_http_client.post(
             url, headers=headers, json=payload, timeout=timeout
         )
